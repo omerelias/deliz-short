@@ -29,10 +29,22 @@ function ed_rest_get_products_html(\WP_REST_Request $req) {
     (int)$per_page
   );
 
-  return new \WP_REST_Response([
+  $response_data = [
     'term' => ['slug' => $slug, 'name' => $term->name],
     'html' => do_shortcode($shortcode),
-  ], 200);
+  ];
+
+  // ✅ Include cart fragments in AJAX response for sync
+  if (function_exists('WC') && WC()->cart) {
+    $fragments = apply_filters('woocommerce_add_to_cart_fragments', []);
+    if (!empty($fragments)) {
+      $response_data['fragments'] = $fragments;
+      // Also include fragment hash for validation
+      $response_data['fragment_hash'] = function_exists('wc_get_cart_hash') ? wc_get_cart_hash() : '';
+    }
+  }
+  
+  return new \WP_REST_Response($response_data, 200);
 }
 
 
@@ -372,6 +384,7 @@ $config = [
   'searchEndpoint'       => rest_url('ed/v1/product-search'),
   'searchInputSelector'  => '#search_q',
   'searchWrapSelector'   => '.search',
+  'cartFragmentsEndpoint' => rest_url('ed/v1/cart-fragments'),
 ];
 
   wp_add_inline_script('ed-menu-products', 'window.ED_MENU_PRODUCTS=' . wp_json_encode($config) . ';', 'before');
@@ -463,7 +476,17 @@ function ed_rest_rebuy(\WP_REST_Request $req) {
 
   $user_id = get_current_user_id();
   $cache_key = 'ed_rebuy_' . $user_id . '_' . $mode . '_' . $per_page;
-  if ($cached = get_transient($cache_key)) {
+  
+  // ✅ Always include fresh cart fragments (don't cache them)
+  $fragments = [];
+  if (function_exists('WC') && WC()->cart) {
+    $fragments = apply_filters('woocommerce_add_to_cart_fragments', []);
+  }
+  
+  $cached = get_transient($cache_key);
+  if ($cached && is_array($cached)) {
+    $cached['fragments'] = $fragments;
+    $cached['fragment_hash'] = function_exists('wc_get_cart_hash') ? wc_get_cart_hash() : '';
     return new \WP_REST_Response($cached, 200);
   }
 
@@ -482,8 +505,13 @@ function ed_rest_rebuy(\WP_REST_Request $req) {
       'title' => ($mode === 'last') ? 'שחזור הזמנה קודמת' : 'מוצרים שקניתי',
       'html'  => '<p>לא נמצאו רכישות קודמות.</p>',
       'count' => 0,
+      'fragments' => $fragments,
+      'fragment_hash' => function_exists('wc_get_cart_hash') ? wc_get_cart_hash() : '',
     ];
-    set_transient($cache_key, $payload, 60);
+    // Cache without fragments (they're added fresh on each request)
+    $cache_payload = $payload;
+    unset($cache_payload['fragments'], $cache_payload['fragment_hash']);
+    set_transient($cache_key, $cache_payload, 60);
     return new \WP_REST_Response($payload, 200);
   }
 
@@ -514,8 +542,13 @@ function ed_rest_rebuy(\WP_REST_Request $req) {
       'title' => ($mode === 'last') ? 'שחזור הזמנה קודמת' : 'מוצרים שקניתי',
       'html'  => '<p>לא נמצאו מוצרים להצגה.</p>',
       'count' => 0,
+      'fragments' => $fragments,
+      'fragment_hash' => function_exists('wc_get_cart_hash') ? wc_get_cart_hash() : '',
     ];
-    set_transient($cache_key, $payload, 60);
+    // Cache without fragments (they're added fresh on each request)
+    $cache_payload = $payload;
+    unset($cache_payload['fragments'], $cache_payload['fragment_hash']);
+    set_transient($cache_key, $cache_payload, 60);
     return new \WP_REST_Response($payload, 200);
   }
 
@@ -531,9 +564,15 @@ function ed_rest_rebuy(\WP_REST_Request $req) {
     'title' => ($mode === 'last') ? 'שחזור הזמנה קודמת' : 'מוצרים שקניתי',
     'html'  => do_shortcode($shortcode),
     'count' => count($ids),
+    'fragments' => $fragments,
+    'fragment_hash' => function_exists('wc_get_cart_hash') ? wc_get_cart_hash() : '',
   ];
 
-  set_transient($cache_key, $payload, 60);
+  // Cache without fragments (they're added fresh on each request)
+  $cache_payload = $payload;
+  unset($cache_payload['fragments'], $cache_payload['fragment_hash']);
+  set_transient($cache_key, $cache_payload, 60);
+  
   return new \WP_REST_Response($payload, 200);
 }
 
@@ -615,6 +654,11 @@ function ed_menu_products_js_shared() {
       // שם קטגוריה מדויק מהשרת
       if (data.term && data.term.name) setTitle(data.term.name);
 
+      // ✅ Update cart fragments if provided (for AJAX navigation sync)
+      if (data.fragments && typeof data.fragments === 'object') {
+        updateCartFragments(data.fragments);
+      }
+
       // עדכון URL: /cat/{slug}/
       if (push) {
         const base = (cfg.catBase || '/cat/').replace(/\\/+$/, '/') ; // מבטיח / בסוף
@@ -674,6 +718,11 @@ function ed_menu_products_js_shared() {
     panel.innerHTML = data.html || '';
     box.classList.remove('is-loading');
 
+    // ✅ Update cart fragments if provided
+    if (data.fragments && typeof data.fragments === 'object') {
+      updateCartFragments(data.fragments);
+    }
+
     if (push) {
       const base = (cfg.catBase || '/cat/').replace(/\/+$/, '/');
       history.pushState({term: 'rebuy'}, '', new URL(base + 'rebuy' + '/', window.location.origin).toString());
@@ -693,6 +742,11 @@ function ed_menu_products_js_shared() {
       const d = await fetchMode(mode);
       panel.innerHTML = d.html || '';
       box.classList.remove('is-loading');
+      
+      // ✅ Update cart fragments if provided
+      if (d.fragments && typeof d.fragments === 'object') {
+        updateCartFragments(d.fragments);
+      }
     }, { once: true });
 
   } catch (e) {
@@ -789,6 +843,11 @@ function ed_menu_products_js_shared() {
       box.innerHTML = data.html || '';
       box.classList.remove('is-loading');
 
+      // ✅ Update cart fragments if provided
+      if (data.fragments && typeof data.fragments === 'object') {
+        updateCartFragments(data.fragments);
+      }
+
     } catch (e) {
       if (e.name === 'AbortError') return;
       box.classList.remove('is-loading');
@@ -848,6 +907,65 @@ function ed_menu_products_js_shared() {
   // להפעיל אחרי שהדף נטען
   document.addEventListener('DOMContentLoaded', bindSearch);
 
+  // ✅ Helper function to update cart fragments
+  function updateCartFragments(fragments) {
+    if (!fragments || typeof fragments !== 'object') return;
+    
+    Object.keys(fragments).forEach(selector => {
+      const element = document.querySelector(selector);
+      if (element && fragments[selector]) {
+        element.outerHTML = fragments[selector];
+        
+        // Re-initialize any event listeners if needed
+        // (WooCommerce fragments should handle this, but we ensure it)
+        if (typeof jQuery !== 'undefined' && jQuery.fn.trigger) {
+          jQuery(document.body).trigger('wc_fragment_refresh');
+        }
+      }
+    });
+  }
+
+  // ✅ Refresh cart fragments on demand (for BFCache and manual refresh)
+  async function refreshCartFragments() {
+    if (!cfg.cartFragmentsEndpoint) return;
+    
+    try {
+      const url = new URL(cfg.cartFragmentsEndpoint);
+      const res = await fetch(url.toString(), { credentials: 'same-origin' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.fragments) {
+          updateCartFragments(data.fragments);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to refresh cart fragments:', e);
+    }
+  }
+
+  // ✅ Handle BFCache (Back/Forward Cache) - refresh cart on page restore
+  window.addEventListener('pageshow', function(event) {
+    // event.persisted is true when page is restored from BFCache
+    if (event.persisted) {
+      // Refresh cart fragments to ensure they're up-to-date
+      refreshCartFragments();
+      
+      // Also reload the current category to ensure everything is fresh
+      const term = getTermFromUrl();
+      if (term) {
+        current = null; // Reset to allow reload
+        loadTerm(term, {push: false});
+      }
+    }
+  });
+
+  // ✅ Also refresh fragments on visibility change (tab switch)
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+      // Tab became visible - refresh fragments in case cart changed in another tab
+      refreshCartFragments();
+    }
+  });
 
   // קליקים על תפריט מכל מקום בעמוד
   document.addEventListener('click', (e) => {
@@ -858,7 +976,12 @@ function ed_menu_products_js_shared() {
   });
 
   // Back/Forward
-  window.addEventListener('popstate', () => loadTerm(getTermFromUrl()));
+  window.addEventListener('popstate', () => {
+    const term = getTermFromUrl();
+    loadTerm(term);
+    // Refresh fragments on navigation
+    refreshCartFragments();
+  });
 
   // טעינה ראשונית: מה-URL או הראשון בתפריט
   loadTerm(getTermFromUrl() || cfg.defaultSlug, {push:false});
@@ -1064,59 +1187,38 @@ add_action('rest_api_init', function () {
 
       wp_reset_postdata();
 
-      return new WP_REST_Response([
+      $response_data = [
         'html'  => ob_get_clean(),
         'count' => (int) $loop->post_count,
-      ], 200);
+      ];
+
+      // ✅ Include cart fragments in AJAX response for sync
+      if (function_exists('WC') && WC()->cart) {
+        $fragments = apply_filters('woocommerce_add_to_cart_fragments', []);
+        if (!empty($fragments)) {
+          $response_data['fragments'] = $fragments;
+          $response_data['fragment_hash'] = function_exists('wc_get_cart_hash') ? wc_get_cart_hash() : '';
+        }
+      }
+
+      return new WP_REST_Response($response_data, 200);
     }
   ]);
 });
 
+// ✅ New REST API endpoint for cart fragments
 add_action('rest_api_init', function () {
-  register_rest_route('ed/v1', '/product-search', [
+  register_rest_route('ed/v1', '/cart-fragments', [
     'methods'  => 'GET',
     'permission_callback' => '__return_true',
-    'args' => [
-      'q' => ['required' => true],
-      'per_page' => ['required' => false],
-    ],
     'callback' => function (WP_REST_Request $req) {
-      $q = trim((string) $req->get_param('q'));
-      if ($q === '') {
-        return new WP_REST_Response(['html' => '', 'count' => 0], 200);
+      if (!function_exists('WC') || !WC()->cart) {
+        return new \WP_REST_Response(['fragments' => [], 'fragment_hash' => ''], 200);
       }
-
-      $per_page = max(1, (int) $req->get_param('per_page'));
-
-      $loop = new WP_Query([
-        'post_type'      => 'product',
-        'post_status'    => 'publish',
-        's'              => $q,
-        'posts_per_page' => $per_page,
-        'no_found_rows'  => true,
-        'tax_query'      => [
-          [
-            'taxonomy' => 'product_visibility',
-            'field'    => 'name',
-            'terms'    => ['exclude-from-catalog'],
-            'operator' => 'NOT IN',
-          ],
-        ],
-      ]);
-
-      ob_start();
-      if ($loop->have_posts()) {
-        wc_get_template('loop/loop-start.php');
-        while ($loop->have_posts()) { $loop->the_post(); wc_get_template_part('content', 'product'); }
-        wc_get_template('loop/loop-end.php');
-      } else {
-        echo '<p class="woocommerce-info">לא נמצאו מוצרים.</p>';
-      }
-      wp_reset_postdata();
-
-      return new WP_REST_Response([
-        'html'  => ob_get_clean(),
-        'count' => (int) $loop->post_count,
+      $fragments = apply_filters('woocommerce_add_to_cart_fragments', []);
+      return new \WP_REST_Response([
+        'fragments' => $fragments,
+        'fragment_hash' => function_exists('wc_get_cart_hash') ? wc_get_cart_hash() : '',
       ], 200);
     }
   ]);
