@@ -1,0 +1,327 @@
+/* SMS Auth Settings Page */
+.settings-page-oc-sms-auth {
+    max-width: 1200px;
+    margin: 20px;
+}
+
+/* Tables - Specific to SMS Auth */
+.blocked-ips-table-wrap,
+.auth-logs-table-wrap {
+    margin-top: 20px;
+}
+
+/* Table Specific Styles */
+.blocked-ips-table-wrap table.wp-list-table,
+.auth-logs-table-wrap table.wp-list-table {
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    background: #fff;
+    margin: 10px 0;
+    border-spacing: 0;
+    table-layout: auto;
+    width: auto;
+    min-width: 800px;
+}
+
+/* Table Headers and Cells */
+.blocked-ips-table-wrap table.wp-list-table th,
+.auth-logs-table-wrap table.wp-list-table th,
+.blocked-ips-table-wrap table.wp-list-table td,
+.auth-logs-table-wrap table.wp-list-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+.blocked-ips-table-wrap table.wp-list-table th,
+.auth-logs-table-wrap table.wp-list-table th {
+    font-weight: 600;
+    color: #1d2327;
+    background: #f0f0f1;
+}
+
+/* Status Colors */
+.blocked-ips-table-wrap .status-success,
+.auth-logs-table-wrap .status-success {
+    color: #46b450;
+    font-weight: 600;
+}
+
+.blocked-ips-table-wrap .status-failed,
+.blocked-ips-table-wrap .status-blocked,
+.blocked-ips-table-wrap .status-expired,
+.auth-logs-table-wrap .status-failed,
+.auth-logs-table-wrap .status-blocked,
+.auth-logs-table-wrap .status-expired {
+    color: #dc3232;
+    font-weight: 600;
+}
+
+/* Action Buttons */
+.blocked-ips-table-wrap .button.unblock-ip {
+    background: #dc3232;
+    border-color: #dc3232;
+    color: #fff;
+}
+
+.blocked-ips-table-wrap .button.unblock-ip:hover {
+    background: #c92626;
+    border-color: #c92626;
+}
+
+
+/* Empty State Messages */
+.blocked-ips-table-wrap table.wp-list-table td[colspan="4"],
+.auth-logs-table-wrap table.wp-list-table td[colspan="5"] {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+/* Timer Display */
+.verification-code-timer {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+/* Section Containers */
+.blocked-ips-section,
+.auth-logs-section {
+    margin-top: 40px;
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.blocked-ips-section h2,
+.auth-logs-section h2 {
+    margin-top: 0;
+    padding: 0 0 10px;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+/* Table Navigation - Specific to SMS Auth */
+.blocked-ips-table-wrap .tablenav,
+.auth-logs-table-wrap .tablenav {
+    margin: 8px 0 15px;
+}
+
+.tablenav.top {
+    margin-bottom: 10px;
+}
+
+.oc-sms-auth-settings {
+    margin: 20px;
+    max-width: 1200px;
+}
+
+.settings-container {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    margin-top: 20px;
+}
+
+/* Navigation Tabs */
+.nav-tab-wrapper {
+    margin: 0;
+    padding-top: 9px;
+    padding-bottom: 0;
+    line-height: inherit;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+.nav-tab {
+    float: left;
+    border: 1px solid #c3c4c7;
+    border-bottom: none;
+    margin-left: .5em;
+    padding: 10px 20px;
+    font-size: 14px;
+    line-height: 1.71428571;
+    font-weight: 600;
+    background: #dcdcde;
+    color: #50575e;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.nav-tab:first-child {
+    margin-left: 0;
+}
+
+.nav-tab-active,
+.nav-tab:focus,
+.nav-tab:hover {
+    background: #fff;
+    color: #000;
+}
+
+.nav-tab-active {
+    margin-bottom: -1px;
+    border-bottom: 1px solid #fff;
+}
+
+/* Clear float after tabs */
+.nav-tab-wrapper:after {
+    content: '';
+    display: table;
+    clear: both;
+}
+
+/* Settings Sections */
+.settings-tab {
+    display: none;
+    padding: 20px;
+    background: #fff;
+}
+
+.settings-tab.active {
+    display: block;
+}
+
+.settings-section {
+    margin-bottom: 30px;
+}
+
+.settings-section h2 {
+    font-size: 1.3em;
+    margin: 1em 0;
+    padding: 0 0 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Form Elements */
+.form-table {
+    background: #fff;
+    margin-top: 0;
+}
+
+.form-table th {
+    padding: 20px 10px 20px 0;
+    width: 200px;
+}
+
+.form-table td {
+    padding: 15px 10px;
+    vertical-align: top;
+}
+
+/* Input Styling */
+input[type="text"],
+input[type="number"] {
+    width: 300px;
+    padding: 8px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+}
+
+input[type="number"] {
+    width: 100px;
+}
+
+/* Description text */
+.description {
+    color: #646970;
+    font-style: italic;
+    margin-top: 4px;
+    display: block;
+}
+
+/* Additional Sections */
+.additional-sections {
+    padding: 20px;
+    border-top: 1px solid #c3c4c7;
+}
+
+/* Submit Button */
+.submit {
+    margin: 0;
+    padding: 20px;
+    background: #fff;
+    border-top: 1px solid #dcdcde;
+}
+
+/* Main Settings Container - Specific to SMS Auth */
+.settings-page-oc-sms-auth.wrap {
+    max-width: 1200px;
+    margin: 20px;
+}
+
+/* Settings Form */
+.form-table {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    margin-top: 20px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.form-table th {
+    padding: 20px;
+    width: 200px;
+    vertical-align: top;
+}
+
+.form-table td {
+    padding: 20px 10px;
+    vertical-align: top;
+}
+
+/* Input Fields */
+input[type="text"] {
+    width: 300px;
+}
+
+input[type="number"] {
+    width: 100px;
+}
+
+.regular-text {
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    padding: 6px 8px;
+}
+
+/* Section Headers */
+h2 {
+    font-size: 1.3em;
+    margin: 2em 0 1em;
+    padding: 0 0 10px;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+/* Checkbox Styling */
+input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* SMS Balance Notice */
+.sms-balance-notice {
+    margin: 20px 0;
+    padding: 12px 15px;
+    background: #fff;
+    border-left: 4px solid #2271b1;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.sms-balance-notice p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.sms-balance-notice strong {
+    color: #2271b1;
+}
+
+/* Provider Settings */
+.activetrail-setting,
+.twilio-setting {
+    transition: all 0.3s ease;
+}

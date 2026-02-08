@@ -1,0 +1,42 @@
+/* Auto-generated. Do not edit directly. */
+:root{
+  --color-primary: #81d742;
+  --color-primary-hover: #eeee22;
+  --main-text-color: #ffffff;
+  --main-text-color-hover: #000000;
+  --color-secondary: #000000;
+  --floating-cart-bg: #000000;
+  --floating-cart-text-color: #ffffff;
+  --radius: 50px;
+  --top-header-bg: #5dd642;
+  --top-header-txt_color: #000000;
+  --main-header-bg: #e2e2e2;
+  --main-header-txt-color: #000000;
+  --menu-link-color: #777777;
+  --menu-link-color-active: #822727;
+  --mobile-menu-bg: #d3d3d3;
+  --mobile-menu-text-color: #000000;
+  --mobile-menu-bg-active: #dd3333;
+  --mobile-menu-text-color-active: #ffffff;
+  --ft-bg-color: #e2e2e2;
+  --ft-txt-color: #000000;
+  --fb-bg-color: #f7f7f7;
+  --fb-txt-color: #000000;
+}
+body{font-size:var(--font-size-base,16px)}
+.top-header{background-color:var(--top-header-bg);color:var(--top-header-txt_color)}
+.top-header a{color:var(--top-header-txt_color)}
+.site-header{background-color:var(--main-header-bg);color:var(--main-header-txt-color)}
+.site-header a{color:var(--main-header-txt-color)}
+.ed-main-slider .ed-slide[data-ed-slide="1"]{
+  --ed-content-bg: #e5e5e5;
+  --ed-text-color: #000000;
+  --ed-btn-bg: #eeee22;
+  --ed-btn-txt: #000000;
+}
+.ed-main-slider .ed-slide[data-ed-slide="2"]{
+  --ed-content-bg: #bca012;
+  --ed-text-color: #dd9933;
+  --ed-btn-bg: #a8a8a8;
+  --ed-btn-txt: #81d742;
+}

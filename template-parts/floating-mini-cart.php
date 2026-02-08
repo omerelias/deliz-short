@@ -1,0 +1,139 @@
+<?php
+// Exit if accessed directly
+if ( ! defined('ABSPATH') ) exit;
+
+if ( ! function_exists('WC') ) return;
+
+$cart = WC()->cart;
+?>
+<aside class="ed-float-cart" id="ed-float-cart" aria-label="<?php esc_attr_e('Mini cart', 'deliz-short'); ?>">
+  <div class="ed-float-cart__inner">
+    <header class="ed-float-cart__header">
+      <h3 class="ed-float-cart__title"><?php echo esc_html__('סל קניות', 'deliz-short'); ?></h3>
+
+      <!--<div class="ed-float-cart__meta">
+        <?php
+          $count = $cart ? $cart->get_cart_contents_count() : 0;
+          printf(
+            '<span class="ed-float-cart__count">%s</span>',
+            esc_html( sprintf(_n('%d מוצר', '%d מוצרים', $count, 'deliz-short'), $count) )
+          );
+        ?>
+      </div>-->
+      <button class="cart-close default-close-btn btn-empty" type="button" aria-label="<?php _e( 'סגירה של סל הקניות', 'deliz-short' ) ?>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="Icon Icon--close" role="presentation" viewBox="0 0 16 14">
+            <path d="M15 0L1 14m14 0L1 0" stroke="currentColor" fill="none" fill-rule="evenodd"></path>
+          </svg>
+      </button>
+    </header>
+
+    <div class="ed-float-cart__items" role="list">
+      <?php if ( ! $cart || $cart->is_empty() ) : ?>
+        <div class="ed-float-cart__empty">
+            <svg width="80" height="80" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M23.0346 22.2883L21.8894 9.39264C21.8649 9.10634 21.6236 8.88957 21.3414 8.88957H18.9855C18.9528 6.73824 17.1941 5 15.0346 5C12.8751 5 11.1164 6.73824 11.0837 8.88957H8.72786C8.44156 8.88957 8.20434 9.10634 8.1798 9.39264L7.03461 22.2883C7.03461 22.2965 7.03359 22.3047 7.03256 22.3129L7.03256 22.3129L7.03256 22.3129C7.03154 22.3211 7.03052 22.3292 7.03052 22.3374C7.03052 23.8057 8.37612 25 10.0326 25H20.0367C21.6931 25 23.0387 23.8057 23.0387 22.3374C23.0387 22.3211 23.0387 22.3047 23.0346 22.2883ZM15.0346 6.10425C16.5847 6.10425 17.8485 7.3476 17.8812 8.88952H12.188C12.2207 7.3476 13.4845 6.10425 15.0346 6.10425ZM10.0326 23.8957H20.0367C21.0714 23.8957 21.9181 23.2086 21.9344 22.3619L20.8342 9.99792H18.9855V11.6748C18.9855 11.9816 18.7401 12.227 18.4334 12.227C18.1266 12.227 17.8812 11.9816 17.8812 11.6748V9.99792H12.1839V11.6748C12.1839 11.9816 11.9385 12.227 11.6318 12.227C11.325 12.227 11.0796 11.9816 11.0796 11.6748V9.99792H9.23094L8.13483 22.3619C8.15119 23.2086 8.99372 23.8957 10.0326 23.8957Z" fill="#0F0F0F"></path>
+            </svg>
+            <?php echo esc_html__('הסל ריק, אבל לא להרבה זמן :)', 'deliz-short'); ?>
+        </div>
+      <?php else : ?>
+
+        <?php foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) :
+          $product = $cart_item['data'];
+          if ( ! $product || ! $product->exists() || $cart_item['quantity'] <= 0 ) continue;
+
+          $product_id   = $cart_item['product_id'];
+          $name         = $product->get_name();
+          $qty          = (int) $cart_item['quantity'];
+          $permalink    = $product->is_visible() ? $product->get_permalink( $cart_item ) : '';
+          $thumbnail    = $product->get_image('woocommerce_thumbnail');
+          $remove_url   = wc_get_cart_remove_url( $cart_item_key );
+          $line_price   = WC()->cart->get_product_price( $product ); // מחיר ליחידה (עם מטבע)
+          $subtotal     = WC()->cart->get_product_subtotal( $product, $qty ); // סה"כ שורה
+        ?>
+          <div class="ed-float-cart__item" role="listitem">
+            <a
+              href="<?php echo esc_url( $remove_url ); ?>"
+              class="ed-float-cart__remove remove remove_from_cart_button"
+              aria-label="<?php echo esc_attr( sprintf(__('הסר %s מהסל', 'deliz-short'), $name) ); ?>"
+              data-product_id="<?php echo esc_attr( $product_id ); ?>"
+              data-cart_item_key="<?php echo esc_attr( $cart_item_key ); ?>"
+              data-product_sku="<?php echo esc_attr( $product->get_sku() ); ?>"
+            >×</a>
+
+            <div class="ed-float-cart__thumb">
+              <?php
+              if ( $permalink ) {
+                echo '<a href="' . esc_url($permalink) . '">' . $thumbnail . '</a>';
+              } else {
+                echo $thumbnail; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+              }
+              ?>
+            </div>
+
+            <div class="ed-float-cart__details">
+              <div class="ed-float-cart__name">
+                <?php if ( $permalink ) : ?>
+                  <a href="<?php echo esc_url($permalink); ?>"><?php echo esc_html($name); ?></a>
+                <?php else : ?>
+                  <?php echo esc_html($name); ?>
+                <?php endif; ?>
+              </div>
+
+              <?php
+                // וריאציות/מטא
+                $item_data = wc_get_formatted_cart_item_data($cart_item, true);
+                if ( $item_data ) {
+                  echo '<div class="ed-float-cart__meta2">' . $item_data . '</div>'; // phpcs:ignore
+                }
+              ?>
+
+              <div class="ed-float-cart__price">
+                <span class="ed-float-cart__unit"><?php echo wp_kses_post( $line_price ); ?></span>
+                <span class="ed-float-cart__sep">×</span>
+                <span class="ed-float-cart__qty"><?php echo esc_html( $qty ); ?></span>
+                <span class="ed-float-cart__subtotal"><?php echo wp_kses_post( $subtotal ); ?></span>
+              </div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+
+      <?php endif; ?>
+    </div>
+
+    <footer class="ed-float-cart__footer">
+      <?php if ( $cart && ! $cart->is_empty() ) : ?>
+        <div class="ed-float-cart__totals">
+          <div class="ed-float-cart__row">
+            <span><?php echo esc_html__('סה"כ ביניים', 'deliz-short'); ?></span>
+            <strong><?php echo wp_kses_post( wc_price( $cart->get_subtotal() ) ); ?></strong>
+          </div>
+
+          <?php
+          // טקסט משלוח חינם/עלות משלוח (פשוט, בלי חישובים כבדים)
+          $free_min = 0;
+          $settings = get_option('woocommerce_free_shipping_1_settings');
+          if ( is_array($settings) && isset($settings['min_amount']) ) {
+            $free_min = (float) $settings['min_amount'];
+          }
+          if ( $free_min > 0 ) :
+            $remaining = max(0, $free_min - (float) $cart->get_subtotal());
+          ?>
+            <div class="ed-float-cart__shippinghint">
+              <?php if ( $remaining > 0 ) : ?>
+                <?php echo esc_html( 'חסר לך רק ' . wc_price($remaining) . ' למשלוח חינם!' ); ?>
+              <?php else : ?>
+                <?php echo esc_html__('מגיע לך משלוח חינם!', 'deliz-short'); ?>
+              <?php endif; ?>
+            </div>
+          <?php endif; ?>
+        </div>
+
+        <div class="ed-float-cart__actions">
+          <a class="ed-float-cart__btn ed-float-cart__btn--checkout" href="<?php echo esc_url( wc_get_checkout_url() ); ?>">
+            <?php echo esc_html__('לתשלום', 'deliz-short'); ?>
+          </a>
+        </div>
+      <?php endif; ?>
+    </footer>
+  </div>
+</aside>

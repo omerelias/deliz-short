@@ -1,0 +1,142 @@
+.form-row-sms{
+    width:100%
+}
+.phone-input{
+    width:100%;
+direction: rtl;
+}
+.submit-sms{
+	width: 100%;
+	max-width: none;
+	    padding: 0;
+    height: 45px;
+}
+.sms-auth-form,.confirm-sms-code{
+    display:flex;
+    justify-content: space-between;
+    width:100%;
+	flex-wrap: wrap;
+	flex-direction: column;
+    gap: 15px;
+}
+.verification-code-timer{
+position: absolute;
+    bottom: -23px;
+    left: 0;
+}
+
+.confirm-sms-code{
+    position: relative;
+}
+
+.verification-code-input{
+    width:100%
+}
+.phone-auth-div-container .or,
+ #customer_login .subtitle.or{
+	margin-top:35px;
+	text-align: center;
+	color: #ADADAD;
+    font-size: 16px;
+    position: relative;
+	margin-bottom: 35px;
+}
+.phone-auth-div-container .or:before{
+	content: "";
+    background: #ADADAD;
+    width: 45%;
+    display: block;
+    position: absolute;
+    right: 0;
+    height: 1px;
+    top: 9px;
+}
+.phone-auth-div-container .or:after{
+	content: "";
+    background: #ADADAD;
+    width: 45%;
+    display: block;
+    position: absolute;
+    left: 0;
+    height: 1px;
+    top: 9px;
+}
+.authorization-panel--container .woocommerce-error,
+.authorization-panel--container .woocommerce-message{
+	width: 100%;
+}
+button.verify-button{
+	width: 100%;
+}
+button.submit-sms.disabled,
+button.verify-button.disabled{
+	opacity: 1;
+	font-size: 0;
+}
+button.submit-sms.disabled:after,
+button.verify-button.disabled:after{
+	content: "";
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-block;
+    border-top: 3px solid var(--button-primary-color);
+    border-right: 3px solid var(--button-primary-color);
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin: auto;
+    top: 12px;
+}
+button.resend-code{
+    background: transparent !important;
+    color: #000 !important;
+    position: absolute;
+    bottom: -20px;
+    padding: 0;
+    text-decoration: underline;
+}
+button.resend-code:before{
+	display:none;
+}
+.login-tabs ul{
+    margin-top: 30px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px !important;
+    border-bottom: 1px solid #e6e7e9;
+    gap: 10px;
+}
+.login-tabs ul li{
+    width: 100% !important;
+    text-align: center;
+    justify-content: center;
+    border: 1px solid #e6e7e9;
+    border-radius: 3px 3px 0 0;
+    color: #50575e;
+    background-color: #f0f0f1;
+    font-size: 13px;
+    border-bottom: 0;
+    margin-bottom: -1px;
+    box-shadow: none !important;
+    height: 40px;
+    line-height: 38px;
+}
+.login-tabs ul li.active{
+	color: #007cba !important;
+    background: #ffffff !important;
+    position: relative;
+    top: 0;
+    z-index: 1000;
+    border-color: #e6e7e9 !important;
+}
+.login-tabs .reg-log-container{
+	display:none;
+}
+.login-tabs .sms-log-container .subtitle,
+.login-tabs .sms-log-container .subtitle.or{
+	display: none!important;
+}

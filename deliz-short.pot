@@ -1,0 +1,129 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: deliz-short\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-01 12:38+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.8.1; wp-6.9; php-8.5.1\n"
+"X-Domain: deliz-short"
+
+#: template-parts/floating-mini-cart.php:19
+msgid "%d מוצר"
+msgid_plural "%d מוצרים"
+msgstr[0] ""
+msgstr[1] ""
+
+#: comments.php:10
+#, php-format
+msgid "%s Comment"
+msgid_plural "%s Comments"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Name of the theme
+msgid "deliz-short"
+msgstr ""
+
+#: footer.php:3
+msgid "Footer"
+msgstr ""
+
+#: functions.php:27
+msgid "Footer Menu"
+msgstr ""
+
+#: header.php:82
+msgid "Hi"
+msgstr ""
+
+#: header.php:84
+msgid "Hi,"
+msgstr ""
+
+#. URI of the theme
+#. Author URI of the theme
+msgid "https://example.com/"
+msgstr ""
+
+#: header.php:84
+msgid "Login"
+msgstr ""
+
+#: template-parts/floating-mini-cart.php:9
+msgid "Mini cart"
+msgstr ""
+
+#. Description of the theme
+msgid "Minimal starter theme scaffold."
+msgstr ""
+
+#: index.php:14
+msgid "No posts found."
+msgstr ""
+
+#: search.php:24
+msgid "No results found."
+msgstr ""
+
+#: archive.php:18
+msgid "Nothing here yet."
+msgstr ""
+
+#: 404.php:5
+msgid "Page not found"
+msgstr ""
+
+#: header.php:57
+msgid "Primary"
+msgstr ""
+
+#: functions.php:26
+msgid "Primary Menu"
+msgstr ""
+
+#: search.php:8
+#, php-format
+msgid "Search results for: %s"
+msgstr ""
+
+#: 404.php:6
+msgid "Sorry, that page does not exist."
+msgstr ""
+
+#. Author of the theme
+msgid "Your Name"
+msgstr ""
+
+#: template-parts/floating-mini-cart.php:31
+msgid "הסל ריק כרגע"
+msgstr ""
+
+#: template-parts/floating-mini-cart.php:52
+#, php-format
+msgid "הסר %s מהסל"
+msgstr ""
+
+#: template-parts/floating-mini-cart.php:128
+msgid "לתשלום"
+msgstr ""
+
+#: template-parts/floating-mini-cart.php:120
+msgid "מגיע לך משלוח חינם!"
+msgstr ""
+
+#: template-parts/floating-mini-cart.php:102
+msgid "סה\"כ ביניים"
+msgstr ""
+
+#: template-parts/floating-mini-cart.php:12
+msgid "סל קניות"
+msgstr ""

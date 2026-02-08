@@ -1,0 +1,18 @@
+/*
+Theme Name: deliz-short
+Theme URI: https://example.com/
+Author: Your Name
+Author URI: https://example.com/
+Description: Minimal starter theme scaffold.
+Version: 1.0.0
+Requires at least: 6.0
+Tested up to: 6.6
+Requires PHP: 7.4
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: deliz-short
+*/
+
+/* Optional: tiny baseline */
+body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+img { max-width: 100%; height: auto; }
