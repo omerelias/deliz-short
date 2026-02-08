@@ -4,8 +4,8 @@
  */
 
 // 1. פונקציית Debug חכמה - תצוגה לפי הרשאות או פרמטר ב-URL
-if ( ! function_exists('edd') ) {
-    function edd($data, $admin_only = true) {
+if ( ! function_exists('debug') ) {
+    function debug($data, $admin_only = true) {
         $is_admin = current_user_can('manage_options');
         $is_debug_url = isset($_GET['ed_debug']);
 
