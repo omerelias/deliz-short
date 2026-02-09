@@ -328,7 +328,7 @@
     }
     
     // Build options HTML
-    let optionsHTML = '<div class="ed-product-popup__options"><h3 class="ed-product-popup__options-title">הגדרות מוצר</h3>';
+    let optionsHTML = '<div class="ed-product-popup__options">';
     
     // Unit weight selection (if variable)
     if (ocwsu.weighable && ocwsu.sold_by_units && ocwsu.unit_weight_type === 'variable' && ocwsu.unit_weight_options?.length) {
