@@ -92,7 +92,99 @@ class ED_Product_Popup {
     $product_weight_units = get_post_meta($product_id, '_ocwsu_product_weight_units', true);
     $min_weight = get_post_meta($product_id, '_ocwsu_min_weight', true);
     $weight_step = get_post_meta($product_id, '_ocwsu_weight_step', true);
-    $display_price_per_100g = get_post_meta($product_id, '_ocwsu_display_price_per_100g', true) === 'yes';
+    $display_price_per_100g = get_post_meta($product_id, '_ocwsu_display_price_per_100g', true) === 'yes'; 
+    $get_weight_from_variation = get_post_meta($product_id, '_ocwsu_get_weight_from_variation', true) === 'yes';
+
+    // If get_weight_from_variation is enabled and product is variable, collect weights from variations
+    $final_unit_weight_options = array_filter(array_map('floatval', $unit_weight_options));
+    
+    // Debug logging
+    error_log('=== ED POPUP: Variation Weight Collection ===');
+    error_log('get_weight_from_variation: ' . ($get_weight_from_variation ? 'yes' : 'no'));
+    error_log('product->is_type(variable): ' . ($product->is_type('variable') ? 'yes' : 'no'));
+    error_log('weighable: ' . ($weighable ? 'yes' : 'no'));
+    error_log('sold_by_units: ' . ($sold_by_units ? 'yes' : 'no'));
+    error_log('unit_weight_type: ' . $unit_weight_type);
+    error_log('product_weight_units: ' . $product_weight_units);
+    
+    if ($get_weight_from_variation && $product->is_type('variable') && $weighable && $sold_by_units && $unit_weight_type === 'variable') {
+      $variation_weights = [];
+      
+      // Use get_available_variations() like the plugin does - this returns formatted variation data
+      $available_variations = $product->get_available_variations();
+      
+      error_log('Available variations count: ' . count($available_variations));
+      
+      foreach ($available_variations as $variation_data) {
+        $variation_id = isset($variation_data['variation_id']) ? $variation_data['variation_id'] : 0;
+        $variation_weight = isset($variation_data['weight']) ? $variation_data['weight'] : null;
+        
+        error_log("Variation {$variation_id}: weight from get_available_variations = " . ($variation_weight !== null ? $variation_weight : 'null'));
+        
+        // Also try to get from variation object directly
+        if ($variation_weight === null || $variation_weight === '') {
+          $variation_obj = wc_get_product($variation_id);
+          if ($variation_obj) {
+            $variation_weight = $variation_obj->get_weight();
+            error_log("Variation {$variation_id}: weight from object = " . ($variation_weight ?: 'empty'));
+          }
+        }
+        
+        if ($variation_weight && $variation_weight > 0) {
+          // WooCommerce stores weight in kg
+          $weight_in_kg = (float) $variation_weight;
+          
+          error_log("Variation {$variation_id}: weight_in_kg = {$weight_in_kg}, product_weight_units = {$product_weight_units}");
+          
+          // Check product_weight_units - it might be stored as constant value
+          // From the plugin: PRODUCT_UNIT_WEIHGT_LABEL_KG = 'kg', PRODUCT_UNIT_WEIHGT_LABEL_GRAM = 'grams'
+          $is_kg = ($product_weight_units === 'kg' || $product_weight_units === 'Kg' || strpos(strtolower($product_weight_units), 'kg') !== false);
+          
+          // Convert to product weight units if needed
+          if (!$is_kg || ($is_kg && $weight_in_kg < 1)) {
+            // If product uses grams or weight is less than 1kg, convert to grams
+            $weight_value = $weight_in_kg * 1000;
+            error_log("Variation {$variation_id}: converted to grams = {$weight_value}");
+          } else {
+            // Keep in kg
+            $weight_value = $weight_in_kg;
+            error_log("Variation {$variation_id}: kept in kg = {$weight_value}");
+          }
+          
+          // Only add unique weights (use tolerance for float comparison)
+          $found = false;
+          foreach ($variation_weights as $existing_weight) {
+            if (abs($existing_weight - $weight_value) < 0.001) {
+              $found = true;
+              break;
+            }
+          }
+          
+          if (!$found) {
+            $variation_weights[] = $weight_value;
+            error_log("Variation {$variation_id}: Added weight {$weight_value} to array");
+          } else {
+            error_log("Variation {$variation_id}: Weight {$weight_value} already exists, skipping");
+          }
+        }
+      }
+      
+      error_log('Final variation_weights: ' . print_r($variation_weights, true));
+      
+      // Replace unit_weight_options with variation weights if found
+      if (!empty($variation_weights)) {
+        sort($variation_weights); // Sort ascending
+        $final_unit_weight_options = $variation_weights;
+        error_log('Replaced unit_weight_options with variation weights: ' . print_r($final_unit_weight_options, true));
+      } else {
+        error_log('No variation weights found, keeping original unit_weight_options');
+      }
+    } else {
+      error_log('Conditions not met for variation weight collection');
+    }
+    
+    error_log('Final unit_weight_options: ' . print_r($final_unit_weight_options, true));
+    error_log('=== END DEBUG ===');
 
     $data['ocwsu'] = [
       'weighable' => $weighable,
@@ -100,11 +192,12 @@ class ED_Product_Popup {
       'sold_by_weight' => $sold_by_weight,
       'unit_weight_type' => $unit_weight_type,
       'unit_weight' => $unit_weight ? (float) $unit_weight : null,
-      'unit_weight_options' => array_filter(array_map('floatval', $unit_weight_options)),
+      'unit_weight_options' => $final_unit_weight_options,
       'product_weight_units' => $product_weight_units ?: 'kg',
       'min_weight' => $min_weight ? (float) $min_weight : null,
       'weight_step' => $weight_step ? (float) $weight_step : null,
       'display_price_per_100g' => $display_price_per_100g,
+      'get_weight_from_variation' => $get_weight_from_variation,
     ];
 
     // Calculate average weight if sold by units
@@ -112,8 +205,8 @@ class ED_Product_Popup {
       if ($unit_weight_type === 'fixed' && $unit_weight) {
         $data['ocwsu']['average_weight'] = (float) $unit_weight;
         $data['ocwsu']['average_weight_label'] = $product_weight_units === 'kg' ? 'ק"ג' : 'גרם';
-      } elseif ($unit_weight_type === 'variable' && !empty($unit_weight_options)) {
-        $avg = array_sum($unit_weight_options) / count($unit_weight_options);
+      } elseif ($unit_weight_type === 'variable' && !empty($final_unit_weight_options)) {
+        $avg = array_sum($final_unit_weight_options) / count($final_unit_weight_options);
         $data['ocwsu']['average_weight'] = $avg;
         $data['ocwsu']['average_weight_label'] = $product_weight_units === 'kg' ? 'ק"ג' : 'גרם';
       }
