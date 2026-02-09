@@ -361,7 +361,7 @@ add_shortcode('ed_menu_sidebar', function ($atts) {
     array_unshift($cats, [
       'title'    => 'קנייה חוזרת',
       'slug'     => 'rebuy',
-      'icon_url' => '', // אם תרצה אייקון קבוע תגיד לי
+      'icon_url' => 'https://deliz-short.mywebsite.co.il/wp-content/uploads/2026/01/%D7%91%D7%A9%D7%A8-%D7%91%D7%A7%D7%A8.jpg', // אם תרצה אייקון קבוע תגיד לי
     ]);
   }
 
@@ -619,6 +619,15 @@ function ed_menu_products_js_shared() {
     if (!title) return;
     title.textContent = text || '';
   }
+
+  function debounce(fn, wait = 300) {
+    let t;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), wait);
+    };
+  }
+
 
   async function loadTerm(term, {push=false} = {}) {
     lastTerm = term;
@@ -899,6 +908,21 @@ function ed_menu_products_js_shared() {
       if (!query) return;
       loadSearch(query, {push: false});
     };
+
+  const MIN_LEN = 2;
+
+  const runLive = debounce(() => {
+    const query = (input.value || '').trim();
+    if (!query) { if (beforeSearch) clearSearch(); return; }
+    if (query.length < MIN_LEN) return;
+    loadSearch(query, { push: false });
+  }, 300);
+
+  input.addEventListener('input', (e) => {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    runLive();
+  }, true);
 
     btn && btn.addEventListener('click', run);
     input.addEventListener('keydown', (e) => {
@@ -1271,7 +1295,7 @@ function overlay_bg(){
   echo '<div class="site-overlay"></div>';
 }
 
-//remove_action('woocommerce_after_shop_loop_item','woocommerce_template_loop_add_to_cart');
+remove_action('woocommerce_after_shop_loop_item','woocommerce_template_loop_add_to_cart');
 
 // Shortcode: [ed_basket_bar]
 add_shortcode('ed_basket_bar', function () {
