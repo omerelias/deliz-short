@@ -7,7 +7,7 @@
   'use strict';
 
   let popupData = null; 
-  let popupElement = null; 
+  let popupElement = null;  
   let isOpen = false;
 
   /**
@@ -31,6 +31,100 @@
     
     // Listen for attribute/variation changes
     document.addEventListener('change', handleAttributeChange);
+    
+    // Check if URL contains product slug - open popup on page load
+    checkUrlForProduct();
+  }
+  
+  /**
+   * Check URL for product slug and open popup if found
+   */
+  async function checkUrlForProduct() {
+    // Don't check if popup is already open
+    if (isOpen || popupElement) return;
+    
+    const url = new URL(window.location.href);
+    const pathname = url.pathname;
+    
+    // Check for /cat/{category}/product/{slug}/ pattern
+    const catProductMatch = pathname.match(/^\/cat\/([^\/]+)\/product\/([^\/]+)\/?$/);
+    if (catProductMatch) {
+      const categorySlug = catProductMatch[1];
+      const productSlug = catProductMatch[2];
+      
+      // Get product ID from slug
+      try {
+        const apiUrl = window.location.origin + '/wp-json/wp/v2/product?slug=' + encodeURIComponent(productSlug);
+        const response = await fetch(apiUrl);
+        if (response.ok) {
+          const products = await response.json();
+          if (products.length) {
+            const productId = products[0].id;
+            
+            // Update URL to category only (for SEO - stay in category context)
+            const categoryUrl = window.location.origin + '/cat/' + categorySlug + '/';
+            history.replaceState({category: categorySlug}, '', categoryUrl);
+            
+            // Open popup after a short delay to ensure page is loaded
+            setTimeout(() => {
+              openPopup(productId);
+            }, 100);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not resolve product slug from URL:', err);
+      }
+      return;
+    }
+    
+    // Check for standard WooCommerce product URL: /product/{slug}/
+    const productMatch = pathname.match(/^\/product\/([^\/]+)\/?$/);
+    if (productMatch) {
+      const productSlug = productMatch[1];
+      
+      // Get product ID from slug
+      try {
+        const apiUrl = window.location.origin + '/wp-json/wp/v2/product?slug=' + encodeURIComponent(productSlug);
+        const response = await fetch(apiUrl);
+        if (response.ok) {
+          const products = await response.json();
+          if (products.length) {
+            const productId = products[0].id;
+            const product = products[0];
+            
+            // Try to get category from product
+            let categorySlug = null;
+            if (product.product_cat && product.product_cat.length > 0) {
+              // Get category slug from REST API response
+              const catId = product.product_cat[0];
+              const catResponse = await fetch(window.location.origin + '/wp-json/wp/v2/product_cat/' + catId);
+              if (catResponse.ok) {
+                const cat = await catResponse.json();
+                categorySlug = cat.slug;
+              }
+            }
+            
+            // Update URL to category if available, otherwise stay on home
+            if (categorySlug) {
+              const categoryUrl = window.location.origin + '/cat/' + categorySlug + '/';
+              history.replaceState({category: categorySlug}, '', categoryUrl);
+            } else {
+              // Fallback to home page
+              const homeUrl = window.location.origin + '/';
+              history.replaceState({}, '', homeUrl);
+            }
+            
+            // Open popup after a short delay to ensure page is loaded
+            setTimeout(() => {
+              openPopup(productId);
+            }, 100);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not resolve product slug from URL:', err);
+      }
+      return;
+    }
   }
 
   /**
@@ -155,15 +249,21 @@
     
     // Get product ID (handle slugs)
     let id = parseInt(productId);
+    let productSlug = null;
+    
     if (isNaN(id)) {
       // Try to get ID from slug via REST API
       try {
+        productSlug = productId;
         const apiUrl = window.location.origin + '/wp-json/wp/v2/product?slug=' + encodeURIComponent(productId);
         const response = await fetch(apiUrl);
         if (response.ok) {
           const products = await response.json();
-          if (products.length) id = products[0].id;
-          else {
+          if (products.length) {
+            id = products[0].id;
+            // Get product slug from response if not already set
+            if (!productSlug) productSlug = products[0].slug;
+          } else {
             console.warn('Product not found:', productId);
             return;
           }
@@ -175,6 +275,55 @@
         console.warn('Could not resolve product slug:', err);
         return;
       }
+    } else {
+      // If we have ID, get slug from product link
+      const productLink = productEl?.querySelector('a.woocommerce-loop-product__link, a[href*="/product/"]');
+      if (productLink) {
+        const hrefMatch = productLink.href.match(/\/product\/([^\/]+)/);
+        if (hrefMatch) productSlug = hrefMatch[1];
+      }
+    }
+    
+    // Get current category from URL or try to get from product
+    let categorySlug = null;
+    const url = new URL(window.location.href);
+    const pathname = url.pathname;
+    
+    // Check if we're in a category page
+    const catMatch = pathname.match(/^\/cat\/([^\/]+)/);
+    if (catMatch) {
+      categorySlug = catMatch[1];
+    } else {
+      // Try to get category from product element or REST API
+      if (id && !isNaN(id)) {
+        try {
+          const apiUrl = window.location.origin + '/wp-json/wp/v2/product/' + id;
+          const response = await fetch(apiUrl);
+          if (response.ok) {
+            const product = await response.json();
+            if (product.product_cat && product.product_cat.length > 0) {
+              const catId = product.product_cat[0];
+              const catResponse = await fetch(window.location.origin + '/wp-json/wp/v2/product_cat/' + catId);
+              if (catResponse.ok) {
+                const cat = await catResponse.json();
+                categorySlug = cat.slug;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Could not get product category:', err);
+        }
+      }
+    }
+    
+    // Update URL to /cat/{category}/product/{slug}/ if we have both
+    if (categorySlug && productSlug) {
+      const newUrl = window.location.origin + '/cat/' + categorySlug + '/product/' + productSlug + '/';
+      history.pushState({category: categorySlug, product: productSlug}, '', newUrl);
+    } else if (productSlug) {
+      // Fallback: just update to product URL if no category
+      const newUrl = window.location.origin + '/product/' + productSlug + '/';
+      history.pushState({product: productSlug}, '', newUrl);
     }
     
     await openPopup(id, triggerElement);
@@ -1193,6 +1342,23 @@
         isOpen = false;
       }
     }, 300);
+    
+    // Ensure URL is clean (no product slug) after closing
+    const url = new URL(window.location.href);
+    const pathname = url.pathname;
+    
+    // If URL still contains product, clean it up
+    if (pathname.match(/\/product\//)) {
+      // Try to get category from current URL or default to home
+      const catMatch = pathname.match(/^\/cat\/([^\/]+)\//);
+      if (catMatch) {
+        const categoryUrl = window.location.origin + '/cat/' + catMatch[1] + '/';
+        history.replaceState({category: catMatch[1]}, '', categoryUrl);
+      } else {
+        const homeUrl = window.location.origin + '/';
+        history.replaceState({}, '', homeUrl);
+      }
+    }
   }
 
   // Initialize on DOM ready

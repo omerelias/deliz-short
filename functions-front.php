@@ -1019,9 +1019,10 @@ JS;
 }
 
 
-// מאפשר לקרוא get_query_var('mp_cat')
+// מאפשר לקרוא get_query_var('mp_cat') ו-get_query_var('mp_product')
 add_filter('query_vars', function ($vars) {
   $vars[] = 'mp_cat';
+  $vars[] = 'mp_product';
   return $vars;
 });
 
@@ -1036,6 +1037,12 @@ add_action('init', function () {
       'index.php?page_id=' . $front_id . '&mp_cat=$matches[1]',
       'top'
     );
+    // /cat/{category}/product/{product-slug}/
+    add_rewrite_rule(
+      '^cat/([^/]+)/product/([^/]+)/?$',
+      'index.php?page_id=' . $front_id . '&mp_cat=$matches[1]&mp_product=$matches[2]',
+      'top'
+    );
   } else {
     // אם הבית הוא "הפוסטים האחרונים" – עדיין נמנע 404 ונשתמש ב-home
     add_rewrite_rule(
@@ -1043,10 +1050,16 @@ add_action('init', function () {
       'index.php?mp_cat=$matches[1]',
       'top'
     );
+    // /cat/{category}/product/{product-slug}/
+    add_rewrite_rule(
+      '^cat/([^/]+)/product/([^/]+)/?$',
+      'index.php?mp_cat=$matches[1]&mp_product=$matches[2]',
+      'top'
+    );
   }
 }, 20);
 
-// לא מאפשר 404 על /cat/{slug} (גם אם slug לא קיים)
+// לא מאפשר 404 על /cat/{slug} או /cat/{category}/product/{slug} (גם אם slug לא קיים)
 add_action('template_redirect', function () {
   if (!get_query_var('mp_cat')) return;
 
@@ -1057,16 +1070,16 @@ add_action('template_redirect', function () {
   }
 });
 
-// מונע מ-WordPress להפוך /cat/slug/ ל- / (redirect canonical)
+// מונע מ-WordPress להפוך /cat/slug/ או /cat/{category}/product/{slug}/ ל- / (redirect canonical)
 add_filter('redirect_canonical', function ($redirect_url, $requested_url) {
-  // אם ה-rewrite שלנו זיהה קטגוריה
-  if (get_query_var('mp_cat')) {
+  // אם ה-rewrite שלנו זיהה קטגוריה או מוצר
+  if (get_query_var('mp_cat') || get_query_var('mp_product')) {
     return false;
   }
 
   // גם אם עוד לא הוזן query_var מסיבה כלשהי - בדיקה לפי path
   $path = parse_url($requested_url, PHP_URL_PATH) ?: '';
-  if (preg_match('#^/cat/[^/]+/?$#', $path)) {
+  if (preg_match('#^/cat/[^/]+(/product/[^/]+)?/?$#', $path)) {
     return false;
   }
 
