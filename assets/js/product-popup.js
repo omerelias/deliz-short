@@ -12,7 +12,7 @@
 
   /**
    * Initialize popup 
-   */
+   */ 
   function init() { 
     // Listen for product clicks 
     document.addEventListener('click', handleProductClick);
@@ -652,18 +652,31 @@
       btn.addEventListener('click', function() {
         const action = this.dataset.action;
         const input = this.closest('.ed-product-popup__quantity-input').querySelector('input');
-        const step = parseFloat(this.dataset.step) || 1;
         const min = parseFloat(input.min) || 1;
         let value = parseFloat(input.value) || min;
+        
+        // Check if this is a weight input (has step attribute on input, not button)
+        const isWeightInput = input.id === 'popup-quantity-weight';
+        
+        // For weight inputs, always use step of 1 (as per user requirement)
+        // For other inputs, use the step from data attribute or default to 1
+        let step = 1;
+        if (!isWeightInput) {
+          step = parseFloat(this.dataset.step) || 1;
+        }
         
         if (action === 'increase') {
           value += step;
         } else if (action === 'decrease' && value > min) {
           value -= step;
+          // Ensure value doesn't go below minimum
+          if (value < min) {
+            value = min;
+          }
         }
         
-        // Round to step precision
-        const decimals = step.toString().split('.')[1]?.length || 0;
+        // Round to step precision (for weight, step is 1, so round to 1 decimal)
+        const decimals = isWeightInput ? 1 : (step.toString().split('.')[1]?.length || 0);
         value = parseFloat(value.toFixed(decimals));
         
         input.value = value;
