@@ -5,7 +5,7 @@
 
 (function() {
   'use strict';
- 
+
   let popupData = null; 
   let popupElement = null;  
   let isOpen = false;
