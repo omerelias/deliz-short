@@ -70,7 +70,6 @@ $options = $product_data['options'] ?? [];
 
         <!-- Product Options -->
         <div class="ed-product-popup__options">
-          <h3 class="ed-product-popup__options-title">הגדרות מוצר</h3>
 
           <!-- Unit Weight Selection (if variable) -->
           <?php if ($ocwsu['weighable'] && $ocwsu['sold_by_units'] && $ocwsu['unit_weight_type'] === 'variable' && !empty($ocwsu['unit_weight_options'])): ?>

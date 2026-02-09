@@ -101,6 +101,13 @@ $cart = WC()->cart;
     </div>
 
     <footer class="ed-float-cart__footer">
+
+      <?php
+      if ( class_exists('Oc_Woo_Shipping_Public') && is_callable(['Oc_Woo_Shipping_Public', 'show_chip_in_cart']) ) {
+          Oc_Woo_Shipping_Public::show_chip_in_cart();
+      }
+      ?>  
+
       <?php if ( $cart && ! $cart->is_empty() ) : ?>
         <div class="ed-float-cart__totals">
           <div class="ed-float-cart__row">

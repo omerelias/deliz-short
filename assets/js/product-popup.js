@@ -4,17 +4,17 @@
  */
 
 (function() {
-  'use strict'; 
+  'use strict';
 
-  let popupData = null;
-  let popupElement = null;
+  let popupData = null; 
+  let popupElement = null;  
   let isOpen = false;
 
   /**
    * Initialize popup 
    */
-  function init() {
-    // Listen for product clicks
+  function init() { 
+    // Listen for product clicks 
     document.addEventListener('click', handleProductClick);
     
     // Listen for close button clicks
@@ -31,87 +31,239 @@
     
     // Listen for attribute/variation changes
     document.addEventListener('change', handleAttributeChange);
+    
+    // Check if URL contains product slug - open popup on page load
+    checkUrlForProduct();
+  }
+  
+  /**
+   * Check URL for product slug and open popup if found
+   */
+  async function checkUrlForProduct() {
+    // Don't check if popup is already open
+    if (isOpen || popupElement) return;
+    
+    const url = new URL(window.location.href);
+    const pathname = url.pathname;
+    
+    // Check for /cat/{category}/product/{slug}/ pattern
+    const catProductMatch = pathname.match(/^\/cat\/([^\/]+)\/product\/([^\/]+)\/?$/);
+    if (catProductMatch) {
+      const categorySlug = catProductMatch[1];
+      const productSlug = catProductMatch[2];
+      
+      // Get product ID from slug
+      try {
+        const apiUrl = window.location.origin + '/wp-json/wp/v2/product?slug=' + encodeURIComponent(productSlug);
+        const response = await fetch(apiUrl);
+        if (response.ok) {
+          const products = await response.json();
+          if (products.length) {
+            const productId = products[0].id;
+            
+            // Update URL to category only (for SEO - stay in category context)
+            const categoryUrl = window.location.origin + '/cat/' + categorySlug + '/';
+            history.replaceState({category: categorySlug}, '', categoryUrl);
+            
+            // Open popup after a short delay to ensure page is loaded
+            setTimeout(() => {
+              openPopup(productId);
+            }, 100);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not resolve product slug from URL:', err);
+      }
+      return;
+    }
+    
+    // Check for standard WooCommerce product URL: /product/{slug}/
+    const productMatch = pathname.match(/^\/product\/([^\/]+)\/?$/);
+    if (productMatch) {
+      const productSlug = productMatch[1];
+      
+      // Get product ID from slug
+      try {
+        const apiUrl = window.location.origin + '/wp-json/wp/v2/product?slug=' + encodeURIComponent(productSlug);
+        const response = await fetch(apiUrl);
+        if (response.ok) {
+          const products = await response.json();
+          if (products.length) {
+            const productId = products[0].id;
+            const product = products[0];
+            
+            // Try to get category from product
+            let categorySlug = null;
+            if (product.product_cat && product.product_cat.length > 0) {
+              // Get category slug from REST API response
+              const catId = product.product_cat[0];
+              const catResponse = await fetch(window.location.origin + '/wp-json/wp/v2/product_cat/' + catId);
+              if (catResponse.ok) {
+                const cat = await catResponse.json();
+                categorySlug = cat.slug;
+              }
+            }
+            
+            // Update URL to category if available, otherwise stay on home
+            if (categorySlug) {
+              const categoryUrl = window.location.origin + '/cat/' + categorySlug + '/';
+              history.replaceState({category: categorySlug}, '', categoryUrl);
+            } else {
+              // Fallback to home page
+              const homeUrl = window.location.origin + '/';
+              history.replaceState({}, '', homeUrl);
+            }
+            
+            // Open popup after a short delay to ensure page is loaded
+            setTimeout(() => {
+              openPopup(productId);
+            }, 100);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not resolve product slug from URL:', err);
+      }
+      return;
+    }
   }
 
   /**
    * Handle product click - open popup
    */
   async function handleProductClick(e) {
-    // Check for add to cart button first
+    // Ignore clicks on popup itself
+    if (e.target.closest('#ed-product-popup')) return;
+    
+    // Ignore clicks on elements that shouldn't open popup
+    const ignoredSelectors = [
+      '.ed-product-popup__close',
+      '.ed-product-popup__overlay',
+      '.ed-product-popup',
+      'a[href^="#"]',
+      'button[type="submit"]',
+      '.skip-link'
+    ];
+    
+    for (const selector of ignoredSelectors) {
+      if (e.target.closest(selector)) return;
+    }
+    
+    // Check for add to cart button first (should open popup, not add directly)
     const addToCartBtn = e.target.closest('a.add_to_cart_button, button.add_to_cart_button, .add_to_cart_button');
     let productId = null;
     let triggerElement = null;
     
+    // Find the product element (prioritize li.product)
+    let productEl = null;
+    
+    // Check if clicked on out of stock product BEFORE processing
+    const clickedEl = e.target;
+    const potentialProductEl = clickedEl.closest('li.product, .product, .woocommerce-loop-product, .woocommerce-loop-product__link');
+    if (potentialProductEl) {
+      // Check if product has out-of-stock indicators
+      if (potentialProductEl.classList.contains('outofstock') || 
+          potentialProductEl.classList.contains('product-out-of-stock') ||
+          potentialProductEl.querySelector('.outofstock') ||
+          potentialProductEl.querySelector('.stock.out-of-stock') ||
+          potentialProductEl.querySelector('[class*="out-of-stock"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+    
     if (addToCartBtn) {
-      // Get product ID from button
-      productId = addToCartBtn.dataset.productId || 
-                  addToCartBtn.dataset.product_id ||
-                  addToCartBtn.getAttribute('data-product_id') ||
-                  addToCartBtn.href?.match(/add-to-cart=(\d+)/)?.[1];
+      // Get product element from button
+      productEl = addToCartBtn.closest('li.product, .product, .woocommerce-loop-product__link');
+      triggerElement = addToCartBtn;
+    } else {
+      // Check if clicked directly on li.product (highest priority)
+      const clickedEl = e.target;
       
-      // Also check parent product element
-      if (!productId) {
-        const productEl = addToCartBtn.closest('.product, .woocommerce-loop-product__link, li.product');
-        if (productEl) {
-          productId = productEl.dataset.productId || 
-                     productEl.getAttribute('data-product_id') ||
-                     productEl.id?.match(/product-(\d+)/)?.[1];
+      // First check if clicked on li.product itself
+      if (clickedEl.closest && clickedEl.closest('li.product')) {
+        productEl = clickedEl.closest('li.product');
+        triggerElement = productEl;
+      } else {
+        // Fallback to other product selectors
+        productEl = clickedEl.closest('.product, li.product, .woocommerce-loop-product, .woocommerce-loop-product__link');
+        triggerElement = productEl;
+      }
+    }
+    
+    if (!productEl) return;
+    
+    // Get product ID from various sources
+    productId = productEl.dataset.productId || 
+               productEl.dataset.product_id ||
+               productEl.getAttribute('data-product_id') ||
+               productEl.getAttribute('data-product-id') ||
+               productEl.id?.match(/product-(\d+)/)?.[1];
+    
+    // Try to get from link inside product
+    if (!productId) {
+      const link = productEl.querySelector('a.woocommerce-loop-product__link, a[href*="/product/"]');
+      if (link) {
+        // Try product_id in URL
+        const productIdMatch = link.href.match(/[?&]product_id=(\d+)/);
+        if (productIdMatch) {
+          productId = productIdMatch[1];
+        } else {
+          // Try slug in URL
+          const slugMatch = link.href.match(/\/product\/([^\/\?]+)/);
+          if (slugMatch) {
+            productId = slugMatch[1];
+          }
         }
       }
-      
-      triggerElement = addToCartBtn;
-      e.preventDefault();
-      e.stopPropagation();
-    } else {
-      // Check if clicked on product image, title, or any product element
-      const clickedEl = e.target;
-      const productEl = clickedEl.closest('.product, li.product, .woocommerce-loop-product, .woocommerce-loop-product__link');
-      
-      if (productEl) {
-        // Get product ID from various sources
-        productId = productEl.dataset.productId || 
-                   productEl.getAttribute('data-product_id') ||
-                   productEl.id?.match(/product-(\d+)/)?.[1];
-        
-        // Try to get from link inside product
-        if (!productId) {
-          const link = productEl.querySelector('a.woocommerce-loop-product__link, a[href*="/product/"]');
-          if (link) {
-            const match = link.href.match(/\/product\/([^\/]+)/);
-            if (match) productId = match[1];
-          }
-        }
-        
-        // Try to get from product image data attribute
-        if (!productId) {
-          const img = productEl.querySelector('img');
-          if (img && img.dataset.productId) {
-            productId = img.dataset.productId;
-          }
-        }
-        
-        // Only prevent default if we found a product ID
-        if (productId) {
-          e.preventDefault();
-          e.stopPropagation();
-          triggerElement = productEl;
-        }
+    }
+    
+    // Try to get from product image data attribute
+    if (!productId) {
+      const img = productEl.querySelector('img');
+      if (img) {
+        productId = img.dataset.productId || 
+                   img.dataset.product_id ||
+                   img.getAttribute('data-product-id') ||
+                   img.getAttribute('data-product_id');
+      }
+    }
+    
+    // Try to get from add to cart button inside product
+    if (!productId) {
+      const btn = productEl.querySelector('a.add_to_cart_button, button.add_to_cart_button');
+      if (btn) {
+        productId = btn.dataset.productId || 
+                   btn.dataset.product_id ||
+                   btn.getAttribute('data-product_id') ||
+                   btn.getAttribute('data-product-id') ||
+                   btn.href?.match(/add-to-cart=(\d+)/)?.[1];
       }
     }
     
     if (!productId) return;
     
+    // Prevent default navigation/action
+    e.preventDefault();
+    e.stopPropagation();
+    
     // Get product ID (handle slugs)
     let id = parseInt(productId);
+    let productSlug = null;
+    
     if (isNaN(id)) {
       // Try to get ID from slug via REST API
       try {
+        productSlug = productId;
         const apiUrl = window.location.origin + '/wp-json/wp/v2/product?slug=' + encodeURIComponent(productId);
         const response = await fetch(apiUrl);
         if (response.ok) {
           const products = await response.json();
-          if (products.length) id = products[0].id;
-          else {
+          if (products.length) {
+            id = products[0].id;
+            // Get product slug from response if not already set
+            if (!productSlug) productSlug = products[0].slug;
+          } else {
             console.warn('Product not found:', productId);
             return;
           }
@@ -123,6 +275,55 @@
         console.warn('Could not resolve product slug:', err);
         return;
       }
+    } else {
+      // If we have ID, get slug from product link
+      const productLink = productEl?.querySelector('a.woocommerce-loop-product__link, a[href*="/product/"]');
+      if (productLink) {
+        const hrefMatch = productLink.href.match(/\/product\/([^\/]+)/);
+        if (hrefMatch) productSlug = hrefMatch[1];
+      }
+    }
+    
+    // Get current category from URL or try to get from product
+    let categorySlug = null;
+    const url = new URL(window.location.href);
+    const pathname = url.pathname;
+    
+    // Check if we're in a category page
+    const catMatch = pathname.match(/^\/cat\/([^\/]+)/);
+    if (catMatch) {
+      categorySlug = catMatch[1];
+    } else {
+      // Try to get category from product element or REST API
+      if (id && !isNaN(id)) {
+        try {
+          const apiUrl = window.location.origin + '/wp-json/wp/v2/product/' + id;
+          const response = await fetch(apiUrl);
+          if (response.ok) {
+            const product = await response.json();
+            if (product.product_cat && product.product_cat.length > 0) {
+              const catId = product.product_cat[0];
+              const catResponse = await fetch(window.location.origin + '/wp-json/wp/v2/product_cat/' + catId);
+              if (catResponse.ok) {
+                const cat = await catResponse.json();
+                categorySlug = cat.slug;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Could not get product category:', err);
+        }
+      }
+    }
+    
+    // Update URL to /cat/{category}/product/{slug}/ if we have both
+    if (categorySlug && productSlug) {
+      const newUrl = window.location.origin + '/cat/' + categorySlug + '/product/' + productSlug + '/';
+      history.pushState({category: categorySlug, product: productSlug}, '', newUrl);
+    } else if (productSlug) {
+      // Fallback: just update to product URL if no category
+      const newUrl = window.location.origin + '/product/' + productSlug + '/';
+      history.pushState({product: productSlug}, '', newUrl);
     }
     
     await openPopup(id, triggerElement);
@@ -137,6 +338,18 @@
       if (!response.ok) throw new Error('Failed to load product');
       
       popupData = await response.json();
+      
+      // Debug: log popup data to check ocwsu.weighable
+      console.log('Popup Data:', popupData);
+      console.log('ocwsu.weighable:', popupData.ocwsu?.weighable);
+      
+      // Check if product is in stock - if not, show error and don't open popup
+      if (!popupData.in_stock) {
+        const productName = popupData.name || 'המוצר';
+        const errorMessage = `לא ניתן להוסיף את "${productName}" לסל הקניות - המוצר אזל מהמלאי.`;
+        alert(errorMessage);
+        return;
+      }
       
       // Create popup HTML
       const popupHTML = await fetchPopupHTML(popupData);
@@ -154,7 +367,11 @@
       
       // Initialize variation selection if variable product
       if (popupData.type === 'variable' && popupData.attributes.length > 0) {
-        updateVariationSelection();
+        // Trigger updateVariationSelection after a short delay to ensure DOM is ready
+        setTimeout(() => {
+          updateVariationSelection();
+          validateAddToCartButton();
+        }, 50);
       }
       
       // Show popup
@@ -260,7 +477,7 @@
     }
     
     // Build options HTML
-    let optionsHTML = '<div class="ed-product-popup__options"><h3 class="ed-product-popup__options-title">הגדרות מוצר</h3>';
+    let optionsHTML = '<div class="ed-product-popup__options">';
     
     // Unit weight selection (if variable)
     if (ocwsu.weighable && ocwsu.sold_by_units && ocwsu.unit_weight_type === 'variable' && ocwsu.unit_weight_options?.length) {
@@ -277,11 +494,14 @@
     if (attributes && attributes.length > 0) {
       attributes.forEach(attr => {
         if (!attr || !attr.options || attr.options.length === 0) return;
-        optionsHTML += `<div class="ed-product-popup__option-group"><label class="ed-product-popup__option-label">${attr.label || attr.name}</label><div class="ed-product-popup__radio-group" data-attribute="${attr.name}">`;
+        // Use the full attribute name (including pa_ prefix if exists)
+        const attrName = attr.name; // This already includes pa_ if it's a taxonomy
+        optionsHTML += `<div class="ed-product-popup__option-group"><label class="ed-product-popup__option-label">${attr.label || attr.name}</label><div class="ed-product-popup__radio-group" data-attribute="${attrName}">`;
         attr.options.forEach((option, idx) => {
           const optionSlug = option.slug || sanitizeTitle(option.name || option);
           const optionName = option.name || option;
-          optionsHTML += `<label class="ed-product-popup__radio"><input type="radio" name="attribute_${attr.name}" value="${optionSlug}" ${idx === 0 ? 'checked' : ''}><span class="ed-product-popup__radio-label">${optionName}</span></label>`;
+          // Use full attribute name in input name (attribute_pa_xxx or attribute_xxx)
+          optionsHTML += `<label class="ed-product-popup__radio"><input type="radio" name="attribute_${attrName}" value="${optionSlug}" ${idx === 0 ? 'checked' : ''}><span class="ed-product-popup__radio-label">${optionName}</span></label>`;
         });
         optionsHTML += '</div></div>';
       });
@@ -289,13 +509,13 @@
     
     optionsHTML += '<div class="ed-product-popup__error" id="popup-option-error" style="display: none;">נא לבחור אפשרות</div></div>';
     
-    // Note textarea (only if weighable)
-    const noteHTML = ocwsu.weighable ? `
+    // Note textarea - always show (as per user request)
+    const noteHTML = `
       <div class="ed-product-popup__note">
-        <label for="popup-product-note">הערה למוצר השקיל</label>
+        <label for="popup-product-note">הערות לקצב</label>
         <textarea id="popup-product-note" name="product_note" rows="2" placeholder="הערות לקצב"></textarea>
       </div>
-    ` : '';
+    `;
     
     return `
       <div class="ed-product-popup" id="ed-product-popup" role="dialog" aria-modal="true">
@@ -322,8 +542,8 @@
             <div class="ed-product-popup__footer">
               <div class="ed-product-popup__quantity" id="popup-quantity-container">${quantityHTML}</div>
               ${noteHTML}
-              <button type="button" class="ed-product-popup__add-btn" id="popup-add-to-cart" data-product-id="${data.id}" ${isVariable && attributes.length > 0 ? 'disabled' : ''}>
-                <span class="ed-product-popup__add-btn-text">הוסף לסל</span>
+              <button type="button" class="ed-product-popup__add-btn" id="popup-add-to-cart" data-product-id="${data.id}" ${!data.in_stock ? 'disabled' : (isVariable && attributes.length > 0 ? 'disabled' : '')}>
+                <span class="ed-product-popup__add-btn-text">${!data.in_stock ? 'אזל מהמלאי' : 'הוסף לסל'}</span>
               </button>
             </div>
           </div>
@@ -399,20 +619,112 @@
   function updateVariationSelection() {
     if (!popupElement || !popupData || popupData.type !== 'variable') return;
     
+    console.group('🔍 [DEBUG] updateVariationSelection');
+    console.log('popupData:', popupData);
+    console.log('popupData.attributes:', popupData.attributes);
+    console.log('popupData.variations:', popupData.variations);
+    
+    // Build selected attributes object
+    // Key format: attr.name (e.g., 'pa_color' or 'custom_attr') - WITHOUT 'attribute_' prefix
+    // This matches the format in variation.attributes from PHP
     const selectedAttributes = {};
-    popupElement.querySelectorAll('input[name^="attribute_"]:checked').forEach(radio => {
+    const checkedInputs = popupElement.querySelectorAll('input[name^="attribute_"]:checked');
+    console.log('Checked inputs:', checkedInputs);
+    
+    checkedInputs.forEach(radio => {
+      // Remove 'attribute_' prefix to match variation.attributes format
       const attrName = radio.name.replace('attribute_', '');
       selectedAttributes[attrName] = radio.value;
+      console.log(`Selected: ${radio.name} = ${radio.value} (key: ${attrName})`);
     });
     
+    console.log('selectedAttributes:', selectedAttributes);
+    
+    // Check if all required attributes are selected
+    const allAttributesSelected = popupData.attributes.every(attr => {
+      const found = popupElement.querySelector(`input[name="attribute_${attr.name}"]:checked`);
+      console.log(`Checking attribute ${attr.name}:`, found ? 'SELECTED' : 'NOT SELECTED');
+      return found;
+    });
+    
+    console.log('allAttributesSelected:', allAttributesSelected);
+    
+    if (!allAttributesSelected) {
+      // Not all attributes selected yet
+      console.log('❌ Not all attributes selected');
+      popupElement.dataset.variationId = '';
+      console.groupEnd();
+      return;
+    }
+    
     // Find matching variation
+    // IMPORTANT: PHP removes 'pa_' prefix from variation attributes keys
+    // So if attr.name is 'pa_צורת-חיתוך', variation.attributes key is 'צורת-חיתוך'
+    console.log('🔍 Searching for matching variation...');
     const matchingVariation = popupData.variations.find(variation => {
-      return Object.keys(selectedAttributes).every(attrName => {
-        return variation.attributes[attrName] === selectedAttributes[attrName];
+      console.log(`Checking variation ${variation.id}:`, variation.attributes);
+      console.log(`  Variation attributes keys:`, Object.keys(variation.attributes));
+      console.log(`  Variation attributes entries:`, Object.entries(variation.attributes));
+      
+      // Check if variation has all selected attributes
+      const matches = popupData.attributes.every(attr => {
+        const attrName = attr.name; // e.g., 'pa_צורת-חיתוך' or 'custom_attr'
+        
+        // PHP removes 'pa_' prefix, so we need to check both with and without it
+        // Try with pa_ prefix first (if it exists)
+        let variationKey = attrName;
+        if (attrName.startsWith('pa_')) {
+          // Remove 'pa_' prefix to match PHP format
+          variationKey = attrName.replace(/^pa_/, '');
+        }
+        
+        const selectedValue = selectedAttributes[attrName];
+        
+        // Try to find the value in variation.attributes - check all possible keys
+        let variationValue = variation.attributes[variationKey];
+        
+        // If not found, try to find by iterating through all keys (in case of encoding issues)
+        if (variationValue === undefined) {
+          const allKeys = Object.keys(variation.attributes);
+          console.log(`    Trying to find matching key. Available keys:`, allKeys);
+          
+          // Try exact match first
+          for (const key of allKeys) {
+            if (key === variationKey || decodeURIComponent(key) === variationKey || key === decodeURIComponent(variationKey)) {
+              variationValue = variation.attributes[key];
+              console.log(`    Found match with key: ${key}`);
+              break;
+            }
+          }
+          
+          // If still not found, try to match by checking if any key contains the attribute name
+          if (variationValue === undefined && allKeys.length === 1) {
+            // If there's only one key, use it
+            const singleKey = allKeys[0];
+            variationValue = variation.attributes[singleKey];
+            console.log(`    Using single key: ${singleKey}`);
+          }
+        }
+        
+        console.log(`  Attribute ${attrName}:`);
+        console.log(`    selectedValue: ${selectedValue}`);
+        console.log(`    variationKey (tried): ${variationKey}`);
+        console.log(`    variationValue: ${variationValue}`);
+        console.log(`    match: ${selectedValue === variationValue}`);
+        
+        if (!selectedValue) return false;
+        
+        // variation.attributes uses key WITHOUT 'pa_' prefix (PHP removes it)
+        return variationValue === selectedValue;
       });
+      
+      console.log(`  Variation ${variation.id} matches:`, matches);
+      return matches;
     });
     
     if (matchingVariation) {
+      console.log('✅ Found matching variation:', matchingVariation.id);
+      
       // Update price display
       const priceEl = popupElement.querySelector('.ed-product-popup__price-value');
       if (priceEl) {
@@ -421,6 +733,7 @@
       
       // Store variation ID
       popupElement.dataset.variationId = matchingVariation.id;
+      console.log('✅ Set variationId:', matchingVariation.id);
       
       // Update stock status
       if (!matchingVariation.in_stock) {
@@ -432,8 +745,15 @@
       }
     } else {
       // No matching variation found
+      console.log('❌ No matching variation found');
+      console.log('Available variations:', popupData.variations.map(v => ({
+        id: v.id,
+        attributes: v.attributes
+      })));
       popupElement.dataset.variationId = '';
     }
+    
+    console.groupEnd();
   }
 
   /**
@@ -476,6 +796,15 @@
     
     const addBtn = popupElement.querySelector('#popup-add-to-cart');
     if (!addBtn) return;
+    
+    // Check if product is in stock first
+    if (!popupData || !popupData.in_stock) {
+      addBtn.disabled = true;
+      addBtn.classList.add('is-disabled');
+      const btnText = addBtn.querySelector('.ed-product-popup__add-btn-text');
+      if (btnText) btnText.textContent = 'אזל מהמלאי';
+      return;
+    }
     
     // For variable products, check if all attributes are selected
     if (popupData && popupData.type === 'variable' && popupData.attributes.length > 0) {
@@ -559,65 +888,259 @@
       return;
     }
     
+    // Check stock before sending request
+    if (!popupData || !popupData.in_stock) {
+      const productName = popupData?.name || 'המוצר';
+      showPopupError(`לא ניתן להוסיף את "${productName}" לסל הקניות - המוצר אזל מהמלאי.`);
+      return;
+    }
+    
+    // For variable products, MUST have variation selected
+    if (popupData.type === 'variable') {
+      console.group('🔍 [DEBUG] handleAddToCart - Variable Product Check');
+      console.log('popupData.type:', popupData.type);
+      console.log('popupData.attributes:', popupData.attributes);
+      
+      const variationId = popupElement.dataset.variationId;
+      console.log('Current variationId:', variationId);
+      
+      // Check selected attributes
+      const selectedAttributes = popupElement.querySelectorAll('input[name^="attribute_"]:checked');
+      console.log('Selected attributes count:', selectedAttributes.length);
+      selectedAttributes.forEach(radio => {
+        console.log(`  ${radio.name} = ${radio.value}`);
+      });
+      
+      // Check if variation is selected
+      if (!variationId) {
+        console.log('⚠️ No variationId, trying to update...');
+        // Try to update variation selection one more time
+        updateVariationSelection();
+        const updatedVariationId = popupElement.dataset.variationId;
+        console.log('Updated variationId:', updatedVariationId);
+        
+        if (!updatedVariationId) {
+          console.error('❌ Still no variationId after update');
+          console.groupEnd();
+          showPopupError('נא לבחור את כל האפשרויות הנדרשות');
+          return;
+        }
+      }
+      
+      console.log('✅ Variation ID found:', variationId || popupElement.dataset.variationId);
+      console.groupEnd();
+      
+      // Check variation stock
+      if (variationId) {
+        const variation = popupData.variations.find(v => v.id == variationId);
+        if (variation && !variation.in_stock) {
+          const productName = popupData.name || 'המוצר';
+          showPopupError(`לא ניתן להוסיף את "${productName}" לסל הקניות - המוצר אזל מהמלאי.`);
+          return;
+        }
+      }
+    }
+    
     // Get form data
     const formData = new FormData();
     
     // Product ID or Variation ID
     const variationId = popupElement.dataset.variationId;
-    if (variationId && popupData.type === 'variable') {
+    if (popupData.type === 'variable') {
+      // For variable products, MUST send variation_id and attributes
+      if (!variationId) {
+        showPopupError('נא לבחור את כל האפשרויות הנדרשות');
+        return;
+      }
+      
       formData.append('variation_id', variationId);
       formData.append('product_id', popupData.id);
       
-      // Add selected attributes
-      popupElement.querySelectorAll('input[name^="attribute_"]:checked').forEach(radio => {
-        const attrName = radio.name.replace('attribute_', '');
-        const attrKey = attrName.startsWith('pa_') ? `attribute_${attrName}` : `attribute_${attrName}`;
-        formData.append(attrKey, radio.value);
+      // Add selected attributes (WooCommerce format: attribute_pa_xxx for taxonomy, attribute_xxx for custom)
+      const selectedAttributes = popupElement.querySelectorAll('input[name^="attribute_"]:checked');
+      
+      if (selectedAttributes.length === 0) {
+        showPopupError('נא לבחור את כל האפשרויות הנדרשות');
+        return;
+      }
+      
+      selectedAttributes.forEach(radio => {
+        // The name is already in format "attribute_pa_xxx" or "attribute_xxx" from the HTML
+        // WooCommerce expects exactly this format
+        formData.append(radio.name, radio.value);
       });
     } else {
+      // Simple product
       formData.append('product_id', popupData.id);
     }
     
-    // Quantity
+    // Add WooCommerce nonce if available (for security)
+    if (window.wc_add_to_cart_params?.wc_add_to_cart_nonce) {
+      formData.append('wc_add_to_cart_nonce', window.wc_add_to_cart_params.wc_add_to_cart_nonce);
+    }
+    
+    // Quantity - get the actual input value
     const qtyInput = popupElement.querySelector('#popup-quantity-units, #popup-quantity-weight, #popup-quantity');
     const quantity = qtyInput ? parseFloat(qtyInput.value) : 1;
     
-    // ocwsu fields
+    // ocwsu fields - update before using
     updateOcwsuHiddenFields();
-    formData.append('quantity', popupElement.dataset.quantityInKg || quantity);
+    
+    // For oc-woo-sale-units plugin, quantity should be in the base unit (kg for weighable products)
+    // But we need to check what the plugin expects
+    const ocwsu = popupData.ocwsu || {};
+    let quantityToSend = quantity;
+    
+    if (ocwsu.weighable && ocwsu.sold_by_units) {
+      // If sold by units, convert to kg for the plugin
+      const unitWeight = parseFloat(popupElement.dataset.ocwsuUnitWeight) || 0;
+      if (unitWeight > 0) {
+        quantityToSend = quantity * unitWeight;
+      }
+    } else if (ocwsu.weighable && ocwsu.sold_by_weight) {
+      // If sold by weight, use the weight value directly
+      quantityToSend = quantity;
+    }
+    
+    // Send quantity (WooCommerce expects this)
+    formData.append('quantity', quantityToSend);
+    
+    // ocwsu fields (for the plugin)
     formData.append('ocwsu_unit', popupElement.dataset.ocwsuUnit || 'unit');
     formData.append('ocwsu_unit_weight', popupElement.dataset.ocwsuUnitWeight || '0');
     formData.append('ocwsu_quantity_in_units', popupElement.dataset.ocwsuQuantityInUnits || '0');
     formData.append('ocwsu_quantity_in_weight_units', popupElement.dataset.ocwsuQuantityInWeightUnits || '0');
     
-    // Product note (only if weighable)
+    // Product note (always send if field exists and has value)
     const productNote = popupElement.querySelector('#popup-product-note');
     if (productNote && productNote.value.trim()) {
       formData.append('product_note', productNote.value.trim());
     }
+    
+    // Debug: Log all FormData entries
+    console.group('🔍 [DEBUG] Add to Cart Request');
+    console.log('📦 Product Data:', {
+      productId: popupData.id,
+      productType: popupData.type,
+      variationId: popupElement.dataset.variationId || 'none',
+      quantity: quantity,
+      ocwsu: {
+        unit: popupElement.dataset.ocwsuUnit,
+        unitWeight: popupElement.dataset.ocwsuUnitWeight,
+        quantityInUnits: popupElement.dataset.ocwsuQuantityInUnits,
+        quantityInWeightUnits: popupElement.dataset.ocwsuQuantityInWeightUnits,
+        quantityInKg: popupElement.dataset.quantityInKg
+      }
+    });
+    
+    // Log FormData entries
+    const formDataEntries = {};
+    for (const [key, value] of formData.entries()) {
+      formDataEntries[key] = value;
+    }
+    console.log('📋 FormData:', formDataEntries);
     
     // Add to cart via WooCommerce AJAX
     try {
       addBtn.disabled = true;
       addBtn.classList.add('is-loading');
       
-      // Use WooCommerce AJAX endpoint
-      const ajaxUrl = window.wc_add_to_cart_params?.wc_ajax_url?.toString().replace('%%endpoint%%', 'add_to_cart') || 
-                     window.ED_POPUP_CONFIG?.addToCartUrl || 
+      // Use our custom endpoint for debugging (or fallback to WooCommerce)
+      const ajaxUrl = window.ED_POPUP_CONFIG?.addToCartUrl || 
+                     window.wc_add_to_cart_params?.wc_ajax_url?.toString().replace('%%endpoint%%', 'add_to_cart') || 
                      '/?wc-ajax=add_to_cart';
+      
+      console.log('🌐 AJAX URL:', ajaxUrl);
+      console.log('🔧 Available URLs:', {
+        ED_POPUP_CONFIG: window.ED_POPUP_CONFIG?.addToCartUrl,
+        wc_add_to_cart_params: window.wc_add_to_cart_params?.wc_ajax_url,
+        fallback: '/?wc-ajax=add_to_cart'
+      });
+      
+      console.log('📤 Sending request...');
+      
+      // Convert FormData to JSON for REST API
+      const requestData = {};
+      for (const [key, value] of formData.entries()) {
+        requestData[key] = value;
+      }
       
       const response = await fetch(ajaxUrl, {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify(requestData),
         credentials: 'same-origin',
         headers: {
+          'Content-Type': 'application/json',
+          'X-WP-Nonce': window.ED_POPUP_CONFIG?.restNonce || '',
           'X-Requested-With': 'XMLHttpRequest'
         }
       });
       
-      if (!response.ok) throw new Error('Add to cart failed');
+      console.log('📥 Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      if (!response.ok) {
+        // Try to parse JSON error response
+        let errorData = null;
+        try {
+          const errorText = await response.text();
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          // Not JSON, use status text
+        }
+        
+        console.error('❌ Response Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData: errorData
+        });
+        
+        // Use errorMessage from response if available, otherwise use status
+        const errorMessage = errorData?.errorMessage || 
+                            (errorData?.notices && errorData.notices.length > 0 ? 
+                              errorData.notices.map(n => n.notice || n).join(' ') : 
+                              `שגיאה בהוספה לסל: ${response.status} ${response.statusText}`);
+        
+        showPopupError(errorMessage);
+        throw new Error(errorMessage);
+      }
       
       const result = await response.json();
+      console.log('✅ Result (Full):', JSON.stringify(result, null, 2));
+      
+      // Check for errors in result
+      if (result.error) {
+        // Our custom endpoint returns detailed error info
+        // ALWAYS use errorMessage from result, not status or other fields
+        const errorMessage = result.errorMessage || 
+                            (result.notices && result.notices.length > 0 ? 
+                              result.notices.map(n => (typeof n === 'string' ? n : (n.notice || ''))).filter(m => m).join(' ') : 
+                              (typeof result.error === 'string' ? result.error : 'שגיאה לא ידועה'));
+        
+        console.error('❌ Result Error Details:', {
+          error: result.error,
+          errorMessage: errorMessage,
+          debug: result.debug,
+          notices: result.notices,
+          exception: result.exception,
+          fullResult: result
+        });
+        
+        if (result.debug) {
+          console.error('🔍 Debug Info:', result.debug);
+        }
+        
+        // Show error in popup - ALWAYS use errorMessage from result
+        showPopupError(errorMessage);
+        
+        throw new Error(errorMessage);
+      }
+      
+      console.groupEnd();
       
       // Animate image to cart
       await animateImageToCart();
@@ -645,12 +1168,59 @@
       showQuantityBadge(popupData.id, displayQuantity);
       
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      alert('שגיאה בהוספה לסל. נסה שוב.');
+      console.groupEnd();
+      console.error('❌ [ERROR] Add to Cart Failed:', {
+        error: error,
+        message: error.message,
+        stack: error.stack
+      });
+      
+      // Show error in popup (if not already shown)
+      if (!popupElement.querySelector('.ed-product-popup__error-message')) {
+        showPopupError(error.message || 'שגיאה בהוספה לסל. נסה שוב.');
+      }
     } finally {
       addBtn.disabled = false;
       addBtn.classList.remove('is-loading');
     }
+  }
+  
+  /**
+   * Show error message in popup
+   */
+  function showPopupError(message) {
+    if (!popupElement) return;
+    
+    // Remove existing error messages
+    const existingErrors = popupElement.querySelectorAll('.ed-product-popup__error-message');
+    existingErrors.forEach(el => el.remove());
+    
+    // Create error message element
+    const errorEl = document.createElement('div');
+    errorEl.className = 'ed-product-popup__error-message';
+    errorEl.textContent = message;
+    
+    // Insert before add to cart button
+    const addBtn = popupElement.querySelector('#popup-add-to-cart');
+    if (addBtn && addBtn.parentElement) {
+      addBtn.parentElement.insertBefore(errorEl, addBtn);
+    } else {
+      // Fallback: insert in footer
+      const footer = popupElement.querySelector('.ed-product-popup__footer');
+      if (footer) {
+        footer.insertBefore(errorEl, footer.firstChild);
+      }
+    }
+    
+    // Scroll to error
+    errorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    // Remove error after 5 seconds
+    setTimeout(() => {
+      errorEl.style.opacity = '0';
+      errorEl.style.transition = 'opacity 0.3s';
+      setTimeout(() => errorEl.remove(), 300);
+    }, 5000);
   }
 
   /**
@@ -772,6 +1342,23 @@
         isOpen = false;
       }
     }, 300);
+    
+    // Ensure URL is clean (no product slug) after closing
+    const url = new URL(window.location.href);
+    const pathname = url.pathname;
+    
+    // If URL still contains product, clean it up
+    if (pathname.match(/\/product\//)) {
+      // Try to get category from current URL or default to home
+      const catMatch = pathname.match(/^\/cat\/([^\/]+)\//);
+      if (catMatch) {
+        const categoryUrl = window.location.origin + '/cat/' + catMatch[1] + '/';
+        history.replaceState({category: catMatch[1]}, '', categoryUrl);
+      } else {
+        const homeUrl = window.location.origin + '/';
+        history.replaceState({}, '', homeUrl);
+      }
+    }
   }
 
   // Initialize on DOM ready

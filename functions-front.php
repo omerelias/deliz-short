@@ -1,6 +1,6 @@
 <?php
 
-//Load Product Popup functionality
+// Load Product Popup functionality
 require_once get_template_directory() . '/includes/product-popup/class-product-popup.php';
 
 add_action('rest_api_init', function () {
@@ -1019,9 +1019,10 @@ JS;
 }
 
 
-// מאפשר לקרוא get_query_var('mp_cat')
+// מאפשר לקרוא get_query_var('mp_cat') ו-get_query_var('mp_product')
 add_filter('query_vars', function ($vars) {
   $vars[] = 'mp_cat';
+  $vars[] = 'mp_product';
   return $vars;
 });
 
@@ -1036,6 +1037,12 @@ add_action('init', function () {
       'index.php?page_id=' . $front_id . '&mp_cat=$matches[1]',
       'top'
     );
+    // /cat/{category}/product/{product-slug}/
+    add_rewrite_rule(
+      '^cat/([^/]+)/product/([^/]+)/?$',
+      'index.php?page_id=' . $front_id . '&mp_cat=$matches[1]&mp_product=$matches[2]',
+      'top'
+    );
   } else {
     // אם הבית הוא "הפוסטים האחרונים" – עדיין נמנע 404 ונשתמש ב-home
     add_rewrite_rule(
@@ -1043,10 +1050,16 @@ add_action('init', function () {
       'index.php?mp_cat=$matches[1]',
       'top'
     );
+    // /cat/{category}/product/{product-slug}/
+    add_rewrite_rule(
+      '^cat/([^/]+)/product/([^/]+)/?$',
+      'index.php?mp_cat=$matches[1]&mp_product=$matches[2]',
+      'top'
+    );
   }
 }, 20);
 
-// לא מאפשר 404 על /cat/{slug} (גם אם slug לא קיים)
+// לא מאפשר 404 על /cat/{slug} או /cat/{category}/product/{slug} (גם אם slug לא קיים)
 add_action('template_redirect', function () {
   if (!get_query_var('mp_cat')) return;
 
@@ -1057,16 +1070,16 @@ add_action('template_redirect', function () {
   }
 });
 
-// מונע מ-WordPress להפוך /cat/slug/ ל- / (redirect canonical)
+// מונע מ-WordPress להפוך /cat/slug/ או /cat/{category}/product/{slug}/ ל- / (redirect canonical)
 add_filter('redirect_canonical', function ($redirect_url, $requested_url) {
-  // אם ה-rewrite שלנו זיהה קטגוריה
-  if (get_query_var('mp_cat')) {
+  // אם ה-rewrite שלנו זיהה קטגוריה או מוצר
+  if (get_query_var('mp_cat') || get_query_var('mp_product')) {
     return false;
   }
 
   // גם אם עוד לא הוזן query_var מסיבה כלשהי - בדיקה לפי path
   $path = parse_url($requested_url, PHP_URL_PATH) ?: '';
-  if (preg_match('#^/cat/[^/]+/?$#', $path)) {
+  if (preg_match('#^/cat/[^/]+(/product/[^/]+)?/?$#', $path)) {
     return false;
   }
 
@@ -1349,4 +1362,156 @@ function print_menu_shortcode($atts, $content = null) {
 }
 add_shortcode('oc_menu', 'print_menu_shortcode');
 
-// Product Popup functionality is loaded from includes/product-popup/class-product-popup.php
+//chackout fields
+add_filter( 'woocommerce_checkout_fields', 'oc_theme_woo_add_checkout_fields', 200 );
+function oc_theme_woo_add_checkout_fields( $fields ){
+	// hide fields from billing form
+	$ar_hidden_billing_fields = array(
+		'billing_country',
+		'billing_company',
+		'billing_postcode',
+	);
+
+	// additional fields for shipping
+	$ar_shipping_fields = array(
+		'shipping_floor' 		=> __( 'Floor', 	 'oc-main-theme' ),
+		'shipping_apartment'	=> __( 'Appartment', 'oc-main-theme' ),		
+	);
+
+	// additional fields for billing
+	$ar_billing_fields = array(
+		'billing_floor' 		=> __( 'Floor', 	 'oc-main-theme' ),
+		'billing_apartment'		=> __( 'Appartment', 'oc-main-theme' ),	
+	);
+
+	$chosen_methods 	 = WC()->session->get( 'chosen_shipping_methods' );
+  	$chosen_shipping 	 = $chosen_methods[0];
+  	$local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pickup'));
+
+	$i 			= 0;
+	$priority 	= 70;
+	foreach ( $ar_billing_fields as $field_key => $field_val ){
+		$is_odd = $i % 2 == 0;
+		$class 	= ( $is_odd ) ? 'form-row-first' : 'form-row-last';
+		$args_field = array(
+			'required' 	=> 1,
+			'label' 	=> $field_val,
+			'class' 	=> array( $class ),
+			'priority'  => $priority
+		);
+		// add new fields
+		$fields['billing'][$field_key] = $args_field;
+		$i++;
+		$priority = $priority + 10;		
+	}
+
+	$i 			= 0;
+	$priority 	= 70;
+	foreach ( $ar_shipping_fields as $field_key => $field_val ){
+		$is_odd = $i % 2 == 0;
+		$class 	= ( $is_odd ) ? 'form-row-first' : 'form-row-last';
+		$args_field = array(
+			'required' 	=> 1,
+			'label' 	=> $field_val,
+			'class' 	=> array( $class ),
+			'priority'  => $priority
+		);
+
+		// $args = array_merge( $ar_default_args, $args_field );
+		// add new fields
+		$fields['shipping'][$field_key] = $args_field;
+		$i++;
+		$priority = $priority + 10;
+	}
+
+	// formatted( $ar_hidden_billing_fields, 'ar_hidden_billing_fields BEFORE !' );
+
+	// formatted( $ar_hidden_billing_fields, 'ar_hidden_billing_fields' );
+	// hide some fields as Country, postalcode , e.t.c.
+	foreach ( $ar_hidden_billing_fields as $field_name => $field_val ){
+		$fields['billing'][ $field_val ]['class'][] = 'field-hidden';
+	}
+
+	// Change fields classes and labels
+	$fields['billing']['billing_phone']['class'][] 		= 'form-row-first';	
+	$fields['billing']['billing_address_1']['class'][] 	= 'form-row-first';	
+	$fields['billing']['billing_email']['class'][] 		= 'form-row-last';
+	$fields['billing']['billing_address_2']['class'][] 	= 'form-row-last';
+	// $fields['billing']['billing_address_2']['label'] 	= __( 'Floor', 	 'oc-main-theme' );
+    $fields['billing']['billing_city']['label'] = 'עיר';
+	$fields['billing']['billing_address_1']['label'] = __( 'רחוב ומספר בית', 'oc-main-theme' );
+	$fields['billing']['billing_address_2']['label'] = __( "מספר דירה", 'oc-main-theme' );
+	$fields['billing']['billing_floor']['label'] = __( 'קומה', 'oc-main-theme' );
+	$fields['billing']['billing_apartment']['label'] = __( 'מספר דירה', 'oc-main-theme' );
+
+    $fields['billing']['billing_city']['priority'] = '1';
+    $fields['billing']['billing_address_1']['priority'] = '2';
+    $fields['billing']['billing_address_2']['priority'] = '3';
+    $fields['billing']['billing_floor']['priority'] = '4';
+    $fields['billing']['billing_apartment']['priority'] = '5';
+
+	unset( $fields['billing']['billing_address_1']['placeholder'] );
+	unset( $fields['billing']['billing_address_2']['placeholder'] );
+	unset( $fields['billing']['billing_floor']['placeholder'] );
+	$fields['billing']['billing_floor']['required'] = 0;
+	$fields['billing']['billing_apartment']['required'] = 0;
+	$fields['shipping']['shipping_floor']['required'] = 0;
+	$fields['shipping']['shipping_apartment']['required'] = 0;		
+
+    if ( isset( $_POST['ship_to_different_address'] ) || $local_pickup_chosen ){
+  		$fields['billing']['billing_address_1']['required'] 	= 0;
+  		$fields['billing']['billing_city']['required'] 			= 0;
+		//$fields['billing']['billing_floor']['required'] = 0;
+		//$fields['billing']['billing_apartment']['required'] = 0;
+  	}
+	return $fields;
+}
+
+########
+// save  custom fields to woo session
+add_action( 'woocommerce_checkout_process', 'oc_save_custom_checkout_fields' );
+function oc_save_custom_checkout_fields(){
+	$ar_addiional_fields = array(
+		'billing_floor',
+		'billing_apartment',
+		'shipping_floor',
+		'shipping_apartment',
+	);
+
+	$checkout_data = WC()->session->get( 'checkout_data' );
+	foreach ( $ar_addiional_fields as $additional_field ){
+    	$field_value 		= isset($_POST[$additional_field]) ? sanitize_text_field($_POST[$additional_field]) : '';
+    	if ( $field_value ){
+			$checkout_data[ $additional_field ] = $field_value;	
+    	}
+	}
+	WC()->session->set( 'checkout_data', $checkout_data );
+}
+
+#############################################
+
+// get custom fields value !
+// doent work!
+add_filter( 'woocommerce_checkout_get_value', 'oc_change_checkout_field', 100, 2 );
+function oc_change_checkout_field( $field_value, $field_name ){
+	if ( isset( $_POST['post_data'] ) ) {
+		parse_str( $_POST['post_data'], $post_data );
+	} else {
+		$post_data = $_POST; // fallback for final checkout (non-ajax)
+	}
+
+	$ar_new_fields = array(
+		'billing_floor',
+		'billing_apartment',
+		'shipping_floor',
+		'shipping_apartment',
+	);
+
+	if ( in_array( $field_name , $ar_new_fields ) ){
+		$checkout_data = WC()->session->get( 'checkout_data' );
+		if ( $checkout_data ){
+			$field_value = $checkout_data[ $field_name ];
+		}
+	}
+	return $field_value;
+}
