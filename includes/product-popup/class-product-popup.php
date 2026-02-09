@@ -35,6 +35,10 @@ class ED_Product_Popup {
     // Debug hooks
     add_action('woocommerce_add_to_cart', [__CLASS__, 'debug_add_to_cart'], 10, 6);
     add_filter('woocommerce_add_to_cart_validation', [__CLASS__, 'debug_add_to_cart_validation'], 999, 5);
+    
+    // Fix cart_id generation - exclude product_note from cart_id calculation
+    // This ensures products with/without notes can be added to cart properly
+    add_filter('woocommerce_cart_id', [__CLASS__, 'fix_cart_id_for_product_note'], 10, 5);
   }
   
   /**
@@ -94,7 +98,7 @@ class ED_Product_Popup {
     $weight_step = get_post_meta($product_id, '_ocwsu_weight_step', true);
     $display_price_per_100g = get_post_meta($product_id, '_ocwsu_display_price_per_100g', true) === 'yes'; 
     $get_weight_from_variation = get_post_meta($product_id, '_ocwsu_get_weight_from_variation', true) === 'yes';
-
+ 
     // If get_weight_from_variation is enabled and product is variable, collect weights from variations
     $final_unit_weight_options = array_filter(array_map('floatval', $unit_weight_options));
     
@@ -531,16 +535,66 @@ class ED_Product_Popup {
     
     // Try to add to cart
     try {
+      // Log cart state BEFORE adding
+      $cart_before = WC()->cart->get_cart();
+      $cart_count_before = WC()->cart->get_cart_contents_count();
+      error_log("Cart BEFORE add: {$cart_count_before} items");
+      error_log("Cart items BEFORE: " . print_r(array_keys($cart_before), true));
+      
+      // Check if product already exists in cart
+      $existing_cart_item_key = null;
+      foreach ($cart_before as $key => $item) {
+        if ($item['product_id'] == $product_id && 
+            ($variation_id == 0 || $item['variation_id'] == $variation_id)) {
+          // Check if variations match
+          $variations_match = true;
+          if (!empty($variation)) {
+            foreach ($variation as $attr_key => $attr_value) {
+              if (!isset($item['variation'][$attr_key]) || $item['variation'][$attr_key] != $attr_value) {
+                $variations_match = false;
+                break;
+              }
+            }
+          }
+          if ($variations_match) {
+            $existing_cart_item_key = $key;
+            error_log("Found existing cart item: {$key}");
+            error_log("Existing item data: " . print_r($item, true));
+            break;
+          }
+        }
+      }
+      
       $cart_item_key = WC()->cart->add_to_cart($product_id, $quantity, $variation_id, $variation);
+      
+      // Log cart state AFTER adding
+      $cart_after = WC()->cart->get_cart();
+      $cart_count_after = WC()->cart->get_cart_contents_count();
+      error_log("Cart AFTER add: {$cart_count_after} items");
+      error_log("Cart items AFTER: " . print_r(array_keys($cart_after), true));
       
       if ($cart_item_key) {
         error_log("SUCCESS: Added to cart with key: {$cart_item_key}");
         
+        // Check if quantity was actually increased or new item was added
+        if ($existing_cart_item_key && $existing_cart_item_key === $cart_item_key) {
+          $existing_item = $cart_after[$cart_item_key];
+          error_log("Item was merged - new quantity: " . $existing_item['quantity']);
+        } else {
+          error_log("New item was added to cart");
+        }
+        
         // Clear any error notices that might have accumulated
         wc_clear_notices('error');
         
-        // Get fragments
+        // Get fragments - use WC_AJAX method to ensure proper fragments
+        // First, trigger the action hook that WooCommerce uses
+        do_action('woocommerce_add_to_cart', $cart_item_key, $product_id, $quantity, $variation_id, $variation, []);
+        
+        // Now get fragments properly
         $fragments = apply_filters('woocommerce_add_to_cart_fragments', []);
+        error_log("Fragments count: " . count($fragments));
+        error_log("Fragment keys: " . print_r(array_keys($fragments), true));
         
         return new \WP_REST_Response([
           'error' => false,
@@ -548,6 +602,8 @@ class ED_Product_Popup {
           'cart_item_key' => $cart_item_key,
           'fragments' => $fragments,
           'cart_hash' => WC()->cart->get_cart_hash(),
+          'cart_count' => $cart_count_after,
+          'was_merged' => ($existing_cart_item_key && $existing_cart_item_key === $cart_item_key),
         ], 200);
       } else {
         error_log('ERROR: add_to_cart returned false');
@@ -644,14 +700,26 @@ class ED_Product_Popup {
   
   /**
    * Add product note to cart item data
+   * IMPORTANT: Only add product_note if it's not empty, to prevent cart_id issues
    */
   public static function add_product_note_to_cart($cart_item_data, $product_id) {
-    if (isset($_POST['product_note']) && !empty($_POST['product_note'])) {
+    // Ensure cart_item_data is an array
+    if (!is_array($cart_item_data)) {
+      $cart_item_data = [];
+    }
+    
+    if (isset($_POST['product_note']) && !empty(trim($_POST['product_note']))) {
       $product_note = sanitize_textarea_field($_POST['product_note']);
       $cart_item_data['product_note'] = $product_note;
       error_log("✅ Product note added to cart item data: {$product_note}");
     } else {
-      error_log("⚠️ No product_note in POST data");
+      // IMPORTANT: If product_note is empty or not set, ensure it's NOT in cart_item_data
+      // This prevents empty product_note from affecting cart_id generation
+      if (isset($cart_item_data['product_note'])) {
+        unset($cart_item_data['product_note']);
+        error_log("⚠️ Removed empty product_note from cart_item_data");
+      }
+      error_log("⚠️ No product_note in POST data or it was empty");
       error_log("POST data: " . print_r($_POST, true));
     }
     return $cart_item_data;
@@ -684,6 +752,89 @@ class ED_Product_Popup {
     } else {
       error_log("⚠️ No product_note in cart_item for order");
     }
+  }
+  
+  /**
+   * Fix cart_id generation to exclude product_note
+   * This ensures that products with/without notes can be added to cart properly
+   * when there's already a product in the cart
+   * 
+   * IMPORTANT: This filter runs AFTER WooCommerce generates the cart_id, but we can override it.
+   * However, the real fix should be in add_product_note_to_cart to prevent empty product_note
+   * from being added to cart_item_data in the first place.
+   */
+  public static function fix_cart_id_for_product_note($cart_id, $product_id, $variation_id, $variation, $cart_item_data) {
+    error_log("=== fix_cart_id_for_product_note called ===");
+    error_log("Original cart_id: {$cart_id}");
+    error_log("Product ID: {$product_id}, Variation ID: {$variation_id}");
+    error_log("Cart item data: " . print_r($cart_item_data, true));
+    
+    // If cart_item_data is empty or not an array, return original cart_id
+    if (!is_array($cart_item_data) || empty($cart_item_data)) {
+      error_log("Cart item data is empty, returning original cart_id");
+      return $cart_id;
+    }
+    
+    // Check if product_note exists in cart_item_data
+    if (!isset($cart_item_data['product_note'])) {
+      error_log("No product_note in cart_item_data, returning original cart_id");
+      return $cart_id;
+    }
+    
+    // If product_note is empty, remove it from cart_item_data for cart_id calculation
+    // This ensures products with same attributes but different notes (or no notes)
+    // will have the same cart_id and can be added together
+    $product_note_value = $cart_item_data['product_note'];
+    error_log("Product note value: '{$product_note_value}'");
+    
+    // Remove product_note from cart_item_data for cart_id calculation
+    $cart_item_data_for_id = $cart_item_data;
+    unset($cart_item_data_for_id['product_note']);
+    
+    // If cart_item_data is now empty after removing product_note, return original cart_id
+    if (empty($cart_item_data_for_id)) {
+      error_log("Cart item data is empty after removing product_note, returning original cart_id");
+      return $cart_id;
+    }
+    
+    // Recalculate cart_id without product_note
+    // Use the same logic as oc-woo-sale-units plugin
+    $id_parts = array($product_id);
+    
+    if ($variation_id && 0 !== $variation_id) {
+      $id_parts[] = $variation_id;
+    }
+    
+    if (is_array($variation) && !empty($variation)) {
+      $variation_key = '';
+      foreach ($variation as $key => $value) {
+        $variation_key .= trim($key) . trim($value);
+      }
+      $id_parts[] = $variation_key;
+    }
+    
+    if (is_array($cart_item_data_for_id) && !empty($cart_item_data_for_id)) {
+      $cart_item_data_key = '';
+      foreach ($cart_item_data_for_id as $key => $value) {
+        // Skip fields that shouldn't affect cart_id (same as oc-woo-sale-units plugin)
+        if ($key == 'ocwsu_quantity_in_units' || $key == 'ocwsu_quantity_in_weight_units') {
+          continue;
+        }
+        if (is_array($value) || is_object($value)) {
+          $value = http_build_query($value);
+        }
+        $cart_item_data_key .= trim($key) . trim($value);
+      }
+      if (!empty($cart_item_data_key)) {
+        $id_parts[] = $cart_item_data_key;
+      }
+    }
+    
+    $new_cart_id = md5(implode('_', $id_parts));
+    error_log("New cart_id (without product_note): {$new_cart_id}");
+    error_log("=== End fix_cart_id_for_product_note ===");
+    
+    return $new_cart_id;
   }
 }
 
