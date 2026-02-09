@@ -1,6 +1,6 @@
 <?php
 
-// Load Product Popup functionality
+//Load Product Popup functionality
 require_once get_template_directory() . '/includes/product-popup/class-product-popup.php';
 
 add_action('rest_api_init', function () {
