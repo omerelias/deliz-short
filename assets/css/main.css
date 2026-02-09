@@ -595,6 +595,8 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     body.menu-with-icons .main-content .menu-block ul.ed-mp__menu a.ed-mp__link{
         padding: 5px 10px;
         gap: 8px;
+        background: transparent;
+        flex-direction: column;
     }
 
     .main-content .left-column{
