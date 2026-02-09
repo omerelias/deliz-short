@@ -10,7 +10,7 @@
   let popupElement = null;
   let isOpen = false;
 
-  /**
+  /** 
    * Initialize popup 
    */
   function init() {
@@ -37,69 +37,105 @@
    * Handle product click - open popup
    */
   async function handleProductClick(e) {
-    // Check for add to cart button first
+    // Ignore clicks on popup itself
+    if (e.target.closest('#ed-product-popup')) return;
+    
+    // Ignore clicks on elements that shouldn't open popup
+    const ignoredSelectors = [
+      '.ed-product-popup__close',
+      '.ed-product-popup__overlay',
+      '.ed-product-popup',
+      'a[href^="#"]',
+      'button[type="submit"]',
+      '.skip-link'
+    ];
+    
+    for (const selector of ignoredSelectors) {
+      if (e.target.closest(selector)) return;
+    }
+    
+    // Check for add to cart button first (should open popup, not add directly)
     const addToCartBtn = e.target.closest('a.add_to_cart_button, button.add_to_cart_button, .add_to_cart_button');
     let productId = null;
     let triggerElement = null;
     
+    // Find the product element (prioritize li.product)
+    let productEl = null;
+    
     if (addToCartBtn) {
-      // Get product ID from button
-      productId = addToCartBtn.dataset.productId || 
-                  addToCartBtn.dataset.product_id ||
-                  addToCartBtn.getAttribute('data-product_id') ||
-                  addToCartBtn.href?.match(/add-to-cart=(\d+)/)?.[1];
-      
-      // Also check parent product element
-      if (!productId) {
-        const productEl = addToCartBtn.closest('.product, .woocommerce-loop-product__link, li.product');
-        if (productEl) {
-          productId = productEl.dataset.productId || 
-                     productEl.getAttribute('data-product_id') ||
-                     productEl.id?.match(/product-(\d+)/)?.[1];
-        }
-      }
-      
+      // Get product element from button
+      productEl = addToCartBtn.closest('li.product, .product, .woocommerce-loop-product__link');
       triggerElement = addToCartBtn;
-      e.preventDefault();
-      e.stopPropagation();
     } else {
-      // Check if clicked on product image, title, or any product element
+      // Check if clicked directly on li.product (highest priority)
       const clickedEl = e.target;
-      const productEl = clickedEl.closest('.product, li.product, .woocommerce-loop-product, .woocommerce-loop-product__link');
       
-      if (productEl) {
-        // Get product ID from various sources
-        productId = productEl.dataset.productId || 
-                   productEl.getAttribute('data-product_id') ||
-                   productEl.id?.match(/product-(\d+)/)?.[1];
-        
-        // Try to get from link inside product
-        if (!productId) {
-          const link = productEl.querySelector('a.woocommerce-loop-product__link, a[href*="/product/"]');
-          if (link) {
-            const match = link.href.match(/\/product\/([^\/]+)/);
-            if (match) productId = match[1];
+      // First check if clicked on li.product itself
+      if (clickedEl.closest && clickedEl.closest('li.product')) {
+        productEl = clickedEl.closest('li.product');
+        triggerElement = productEl;
+      } else {
+        // Fallback to other product selectors
+        productEl = clickedEl.closest('.product, li.product, .woocommerce-loop-product, .woocommerce-loop-product__link');
+        triggerElement = productEl;
+      }
+    }
+    
+    if (!productEl) return;
+    
+    // Get product ID from various sources
+    productId = productEl.dataset.productId || 
+               productEl.dataset.product_id ||
+               productEl.getAttribute('data-product_id') ||
+               productEl.getAttribute('data-product-id') ||
+               productEl.id?.match(/product-(\d+)/)?.[1];
+    
+    // Try to get from link inside product
+    if (!productId) {
+      const link = productEl.querySelector('a.woocommerce-loop-product__link, a[href*="/product/"]');
+      if (link) {
+        // Try product_id in URL
+        const productIdMatch = link.href.match(/[?&]product_id=(\d+)/);
+        if (productIdMatch) {
+          productId = productIdMatch[1];
+        } else {
+          // Try slug in URL
+          const slugMatch = link.href.match(/\/product\/([^\/\?]+)/);
+          if (slugMatch) {
+            productId = slugMatch[1];
           }
-        }
-        
-        // Try to get from product image data attribute
-        if (!productId) {
-          const img = productEl.querySelector('img');
-          if (img && img.dataset.productId) {
-            productId = img.dataset.productId;
-          }
-        }
-        
-        // Only prevent default if we found a product ID
-        if (productId) {
-          e.preventDefault();
-          e.stopPropagation();
-          triggerElement = productEl;
         }
       }
     }
     
+    // Try to get from product image data attribute
+    if (!productId) {
+      const img = productEl.querySelector('img');
+      if (img) {
+        productId = img.dataset.productId || 
+                   img.dataset.product_id ||
+                   img.getAttribute('data-product-id') ||
+                   img.getAttribute('data-product_id');
+      }
+    }
+    
+    // Try to get from add to cart button inside product
+    if (!productId) {
+      const btn = productEl.querySelector('a.add_to_cart_button, button.add_to_cart_button');
+      if (btn) {
+        productId = btn.dataset.productId || 
+                   btn.dataset.product_id ||
+                   btn.getAttribute('data-product_id') ||
+                   btn.getAttribute('data-product-id') ||
+                   btn.href?.match(/add-to-cart=(\d+)/)?.[1];
+      }
+    }
+    
     if (!productId) return;
+    
+    // Prevent default navigation/action
+    e.preventDefault();
+    e.stopPropagation();
     
     // Get product ID (handle slugs)
     let id = parseInt(productId);
