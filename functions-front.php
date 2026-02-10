@@ -1483,14 +1483,14 @@ function oc_theme_woo_add_checkout_fields( $fields ){
 
 	// additional fields for shipping
 	$ar_shipping_fields = array(
-		'shipping_floor' 		=> __( 'Floor', 	 'oc-main-theme' ),
-		'shipping_apartment'	=> __( 'Appartment', 'oc-main-theme' ),		
+		'shipping_floor' 		=> __( 'Floor', 	 'woocommerce' ),
+		'shipping_apartment'	=> __( 'Appartment', 'woocommerce' ),		
 	);
 
 	// additional fields for billing
 	$ar_billing_fields = array(
-		'billing_floor' 		=> __( 'Floor', 	 'oc-main-theme' ),
-		'billing_apartment'		=> __( 'Appartment', 'oc-main-theme' ),	
+		'billing_floor' 		=> __( 'Floor', 	 'woocommerce' ),
+		'billing_apartment'		=> __( 'Appartment', 'woocommerce' ),	
 	);
 
 	$chosen_methods 	 = WC()->session->get( 'chosen_shipping_methods' );
@@ -1546,12 +1546,12 @@ function oc_theme_woo_add_checkout_fields( $fields ){
 	$fields['billing']['billing_address_1']['class'][] 	= 'form-row-first';	
 	$fields['billing']['billing_email']['class'][] 		= 'form-row-last';
 	$fields['billing']['billing_address_2']['class'][] 	= 'form-row-last';
-	// $fields['billing']['billing_address_2']['label'] 	= __( 'Floor', 	 'oc-main-theme' );
+	// $fields['billing']['billing_address_2']['label'] 	= __( 'Floor', 	 'woocommerce' );
     $fields['billing']['billing_city']['label'] = 'עיר';
-	$fields['billing']['billing_address_1']['label'] = __( 'רחוב ומספר בית', 'oc-main-theme' );
-	$fields['billing']['billing_address_2']['label'] = __( "מספר דירה", 'oc-main-theme' );
-	$fields['billing']['billing_floor']['label'] = __( 'קומה', 'oc-main-theme' );
-	$fields['billing']['billing_apartment']['label'] = __( 'מספר דירה', 'oc-main-theme' );
+	$fields['billing']['billing_address_1']['label'] = __( 'רחוב ומספר בית', 'woocommerce' );
+	$fields['billing']['billing_address_2']['label'] = __( "מספר דירה", 'woocommerce' );
+	$fields['billing']['billing_floor']['label'] = __( 'קומה', 'woocommerce' );
+	$fields['billing']['billing_apartment']['label'] = __( 'מספר דירה', 'woocommerce' );
 
     $fields['billing']['billing_city']['priority'] = '1';
     $fields['billing']['billing_address_1']['priority'] = '2';
@@ -1645,3 +1645,73 @@ add_action('woocommerce_before_shop_loop_item_title', function () {
 add_action('woocommerce_before_shop_loop_item_title', function () {
   echo '</div>';
 }, 11);
+
+// additional fields to register form
+add_action( 'woocommerce_register_form_start', 'oc_woo_additional_register_fields_start' );
+function oc_woo_additional_register_fields_start(){
+	$additional_fields = true;
+	if ( $additional_fields ){
+		woocommerce_form_field(
+			'user_first_name',
+			array(
+				'type'        => 'text',
+				'required'    => true, // just adds an "*"
+				'label'       => __( 'First name', 'woocommerce' ),
+				'class' 	  => array( 'woocommerce-form-row' )
+				// 'label'       => __( 'שם פרטי', 'woocommerce' )
+			),
+			( isset( $_POST[ 'user_first_name' ] ) ? $_POST[ 'user_first_name' ] : '' )
+		);
+
+		woocommerce_form_field(
+			'user_last_name',
+			array(
+				'type'        => 'text',
+				'required'    => true, // just adds an "*"
+				'label'       => __( 'Last name', 'woocommerce' ),
+				'class' 	  => array( 'woocommerce-form-row' ),
+				// 'label'       => __( 'שם משפחה', 'woocommerce' )
+			),
+			( isset( $_POST[ 'user_last_name' ] ) ? $_POST[ 'user_last_name' ] : '' )
+		);
+	}
+}
+
+// additional fields
+add_action( 'woocommerce_register_form', 'oc_woo_additional_register_fields_end' );
+function oc_woo_additional_register_fields_end(){
+?>
+	<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
+		<label for="reg_password_check"><?php esc_html_e( 'Submit password', 'woocommerce'); ?>&nbsp;<span class="required">*</span></label>
+		<input type="password" class="woocommerce-Input woocommerce-Input--text input-text" name="password_check" id="reg_password_check" autocomplete="new-password-check" />
+	</p>
+<?php
+}
+
+add_filter( 'woocommerce_registration_errors', 'oc_theme_woo_validate_register_form' , 10, 3 );
+function oc_theme_woo_validate_register_form( $validation_errors, $username, $email ) {
+    
+    if ( isset( $_POST['user_first_name'] ) && empty( $_POST['user_first_name'] ) ) {
+        $validation_errors->add( 'user_first_name_error', __( '<strong>Error</strong>: First name is required!', '' ) );
+    }
+
+    if ( isset( $_POST['user_last_name'] ) && empty( $_POST['user_last_name'] ) ) {
+        $validation_errors->add( 'user_last_name_error', __( '<strong>Error</strong>: Last name is required!', '' ) );
+    }
+
+    return $validation_errors;
+}
+
+// save additional fields on user register
+add_action( 'user_register', 'oc_user_save_account_data' );
+function oc_user_save_account_data( $user_id ) {
+    if ( isset( $_POST['user_first_name'] ) ) {
+        update_user_meta( $user_id, 'first_name', sanitize_text_field( $_POST['user_first_name'] ) );
+        update_user_meta( $user_id, 'billing_first_name', sanitize_text_field( $_POST['user_first_name'] ) );
+    }
+
+    if ( isset( $_POST['user_last_name'] ) ) {
+        update_user_meta( $user_id, 'last_name', sanitize_text_field( $_POST['user_last_name'] ) );
+        update_user_meta( $user_id, 'billing_last_name', sanitize_text_field( $_POST['user_last_name'] ) );
+    }
+}
