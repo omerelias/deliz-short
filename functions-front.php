@@ -382,7 +382,7 @@ $config = [
   'restNonce'     => wp_create_nonce('wp_rest'),
   'pageUrl'      => $page_url,
   'defaultSlug'  => $default_slug,
-  'perPage'      => 12,
+  'perPage'      => 10000,
   'productsSelector' => '[data-ed-products-box="1"]',
   'titleSelector'    => '[data-ed-products-title="1"]',
   'menuSelector'     => '[data-ed-term]',
