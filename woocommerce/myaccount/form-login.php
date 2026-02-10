@@ -112,6 +112,10 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
 
 		</form>
 
+		<div class="register-form-link">
+            <button class="register-form auth-btn btn" type="button" value="login">התחברות
+        </button></div>		
+
 	</div>
 
 </div>
