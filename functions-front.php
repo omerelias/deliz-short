@@ -1733,3 +1733,30 @@ add_filter('wpseo_breadcrumb_single_link', function ($link_output, $link) {
     }
     return $link_output;
 }, 10, 2);
+
+
+// Last price popup html
+add_action('wp_footer', 'oc_last_price_popup');
+function oc_last_price_popup() {
+    ?>
+		<!-- Modal -->
+		<div class="modal fade" id="lastPricePop" tabindex="-1" aria-labelledby="lastPricePopLabel" aria-hidden="true">
+      <div class="modal-ovelay"></div>
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="lastPricePop"><?php the_field('weight_pop_title', 'option'); ?></h5>
+						<button class="close">
+              <svg xmlns="http://www.w3.org/2000/svg" class="Icon Icon--close" role="presentation" viewBox="0 0 16 14">
+                <path d="M15 0L1 14m14 0L1 0" stroke="currentColor" fill="none" fill-rule="evenodd"></path>
+              </svg>
+            </button>
+					</div>
+					<div class="modal-body">
+						<?php the_field('weight_pop_content', 'option'); ?>
+					</div>
+				</div>
+			</div>
+		</div>
+	<?php
+}

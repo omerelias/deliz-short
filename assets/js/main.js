@@ -32,6 +32,7 @@ jQuery(function ($) {
   $(".site-overlay,button.auth__close,button.cart-close").click(function(event) {
     $('body').removeClass('auth-active');
     $('body').removeClass('basket-open');
+    $('.site-overlay').removeClass('active');
   });
 
 
@@ -50,6 +51,15 @@ jQuery(function ($) {
 			parent.removeClass( 'register-show' );
 		}
 	});
+
+  //popup modal
+  $(document).on( 'click', '.cart-custom-notice a', function(e){
+      $('.modal#lastPricePop').addClass( 'show' );
+  });
+
+  $(document).on( 'click', '.modal-header button.close,.modal-ovelay', function(e){
+      $('.modal').removeClass( 'show' );
+  });  
 
 });
 
