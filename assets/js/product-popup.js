@@ -3472,6 +3472,22 @@
           }
         }
         
+        // Update totals
+        if (fragments['div.ed-float-cart__totals']) {
+          const totalsEl = document.querySelector('.ed-float-cart__totals');
+          if (totalsEl) {
+            totalsEl.innerHTML = fragments['div.ed-float-cart__totals'];
+          }
+        }
+        
+        // Also update the row directly if exists
+        if (fragments['div.ed-float-cart__row']) {
+          const rowEl = document.querySelector('.ed-float-cart__row');
+          if (rowEl) {
+            rowEl.outerHTML = fragments['div.ed-float-cart__row'];
+          }
+        }
+        
         // Update cart count badge if exists
         if (fragments['div.widget_shopping_cart_content']) {
           const cartWidget = document.querySelector('.widget_shopping_cart_content');

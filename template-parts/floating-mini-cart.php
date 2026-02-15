@@ -18,7 +18,7 @@ $cart = WC()->cart;
 
   <div class="ed-float-cart__inner">
 
-    <header class="ed-float-cart__header"> 
+    <header class="ed-float-cart__header">
 
       <h3 class="ed-float-cart__title"><?php echo esc_html__('סל קניות', 'deliz-short'); ?></h3>
 

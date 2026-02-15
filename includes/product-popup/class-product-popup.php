@@ -168,6 +168,58 @@ class ED_Product_Popup {
     $mini_cart_items = ob_get_clean();
     $fragments['div.ed-float-cart__items'] = '<div class="ed-float-cart__items" role="list">' . $mini_cart_items . '</div>';
     
+    // Also add totals to fragments
+    if ($cart && !$cart->is_empty()) {
+      ob_start();
+      ?>
+      <div class="ed-float-cart__totals">
+        <div class="ed-float-cart__row">
+          <span><?php echo esc_html__('סה"כ ביניים', 'deliz-short'); ?></span>
+          <strong><?php echo wp_kses_post(wc_price($cart->get_subtotal())); ?></strong>
+        </div>
+        
+        <?php
+        // טקסט משלוח חינם/עלות משלוח
+        $free_min = 0;
+        $settings = get_option('woocommerce_free_shipping_1_settings');
+        if (is_array($settings) && isset($settings['min_amount'])) {
+          $free_min = (float) $settings['min_amount'];
+        }
+        
+        if ($free_min > 0):
+          $remaining = max(0, $free_min - (float) $cart->get_subtotal());
+        ?>
+          <div class="ed-float-cart__shippinghint">
+            <?php if ($remaining > 0): ?>
+              <?php echo esc_html('חסר לך רק ' . wc_price($remaining) . ' למשלוח חינם!'); ?>
+            <?php else: ?>
+              <?php echo esc_html__('מגיע לך משלוח חינם!', 'deliz-short'); ?>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
+      </div>
+      <?php
+      $totals_html = ob_get_clean();
+      // Use the full div with class as key for fragment replacement
+      $fragments['div.ed-float-cart__totals'] = $totals_html;
+    } else {
+      // Empty cart - remove totals
+      $fragments['div.ed-float-cart__totals'] = '';
+    }
+    
+    // Also add the row specifically for easier updates
+    if ($cart && !$cart->is_empty()) {
+      ob_start();
+      ?>
+      <div class="ed-float-cart__row">
+        <span><?php echo esc_html__('סה"כ ביניים', 'deliz-short'); ?></span>
+        <strong><?php echo wp_kses_post(wc_price($cart->get_subtotal())); ?></strong>
+      </div>
+      <?php
+      $row_html = ob_get_clean();
+      $fragments['div.ed-float-cart__row'] = $row_html;
+    }
+    
     return $fragments;
   }
   
