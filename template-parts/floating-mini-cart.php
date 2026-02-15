@@ -18,7 +18,7 @@ $cart = WC()->cart;
 
   <div class="ed-float-cart__inner">
 
-    <header class="ed-float-cart__header">
+    <header class="ed-float-cart__header"> 
 
       <h3 class="ed-float-cart__title"><?php echo esc_html__('סל קניות', 'deliz-short'); ?></h3>
 
@@ -194,7 +194,20 @@ $cart = WC()->cart;
 
         ?>
 
-          <div class="ed-float-cart__item" role="listitem">
+          <?php
+          // Prepare cart item data for edit button
+          $variation_id = isset($cart_item['variation_id']) ? $cart_item['variation_id'] : 0;
+          $variation_attrs = isset($cart_item['variation']) ? $cart_item['variation'] : [];
+          $product_note = isset($cart_item['product_note']) ? $cart_item['product_note'] : '';
+          $ocwsu_quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
+          $ocwsu_quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
+          $quantity = floatval($cart_item['quantity']);
+          
+          // Encode variation attributes as JSON for data attribute
+          $variation_attrs_json = !empty($variation_attrs) ? htmlspecialchars(json_encode($variation_attrs), ENT_QUOTES, 'UTF-8') : '';
+          ?>
+          
+          <div class="ed-float-cart__item" role="listitem" data-cart-item-key="<?php echo esc_attr( $cart_item_key ); ?>">
 
             <a
 
@@ -275,6 +288,62 @@ $cart = WC()->cart;
                 }
 
               ?>
+
+
+
+              <div class="ed-float-cart__actions-row">
+
+                <div class="ed-float-cart__quantity-controls">
+
+                  <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--decrease" data-cart-item-key="<?php echo esc_attr( $cart_item_key ); ?>" aria-label="<?php esc_attr_e('הפחת כמות', 'deliz-short'); ?>">-</button>
+
+                  <input type="number" 
+
+                         class="ed-float-cart__qty-input" 
+
+                         value="<?php echo esc_attr( $qty ); ?>" 
+
+                         min="1" 
+
+                         step="1"
+
+                         data-cart-item-key="<?php echo esc_attr( $cart_item_key ); ?>"
+
+                         aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>">
+
+                  <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--increase" data-cart-item-key="<?php echo esc_attr( $cart_item_key ); ?>" aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+</button>
+
+                </div>
+
+
+
+                <button type="button" 
+
+                        class="ed-float-cart__edit-btn" 
+
+                        data-cart-item-key="<?php echo esc_attr( $cart_item_key ); ?>"
+
+                        data-product-id="<?php echo esc_attr( $product_id ); ?>"
+
+                        data-variation-id="<?php echo esc_attr( $variation_id ); ?>"
+
+                        data-quantity="<?php echo esc_attr( $quantity ); ?>"
+
+                        data-variation="<?php echo $variation_attrs_json; ?>"
+
+                        data-product-note="<?php echo esc_attr( $product_note ); ?>"
+
+                        data-ocwsu-quantity-in-units="<?php echo esc_attr( $ocwsu_quantity_in_units ); ?>"
+
+                        data-ocwsu-quantity-in-weight-units="<?php echo esc_attr( $ocwsu_quantity_in_weight_units ); ?>"
+
+                        aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>">
+
+                  <?php esc_html_e('עריכה', 'deliz-short'); ?>
+
+                </button>
+
+              </div>
 
 
 

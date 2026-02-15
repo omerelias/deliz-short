@@ -20,6 +20,16 @@ class ED_Product_Popup {
     // Register custom add to cart endpoint for debugging
     add_action('rest_api_init', [__CLASS__, 'register_add_to_cart_endpoint']);
     
+    // Register update cart item endpoint
+    add_action('rest_api_init', [__CLASS__, 'register_update_cart_endpoint']);
+    
+    // Register AJAX endpoint for updating cart (better session handling)
+    add_action('wp_ajax_ed_update_cart', [__CLASS__, 'ajax_update_cart']);
+    add_action('wp_ajax_nopriv_ed_update_cart', [__CLASS__, 'ajax_update_cart']);
+    
+    // Register get cart item endpoint (for editing)
+    add_action('rest_api_init', [__CLASS__, 'register_get_cart_item_endpoint']);
+    
     // Enqueue scripts and styles
     add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
     
@@ -39,6 +49,126 @@ class ED_Product_Popup {
     // Fix cart_id generation - exclude product_note from cart_id calculation
     // This ensures products with/without notes can be added to cart properly
     add_filter('woocommerce_cart_id', [__CLASS__, 'fix_cart_id_for_product_note'], 10, 5);
+    
+    // Add mini cart to fragments for AJAX updates
+    add_filter('woocommerce_add_to_cart_fragments', [__CLASS__, 'add_mini_cart_to_fragments']);
+  }
+  
+  /**
+   * Add mini cart HTML to fragments for AJAX updates
+   */
+  public static function add_mini_cart_to_fragments($fragments) {
+    if (!function_exists('WC') || !WC()->cart) {
+      return $fragments;
+    }
+    
+    $cart = WC()->cart;
+    ob_start();
+    
+    if (!$cart || $cart->is_empty()) {
+      echo '<div class="ed-float-cart__empty">';
+      echo '<svg width="80" height="80" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">';
+      echo '<path fill-rule="evenodd" clip-rule="evenodd" d="M23.0346 22.2883L21.8894 9.39264C21.8649 9.10634 21.6236 8.88957 21.3414 8.88957H18.9855C18.9528 6.73824 17.1941 5 15.0346 5C12.8751 5 11.1164 6.73824 11.0837 8.88957H8.72786C8.44156 8.88957 8.20434 9.10634 8.1798 9.39264L7.03461 22.2883C7.03461 22.2965 7.03359 22.3047 7.03256 22.3129L7.03256 22.3129L7.03256 22.3129C7.03154 22.3211 7.03052 22.3292 7.03052 22.3374C7.03052 23.8057 8.37612 25 10.0326 25H20.0367C21.6931 25 23.0387 23.8057 23.0387 22.3374C23.0387 22.3211 23.0387 22.3047 23.0346 22.2883ZM15.0346 6.10425C16.5847 6.10425 17.8485 7.3476 17.8812 8.88952H12.188C12.2207 7.3476 13.4845 6.10425 15.0346 6.10425ZM10.0326 23.8957H20.0367C21.0714 23.8957 21.9181 23.2086 21.9344 22.3619L20.8342 9.99792H18.9855V11.6748C18.9855 11.9816 18.7401 12.227 18.4334 12.227C18.1266 12.227 17.8812 11.9816 17.8812 11.6748V9.99792H12.1839V11.6748C12.1839 11.9816 11.9385 12.227 11.6318 12.227C11.325 12.227 11.0796 11.9816 11.0796 11.6748V9.99792H9.23094L8.13483 22.3619C8.15119 23.2086 8.99372 23.8957 10.0326 23.8957Z" fill="#0F0F0F"></path>';
+      echo '</svg>';
+      echo esc_html__('הסל ריק, אבל לא להרבה זמן :)', 'deliz-short');
+      echo '</div>';
+    } else {
+      // Render cart items using the same template logic
+      $template_file = get_template_directory() . '/template-parts/floating-mini-cart.php';
+      if (file_exists($template_file)) {
+        // Extract the items section from the template
+        $template_content = file_get_contents($template_file);
+        // We'll use a simpler approach - just include the template and extract
+        // But for now, let's use get_template_part with a custom output buffer
+        foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+          $product = $cart_item['data'];
+          if (!$product || !$product->exists() || $cart_item['quantity'] <= 0) continue;
+          
+          // Use the same variables as the template
+          $product_id = $cart_item['product_id'];
+          $name = $product->get_name();
+          $qty = (int) $cart_item['quantity'];
+          $thumbnail = $product->get_image('woocommerce_thumbnail');
+          $remove_url = wc_get_cart_remove_url($cart_item_key);
+          $line_price = WC()->cart->get_product_price($product);
+          $subtotal = WC()->cart->get_product_subtotal($product, $qty);
+          
+          // ocwsu display
+          $ocwsu_display = '';
+          $weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
+          if ($weighable) {
+            $quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
+            $quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
+            $weight_qty = floatval($cart_item['quantity']);
+            $weight_value = $weight_qty;
+            $weight_unit = 'ק"ג';
+            if ($weight_qty > 0 && $weight_qty < 1) {
+              $weight_value = $weight_qty * 1000;
+              $weight_unit = 'גרם';
+            }
+            if ($weight_unit === 'גרם') {
+              $weight_value = wc_format_decimal($weight_value, 0);
+            } else {
+              $weight_value = wc_format_decimal($weight_value, 2);
+            }
+            if ($quantity_in_units > 0) {
+              $units_label = ($quantity_in_units == 1) ? 'יחידה' : 'יחידות';
+              $ocwsu_display = sprintf('%s %s, %s %s', wc_format_decimal($quantity_in_units, 0), $units_label, $weight_value, $weight_unit);
+            } else {
+              $ocwsu_display = sprintf('%s %s', $weight_value, $weight_unit);
+            }
+          }
+          
+          // Prepare edit button data
+          $variation_id = isset($cart_item['variation_id']) ? $cart_item['variation_id'] : 0;
+          $variation_attrs = isset($cart_item['variation']) ? $cart_item['variation'] : [];
+          $product_note = isset($cart_item['product_note']) ? $cart_item['product_note'] : '';
+          $ocwsu_quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
+          $ocwsu_quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
+          $quantity = floatval($cart_item['quantity']);
+          $variation_attrs_json = !empty($variation_attrs) ? htmlspecialchars(json_encode($variation_attrs), ENT_QUOTES, 'UTF-8') : '';
+          
+          // Item data
+          $item_data = wc_get_formatted_cart_item_data($cart_item, true);
+          
+          // Output the cart item HTML (same structure as template)
+          ?>
+          <div class="ed-float-cart__item" role="listitem" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">
+            <a href="<?php echo esc_url($remove_url); ?>" class="ed-float-cart__remove remove remove_from_cart_button" aria-label="<?php echo esc_attr(sprintf(__('הסר %s מהסל', 'deliz-short'), $name)); ?>" data-product_id="<?php echo esc_attr($product_id); ?>" data-cart_item_key="<?php echo esc_attr($cart_item_key); ?>" data-product_sku="<?php echo esc_attr($product->get_sku()); ?>">×</a>
+            <div class="ed-float-cart__thumb"><?php echo $thumbnail; // phpcs:ignore ?></div>
+            <div class="ed-float-cart__details">
+              <div class="ed-float-cart__name"><?php echo esc_html($name); ?></div>
+              <?php if ($item_data): ?>
+                <div class="ed-float-cart__meta2"><?php echo $item_data; // phpcs:ignore ?></div>
+              <?php endif; ?>
+              <?php if ($ocwsu_display): ?>
+                <div class="ed-float-cart__ocwsu-qty"><?php echo esc_html($ocwsu_display); ?></div>
+              <?php endif; ?>
+              <div class="ed-float-cart__actions-row">
+                <div class="ed-float-cart__quantity-controls">
+                  <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--decrease" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הפחת כמות', 'deliz-short'); ?>">-</button>
+                  <input type="number" class="ed-float-cart__qty-input" value="<?php echo esc_attr($qty); ?>" min="1" step="1" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>">
+                  <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--increase" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+</button>
+                </div>
+                <button type="button" class="ed-float-cart__edit-btn" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" data-product-id="<?php echo esc_attr($product_id); ?>" data-variation-id="<?php echo esc_attr($variation_id); ?>" data-quantity="<?php echo esc_attr($quantity); ?>" data-variation="<?php echo $variation_attrs_json; ?>" data-product-note="<?php echo esc_attr($product_note); ?>" data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>" data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>" aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>"><?php esc_html_e('עריכה', 'deliz-short'); ?></button>
+              </div>
+              <div class="ed-float-cart__price">
+                <span class="ed-float-cart__unit"><?php echo wp_kses_post($line_price); ?></span>
+                <span class="ed-float-cart__sep">×</span>
+                <span class="ed-float-cart__qty"><?php echo esc_html($qty); ?></span>
+                <span class="ed-float-cart__subtotal"><?php echo wp_kses_post($subtotal); ?></span>
+              </div>
+            </div>
+          </div>
+          <?php
+        }
+      }
+    }
+    
+    $mini_cart_items = ob_get_clean();
+    $fragments['div.ed-float-cart__items'] = '<div class="ed-float-cart__items" role="list">' . $mini_cart_items . '</div>';
+    
+    return $fragments;
   }
   
   /**
@@ -373,7 +503,13 @@ class ED_Product_Popup {
     wp_localize_script('deliz-short-product-popup', 'ED_POPUP_CONFIG', [
       'endpoint' => rest_url('ed/v1/product-popup'),
       'addToCartUrl' => rest_url('ed/v1/add-to-cart'), // Use our custom endpoint for debugging
+      'updateCartUrl' => rest_url('ed/v1/update-cart'),
+      'updateCartAjaxUrl' => admin_url('admin-ajax.php'),
+      'getCartItemUrl' => rest_url('ed/v1/cart-item'),
+      'getCartItemAjaxUrl' => admin_url('admin-ajax.php'),
       'restNonce' => wp_create_nonce('wp_rest'),
+      'cartItemNonce' => wp_create_nonce('ed-cart-item-nonce'),
+      'updateCartNonce' => wp_create_nonce('ed-update-cart-nonce'),
     ]);
   }
   
@@ -509,7 +645,7 @@ class ED_Product_Popup {
           $variation[$key] = $value;
         }
       }
-      error_log("Variation from request: " . print_r($variation, true));
+      error_log("Variation from request: " . print_r($variation, true)); 
     }
     
     // Ensure WooCommerce cart is initialized
@@ -835,6 +971,334 @@ class ED_Product_Popup {
     error_log("=== End fix_cart_id_for_product_note ===");
     
     return $new_cart_id;
+  }
+  
+  /**
+   * Register update cart item endpoint
+   */
+  public static function register_update_cart_endpoint() {
+    register_rest_route('ed/v1', '/update-cart', [
+      'methods' => 'POST',
+      'permission_callback' => '__return_true',
+      'callback' => [__CLASS__, 'handle_update_cart'],
+    ]);
+  }
+  
+  /**
+   * AJAX handler for updating cart item quantity (better session handling)
+   */
+  public static function ajax_update_cart() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'ed-update-cart-nonce')) {
+      wp_send_json_error(['errorMessage' => 'Invalid nonce']);
+      return;
+    }
+    
+    // Get cart_item_key and quantity from POST
+    $cart_item_key = isset($_POST['cart_item_key']) ? sanitize_text_field($_POST['cart_item_key']) : '';
+    $quantity = isset($_POST['quantity']) ? floatval($_POST['quantity']) : 0;
+    
+    if (empty($cart_item_key) || $quantity <= 0) {
+      wp_send_json_error(['errorMessage' => 'Invalid parameters']);
+      return;
+    }
+    
+    // WooCommerce session is already loaded in AJAX context
+    if (!WC()->cart) {
+      wp_send_json_error(['errorMessage' => 'WooCommerce cart is not available']);
+      return;
+    }
+    
+    $cart_item = WC()->cart->get_cart_item($cart_item_key);
+    
+    if (!$cart_item) {
+      wp_send_json_error([
+        'errorMessage' => 'Cart item not found',
+        'debug' => [
+          'cart_item_key' => $cart_item_key,
+          'cart_count' => count(WC()->cart->get_cart()),
+        ]
+      ]);
+      return;
+    }
+    
+    // Update quantity
+    $updated = WC()->cart->set_quantity($cart_item_key, $quantity);
+    
+    if ($updated) {
+      // Get fragments
+      $fragments = apply_filters('woocommerce_add_to_cart_fragments', []);
+      
+      wp_send_json_success([
+        'cart_hash' => WC()->cart->get_cart_hash(),
+        'cart_count' => WC()->cart->get_cart_contents_count(),
+        'fragments' => $fragments,
+      ]);
+    } else {
+      wp_send_json_error(['errorMessage' => 'Failed to update cart item']);
+    }
+  }
+  
+  /**
+   * Handle update cart item quantity
+   */
+  public static function handle_update_cart(\WP_REST_Request $req) {
+    // Ensure WooCommerce is loaded
+    if (!function_exists('WC')) {
+      return new \WP_REST_Response([
+        'error' => true,
+        'errorMessage' => 'WooCommerce is not available',
+      ], 500);
+    }
+    
+    // CRITICAL: Initialize WooCommerce session BEFORE accessing cart
+    // In REST API context, session is not automatically loaded
+    if (!WC()->session) {
+      WC()->initialize_session();
+    }
+    
+    // CRITICAL: Start session if not already started
+    if (!WC()->session->has_session()) {
+      WC()->session->set_customer_session_cookie(true);
+    }
+    
+    // CRITICAL: Load session data from cookie/database
+    WC()->session->get_session_data();
+    
+    // Load cart if not already loaded
+    if (!WC()->cart) {
+      wc_load_cart();
+    }
+    
+    if (!WC()->cart) {
+      return new \WP_REST_Response([
+        'error' => true,
+        'errorMessage' => 'WooCommerce cart is not available',
+      ], 500);
+    }
+    
+    // CRITICAL: Force cart to load from session
+    do_action('woocommerce_load_cart_from_session');
+    WC()->cart->calculate_totals();
+    
+    $body = $req->get_json_params() ?: $req->get_body_params();
+    $cart_item_key = isset($body['cart_item_key']) ? sanitize_text_field($body['cart_item_key']) : '';
+    $quantity = isset($body['quantity']) ? floatval($body['quantity']) : 0;
+    
+    if (empty($cart_item_key) || $quantity <= 0) {
+      return new \WP_REST_Response([
+        'error' => true,
+        'errorMessage' => 'Invalid parameters',
+      ], 400);
+    }
+    $cart_item = WC()->cart->get_cart_item($cart_item_key);
+    if (!$cart_item) {
+      return new \WP_REST_Response([
+        'error' => true,
+        'errorMessage' => 'Cart item not found',
+      ], 404);
+    }
+    
+    // Update quantity
+    $updated = WC()->cart->set_quantity($cart_item_key, $quantity);
+    
+    if ($updated) {
+      // Get fragments
+      $fragments = apply_filters('woocommerce_add_to_cart_fragments', []);
+      
+      return new \WP_REST_Response([
+        'error' => false,
+        'success' => true,
+        'cart_hash' => WC()->cart->get_cart_hash(),
+        'cart_count' => WC()->cart->get_cart_contents_count(),
+        'fragments' => $fragments,
+      ], 200);
+    } else {
+      return new \WP_REST_Response([
+        'error' => true,
+        'errorMessage' => 'Failed to update cart item',
+      ], 400);
+    }
+  }
+  
+  /**
+   * Register get cart item endpoint (for editing)
+   * Using AJAX endpoint instead of REST API for better session handling
+   */
+  public static function register_get_cart_item_endpoint() {
+    // Register REST API endpoint
+    register_rest_route('ed/v1', '/cart-item', [
+      'methods' => 'GET',
+      'permission_callback' => '__return_true',
+      'args' => [
+        'cart_item_key' => ['required' => true, 'type' => 'string'],
+      ],
+      'callback' => [__CLASS__, 'get_cart_item_data'],
+    ]);
+    
+    // Also register as AJAX endpoint for better session handling
+    add_action('wp_ajax_ed_get_cart_item', [__CLASS__, 'ajax_get_cart_item_data']);
+    add_action('wp_ajax_nopriv_ed_get_cart_item', [__CLASS__, 'ajax_get_cart_item_data']);
+  }
+  
+  /**
+   * AJAX handler for getting cart item data (better session handling)
+   */
+  public static function ajax_get_cart_item_data() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'ed-cart-item-nonce')) {
+      wp_send_json_error(['errorMessage' => 'Invalid nonce']);
+      return;
+    }
+    
+    // Get cart_item_key from POST (sent via FormData)
+    $cart_item_key = isset($_POST['cart_item_key']) ? sanitize_text_field($_POST['cart_item_key']) : '';
+    
+    if (empty($cart_item_key)) {
+      wp_send_json_error(['errorMessage' => 'Cart item key is required']);
+      return;
+    }
+    
+    // WooCommerce session is already loaded in AJAX context
+    if (!WC()->cart) {
+      wp_send_json_error(['errorMessage' => 'WooCommerce cart is not available']);
+      return;
+    }
+    
+    $cart_item = WC()->cart->get_cart_item($cart_item_key);
+    
+    if (!$cart_item) {
+      wp_send_json_error([
+        'errorMessage' => 'Cart item not found',
+        'debug' => [
+          'cart_item_key' => $cart_item_key,
+          'cart_count' => count(WC()->cart->get_cart()),
+        ]
+      ]);
+      return;
+    }
+    
+    // Extract product data
+    $product_id = $cart_item['product_id'];
+    $variation_id = isset($cart_item['variation_id']) ? $cart_item['variation_id'] : 0;
+    $quantity = $cart_item['quantity'];
+    $variation = isset($cart_item['variation']) ? $cart_item['variation'] : [];
+    $product_note = isset($cart_item['product_note']) ? $cart_item['product_note'] : '';
+    
+    // ocwsu data
+    $ocwsu_quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
+    $ocwsu_quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
+    
+    wp_send_json_success([
+      'cart_item_key' => $cart_item_key,
+      'product_id' => $product_id,
+      'variation_id' => $variation_id,
+      'quantity' => $quantity,
+      'variation' => $variation,
+      'product_note' => $product_note,
+      'ocwsu_quantity_in_units' => $ocwsu_quantity_in_units,
+      'ocwsu_quantity_in_weight_units' => $ocwsu_quantity_in_weight_units,
+    ]);
+  }
+  
+  /**
+   * Get cart item data for editing
+   */
+  public static function get_cart_item_data(\WP_REST_Request $req) {
+    // Ensure WooCommerce is loaded
+    if (!function_exists('WC')) {
+      return new \WP_REST_Response([ 
+        'error' => true,
+        'errorMessage' => 'WooCommerce is not available',
+      ], 500);
+    }
+
+    // CRITICAL: Initialize WooCommerce session BEFORE accessing cart
+    // In REST API context, session is not automatically loaded
+    if (!WC()->session) {
+      WC()->initialize_session();
+    }
+    
+    // CRITICAL: Start session if not already started
+    // This ensures cookies are read and session data is loaded
+    if (!WC()->session->has_session()) {
+      // Try to get customer ID from cookie
+      $customer_id = WC()->session->get_customer_id();
+      if (!$customer_id) {
+        // Create new session
+        WC()->session->set_customer_session_cookie(true);
+      }
+    }
+    
+    // CRITICAL: Load session data from cookie/database
+    // This is what actually loads the cart from session
+    WC()->session->get_session_data();
+
+    // Load cart if not already loaded
+    if (!WC()->cart) {
+      wc_load_cart();
+    }
+    
+    if (!WC()->cart) {
+      return new \WP_REST_Response([
+        'error' => true,
+        'errorMessage' => 'WooCommerce cart is not available',
+      ], 500);
+    }
+    
+    // CRITICAL: Force cart to load from session
+    // In REST API context, WooCommerce might not auto-load cart from session
+    // We need to explicitly trigger the cart loading from session
+    do_action('woocommerce_load_cart_from_session');
+    
+    // Force cart to calculate totals which also loads from session
+    WC()->cart->calculate_totals();
+
+    // Now we can search for the product
+    $cart_item_key = sanitize_text_field($req->get_param('cart_item_key'));
+    $cart_item = WC()->cart->get_cart_item($cart_item_key);
+
+    if (!$cart_item) {
+      // Debug info
+      $cart_count = count(WC()->cart->get_cart());
+      $session_cart = WC()->session->get('cart', []);
+      $session_cart_count = is_array($session_cart) ? count($session_cart) : 0;
+      
+      return new \WP_REST_Response([
+        'error' => true,
+        'errorMessage' => 'Cart item not found',
+        'debug' => [
+          'cart_item_key' => $cart_item_key,
+          'cart_count' => $cart_count,
+          'session_cart_count' => $session_cart_count,
+          'session_has_cart' => !empty($session_cart),
+          'available_keys' => array_keys(WC()->cart->get_cart()),
+        ]
+      ], 404);
+    }
+
+    // Extract product data (including ocwsu support)
+    $product_id = $cart_item['product_id'];
+    $variation_id = isset($cart_item['variation_id']) ? $cart_item['variation_id'] : 0;
+    $quantity = $cart_item['quantity'];
+    $variation = isset($cart_item['variation']) ? $cart_item['variation'] : [];
+    $product_note = isset($cart_item['product_note']) ? $cart_item['product_note'] : '';
+
+    // ocwsu data from cart item meta
+    $ocwsu_quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
+    $ocwsu_quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
+
+    return new \WP_REST_Response([
+      'error' => false,
+      'cart_item_key' => $cart_item_key,
+      'product_id' => $product_id,
+      'variation_id' => $variation_id,
+      'quantity' => $quantity,
+      'variation' => $variation,
+      'product_note' => $product_note,
+      'ocwsu_quantity_in_units' => $ocwsu_quantity_in_units,
+      'ocwsu_quantity_in_weight_units' => $ocwsu_quantity_in_weight_units,
+    ], 200);
   }
 }
 
