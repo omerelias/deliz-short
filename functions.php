@@ -12,6 +12,9 @@ require 'functions-front.php';
 // SMS LOGIN
 require_once( 'inc/oc-sms-auth/class-oc-sms-auth.php' );
 
+// Checkout Upsells
+require_once( 'includes/lib/checkout-upsells/class-checkout-upsells.php' );
+
 add_action('after_setup_theme', function () {
   // Translations
   load_theme_textdomain('deliz-short', get_template_directory() . '/languages');
