@@ -10,6 +10,7 @@
     initDatePickers();
     initDeleteButtons();
     initToggleStatus();
+    initPreview();
   });
 
   /**
@@ -30,6 +31,7 @@
       } else if (type === 'buy_x_pay_y') {
         $('.ed-promotion-type-buy_x_pay_y').show();
       }
+      updatePreview();
     });
 
     // Trigger change on load if type is already selected
@@ -68,6 +70,69 @@
         $('#end_date').prop('required', false);
       }
     });
+    
+    // Update preview on field changes
+    $('#promotion_name').on('input', function() {
+      updatePreview();
+    });
+    
+    $('#discount_percent, #buy_kg, #pay_amount').on('input', function() {
+      updatePreview();
+    });
+  }
+  
+  /**
+   * Initialize preview
+   */
+  function initPreview() {
+    // Initial update
+    updatePreview();
+  }
+  
+  /**
+   * Update preview badge
+   */
+  function updatePreview() {
+    const $badge = $('#ed-preview-badge');
+    if (!$badge.length) {
+      return;
+    }
+    
+    // Use promotion name as badge text (like in frontend)
+    const promotionName = $('#promotion_name').val().trim();
+    
+    if (promotionName) {
+      $badge.text(promotionName);
+    } else {
+      // Fallback if no name yet
+      const type = $('input[name="promotion_type"]:checked').val();
+      let badgeText = '';
+      
+      if (type === 'discount') {
+        const discountPercent = parseFloat($('#discount_percent').val()) || 0;
+        if (discountPercent > 0) {
+          badgeText = discountPercent + '% הנחה';
+        } else {
+          badgeText = 'X% הנחה';
+        }
+      } else if (type === 'buy_x_pay_y') {
+        const buyKg = parseFloat($('#buy_kg').val()) || 0;
+        const payAmount = parseFloat($('#pay_amount').val()) || 0;
+        if (buyKg > 0 && payAmount > 0) {
+          badgeText = buyKg + ' ק"ג ב-' + payAmount + ' ש"ח';
+        } else if (buyKg > 0) {
+          badgeText = buyKg + ' ק"ג ב-Y ש"ח';
+        } else if (payAmount > 0) {
+          badgeText = 'X ק"ג ב-' + payAmount + ' ש"ח';
+        } else {
+          badgeText = 'X ק"ג ב-Y ש"ח';
+        }
+      } else {
+        badgeText = 'תווית המבצע';
+      }
+      
+      $badge.text(badgeText);
+    }
   }
 
   /**
@@ -136,6 +201,11 @@
     $('.ed-promotion-step').hide();
     $('.ed-promotion-step[data-step="' + step + '"]').show();
     currentStep = step;
+    
+    // Update preview when entering step 2
+    if (step === 2) {
+      updatePreview();
+    }
   }
 
   /**

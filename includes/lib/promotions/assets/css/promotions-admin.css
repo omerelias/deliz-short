@@ -239,6 +239,118 @@
   margin-right: 10px;
 }
 
+/* Preview Section */
+.ed-promotion-preview-section {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 2px solid #ccd0d4;
+}
+
+.ed-promotion-preview-section h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #1d2327;
+}
+
+.ed-promotion-preview-section .description {
+  margin: 0 0 20px 0;
+  color: #646970;
+  font-size: 13px;
+}
+
+.ed-promotion-preview {
+  background: #f6f7f7;
+  border: 1px solid #ccd0d4;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 400px;
+}
+
+.ed-promotion-preview-product {
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ed-preview-product-image {
+  position: relative;
+  width: 100%;
+  padding-top: 75%; /* 4:3 aspect ratio */
+  background: #f0f0f1;
+  overflow: hidden;
+}
+
+.ed-preview-product-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ed-preview-placeholder-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f1;
+}
+
+.ed-preview-placeholder-image .dashicons {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #8c8f94;
+}
+
+.ed-preview-badge-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+.ed-preview-badge {
+  display: inline-block;
+  background-color: #d63638;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1.4;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ed-preview-product-info {
+  padding: 15px;
+}
+
+.ed-preview-product-name {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d2327;
+  line-height: 1.4;
+}
+
+.ed-preview-product-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2271b1;
+}
+
+.ed-preview-product-price .price {
+  color: #2271b1;
+}
+
 /* Responsive */
 @media (max-width: 782px) {
   .ed-promotion-type-selector {
@@ -248,6 +360,10 @@
   .ed-form-field input[type="text"],
   .ed-form-field input[type="number"],
   .ed-form-field select {
+    max-width: 100%;
+  }
+  
+  .ed-promotion-preview {
     max-width: 100%;
   }
 }

@@ -263,6 +263,53 @@ if ($promotion_id > 0 && $action === 'edit') {
                 <span class="field-suffix">ש"ח</span>
               </div>
             </div>
+            
+            <!-- Preview Section -->
+            <div class="ed-promotion-preview-section">
+              <h3><?php esc_html_e('תצוגה מקדימה', 'deliz-short'); ?></h3>
+              <p class="description"><?php esc_html_e('כך יראה המבצע על המוצרים באתר', 'deliz-short'); ?></p>
+              
+              <div class="ed-promotion-preview">
+                <div class="ed-promotion-preview-product">
+                  <?php
+                  // Get a random product for preview (or placeholder)
+                  $preview_product = null;
+                  $products = wc_get_products(['limit' => 1, 'orderby' => 'rand']);
+                  if (!empty($products)) {
+                    $preview_product = $products[0];
+                  }
+                  ?>
+                  <div class="ed-preview-product-image">
+                    <?php if ($preview_product && $preview_product->get_image_id()): ?>
+                      <?php echo wp_get_attachment_image($preview_product->get_image_id(), 'woocommerce_thumbnail'); ?>
+                    <?php else: ?>
+                      <div class="ed-preview-placeholder-image">
+                        <span class="dashicons dashicons-format-image"></span>
+                      </div>
+                    <?php endif; ?>
+                    <div class="ed-preview-badge-container">
+                      <span class="ed-promotion-badge ed-preview-badge" id="ed-preview-badge">
+                        <?php esc_html_e('תווית המבצע', 'deliz-short'); ?>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="ed-preview-product-info">
+                    <h4 class="ed-preview-product-name">
+                      <?php echo $preview_product ? esc_html($preview_product->get_name()) : esc_html__('שם מוצר לדוגמה', 'deliz-short'); ?>
+                    </h4>
+                    <div class="ed-preview-product-price">
+                      <?php 
+                      if ($preview_product) {
+                        echo wp_kses_post($preview_product->get_price_html());
+                      } else {
+                        echo '<span class="price">₪99.00</span>';
+                      }
+                      ?>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div class="ed-promotion-form-actions">

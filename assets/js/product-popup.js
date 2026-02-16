@@ -876,13 +876,13 @@
 
           <button type="button" class="ed-product-popup__toggle-btn is-active" data-mode="units" aria-label="קנה לפי יחידות">
 
-            <span>יחידות</span>
+            <span>יח'</span>
 
           </button>
 
           <button type="button" class="ed-product-popup__toggle-btn" data-mode="weight" aria-label="קנה לפי משקל">
 
-            <span>משקל</span>
+            <span>ק"ג</span>
 
           </button>
 
@@ -1206,7 +1206,7 @@
  
                 <span class="ed-product-popup__price-value">${data.price_html}</span> 
 
-              </div>
+              </div> 
 
               ${data.description ? `<hr class="ed-product-popup__divider"><div class="ed-product-popup__description">${data.description}</div><hr class="ed-product-popup__divider">` : ''}
 

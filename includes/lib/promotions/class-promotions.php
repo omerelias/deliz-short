@@ -344,21 +344,11 @@ class ED_Promotions {
 
   /**
    * Generate badge text from promotion data
+   * Returns the promotion name (post_title) as the badge text
    */
   public static function generate_badge_text($promotion_id) {
-    $type = get_post_meta($promotion_id, self::META_PREFIX . 'type', true);
-    $name = get_post($promotion_id)->post_title ?? '';
-
-    if ($type === 'discount') {
-      $discount = get_post_meta($promotion_id, self::META_PREFIX . 'discount_percent', true);
-      return sprintf('%s%% הנחה', $discount);
-    } elseif ($type === 'buy_x_pay_y') {
-      $buy_kg = get_post_meta($promotion_id, self::META_PREFIX . 'buy_kg', true);
-      $pay = get_post_meta($promotion_id, self::META_PREFIX . 'pay_amount', true);
-      return sprintf('%s ק"ג ב-%s ש"ח', $buy_kg, $pay);
-    }
-
-    return $name;
+    $post = get_post($promotion_id);
+    return $post ? $post->post_title : '';
   }
 
   /**
