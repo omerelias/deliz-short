@@ -570,62 +570,15 @@ $cart = WC()->cart;
 
                   echo '<div class="ed-float-cart__ocwsu-qty">' . esc_html( $ocwsu_display ) . '</div>';
 
-
-
                 }
 
-                // הודעות קידום מבצעים
-                if ( class_exists('ED_Promotions') ) {
-                  $promotions = ED_Promotions::get_product_promotions($product_id);
-                  
-                  if ( !empty($promotions) ) {
-                    $promotion = $promotions[0];
-                    $type = get_post_meta($promotion->ID, ED_Promotions::META_PREFIX . 'type', true);
-                    $badge_text = get_post_meta($promotion->ID, ED_Promotions::META_PREFIX . 'badge_text', true);
-                    
-                    if ( $type === 'discount' ) {
-                      // למבצע הנחה - תמיד מציגים "משתתף במבצע"
-                      echo '<div class="ed-promotion-cart-message ed-promotion-cart-message--float">';
-                      echo '<span class="ed-promotion-label">' . sprintf(__('משתתף במבצע: %s', 'deliz-short'), esc_html($badge_text)) . '</span>';
-                      echo '</div>';
-                    } elseif ( $type === 'buy_x_pay_y' ) {
-                      // למבצע קונים X תמורת Y - בודקים אם מימש או לא
-                      $buy_kg = floatval(get_post_meta($promotion->ID, ED_Promotions::META_PREFIX . 'buy_kg', true));
-                      $quantity = floatval($cart_item['quantity']);
-                      
-                      // בדיקה אם המוצר שקיל
-                      $weighable = get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes';
-                      if ( !$weighable ) {
-                        // למוצרים לא שקילים - ממירים לפי משקל יחידה
-                        $unit_weight = floatval(get_post_meta($product_id, '_ocwsu_unit_weight', true));
-                        if ( $unit_weight > 0 ) {
-                          $quantity = $quantity / $unit_weight; // המרה לק"ג
-                        }
-                      }
-                      
-                      if ( $quantity >= $buy_kg ) {
-                        // מימש את המבצע
-                        echo '<div class="ed-promotion-cart-message ed-promotion-cart-message--float ed-promotion-fulfilled">';
-                        echo '<span class="ed-promotion-label">' . sprintf(__('קיבלת את המבצע: %s', 'deliz-short'), esc_html($badge_text)) . '</span>';
-                        echo '</div>';
-                      } else {
-                        // לא מימש - מציגים כמה חסר
-                        $remaining = $buy_kg - $quantity;
-                        // פורמט יפה של המספר
-                        if ( $remaining < 1 ) {
-                          $remaining_display = wc_format_decimal($remaining * 1000, 0) . ' גרם';
-                        } else {
-                          $remaining_display = wc_format_decimal($remaining, 2) . ' ק"ג';
-                        }
-                        echo '<div class="ed-promotion-cart-message ed-promotion-cart-message--float ed-promotion-pending">';
-                        echo '<span class="ed-promotion-label">' . sprintf(__('חסר לך רק עוד %s כדי לקבל את המבצע: %s', 'deliz-short'), $remaining_display, esc_html($badge_text)) . '</span>';
-                        echo '</div>';
-                      }
-                    }
-                  }
-                }
+
 
               ?>
+
+
+
+
 
 
 
