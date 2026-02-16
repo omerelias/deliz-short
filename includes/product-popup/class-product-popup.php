@@ -686,7 +686,7 @@ class ED_Product_Popup {
       $version,
       true
     );
-    
+
     // 5. Variations (depends on state, ocwsu)
     wp_enqueue_script(
       'deliz-short-product-popup-variations',
@@ -705,25 +705,7 @@ class ED_Product_Popup {
       true
     );
     
-    // 7. Cart functions (depends on state, ocwsu, variations, core)
-    wp_enqueue_script(
-      'deliz-short-product-popup-cart',
-      $base_path . 'product-popup-cart.js',
-      ['deliz-short-product-popup-state', 'deliz-short-product-popup-ocwsu', 'deliz-short-product-popup-variations'],
-      $version,
-      true
-    );
-    
-    // 8. Mini cart (depends on state, core)
-    wp_enqueue_script(
-      'deliz-short-product-popup-mini-cart',
-      $base_path . 'product-popup-mini-cart.js',
-      ['deliz-short-product-popup-state'],
-      $version,
-      true
-    );
-    
-    // 9. Core functions (depends on all others - initializes everything)
+    // 7. Core functions (must load before cart and mini-cart)
     wp_enqueue_script(
       'deliz-short-product-popup-core',
       $base_path . 'product-popup-core.js',
@@ -734,10 +716,26 @@ class ED_Product_Popup {
         'deliz-short-product-popup-quantity',
         'deliz-short-product-popup-ocwsu',
         'deliz-short-product-popup-variations',
-        'deliz-short-product-popup-events',
-        'deliz-short-product-popup-cart',
-        'deliz-short-product-popup-mini-cart'
+        'deliz-short-product-popup-events'
       ],
+      $version,
+      true
+    );
+    
+    // 8. Cart functions (depends on state, ocwsu, variations, core)
+    wp_enqueue_script(
+      'deliz-short-product-popup-cart',
+      $base_path . 'product-popup-cart.js',
+      ['deliz-short-product-popup-state', 'deliz-short-product-popup-ocwsu', 'deliz-short-product-popup-variations', 'deliz-short-product-popup-core'],
+      $version,
+      true
+    );
+    
+    // 9. Mini cart (depends on state, core)
+    wp_enqueue_script(
+      'deliz-short-product-popup-mini-cart',
+      $base_path . 'product-popup-mini-cart.js',
+      ['deliz-short-product-popup-state', 'deliz-short-product-popup-core'],
       $version,
       true
     );

@@ -7,13 +7,12 @@
     'use strict';
 
     const state = window.EDProductPopupState; // Access shared state
-    const core = window.EDProductPopupCore; // Access core functions like closePopup
 
     /**
      * Handle add to cart
      */
     async function handleAddToCart(e) {
-        const addBtn = e.target.closest('#popup-add-to-cart');
+        const addBtn = e.target.closest('#popup-add-to-cart'); 
         if (!addBtn || addBtn.disabled) return;
 
         e.preventDefault();
@@ -350,7 +349,9 @@
             await animateImageToCart();
 
             // Close popup
-            core.closePopup();
+            if (window.EDProductPopupCore?.closePopup) {
+                window.EDProductPopupCore.closePopup();
+            }
 
             // Update cart fragments
             if (result.fragments && typeof result.fragments === 'object') {
