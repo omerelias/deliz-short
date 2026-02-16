@@ -418,7 +418,7 @@
     // Intercept checkout link click (from floating cart)
     $(document).on('click', '.ed-float-cart__btn--checkout', function(e) {
       e.preventDefault();
-      e.stopPropagation(); 
+      e.stopPropagation();
       e.stopImmediatePropagation();
       
       console.log('🔵 Checkout button clicked - intercepting...'); 

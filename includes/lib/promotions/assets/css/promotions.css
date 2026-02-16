@@ -1,0 +1,110 @@
+/* Promotions Frontend Styles */
+
+/* Promotion Badge */
+.ed-promotion-badge {
+  display: inline-block;
+  background-color: #d63638;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.ed-promotion-badge-inline {
+  display: inline-block;
+  background-color: #d63638;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Cart Messages */
+.ed-promotion-cart-message {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #f0f6fc;
+  border-right: 3px solid #2271b1;
+  border-radius: 3px;
+}
+
+.ed-promotion-cart-message.ed-promotion-fulfilled {
+  background-color: #f0f9f4;
+  border-right-color: #00a32a;
+}
+
+.ed-promotion-cart-message.ed-promotion-pending {
+  background-color: #fff8e5;
+  border-right-color: #dba617;
+}
+
+.ed-promotion-label {
+  font-size: 13px;
+  color: #1d2327;
+  font-weight: 500;
+}
+
+/* Product Badge Positioning */
+.woocommerce ul.products li.product .ed-promotion-badge,
+.woocommerce div.product .ed-promotion-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+.woocommerce ul.products li.product {
+  position: relative;
+}
+
+/* Product Popup Badge */
+.ed-product-popup .ed-promotion-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+/* Floating Mini Cart Promotion Rows */
+.ed-float-cart__row--promotion {
+  color: #00a32a;
+}
+
+.ed-float-cart__row--promotion strong {
+  color: #00a32a;
+  font-weight: 600;
+}
+
+/* Total After Discount Row */
+.ed-float-cart__row--total-after-discount {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 10px;
+  margin-top: 5px;
+  font-weight: 600;
+}
+
+.ed-float-cart__row--total-after-discount strong {
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ed-promotion-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  
+  .ed-promotion-cart-message {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}
+

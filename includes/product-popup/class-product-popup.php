@@ -64,7 +64,7 @@ class ED_Product_Popup {
     
     $cart = WC()->cart;
     ob_start();
-    
+
     if (!$cart || $cart->is_empty()) {
       echo '<div class="ed-float-cart__empty">';
       echo '<svg width="80" height="80" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">';
@@ -179,6 +179,40 @@ class ED_Product_Popup {
         </div>
         
         <?php
+        // וידוא שהעגלה מחושבת לפני קבלת fees
+        $cart->calculate_totals();
+        
+        // הצגת שורות מבצעים (fees) וחישוב סה"כ אחרי מבצעים
+        $fees = $cart->get_fees();
+        $subtotal_after_promotions = $cart->get_subtotal();
+        
+        if ( !empty($fees) ) :
+          foreach ( $fees as $fee ) :
+            // רק fees שליליים (הנחות)
+            if ( $fee->amount < 0 ) :
+              $subtotal_after_promotions += $fee->amount; // fees שליליים מוסיפים (כי הם הנחות)
+        ?>
+          <div class="ed-float-cart__row ed-float-cart__row--promotion">
+            <span><?php echo esc_html( $fee->name ); ?></span>
+            <strong><?php echo wp_kses_post( wc_cart_totals_fee_html( $fee ) ); ?></strong>
+          </div>
+        <?php
+            endif;
+          endforeach;
+          
+          // הצגת סה"כ אחרי הנחה (רק אם יש הנחות)
+          if ( $subtotal_after_promotions != $cart->get_subtotal() ) :
+        ?>
+          <div class="ed-float-cart__row ed-float-cart__row--total-after-discount">
+            <span><?php echo esc_html__('סה"כ אחרי הנחה', 'deliz-short'); ?></span>
+            <strong><?php echo wp_kses_post( wc_price( $subtotal_after_promotions ) ); ?></strong>
+          </div>
+        <?php
+          endif;
+        endif;
+        ?>
+        
+        <?php
         // טקסט משלוח חינם/עלות משלוח
         $free_min = 0;
         $settings = get_option('woocommerce_free_shipping_1_settings');
@@ -187,7 +221,7 @@ class ED_Product_Popup {
         }
         
         if ($free_min > 0):
-          $remaining = max(0, $free_min - (float) $cart->get_subtotal());
+          $remaining = max(0, $free_min - (float) $subtotal_after_promotions);
         ?>
           <div class="ed-float-cart__shippinghint">
             <?php if ($remaining > 0): ?>

@@ -393,6 +393,60 @@ $cart = WC()->cart;
 
           <?php
 
+          // וידוא שהעגלה מחושבת לפני קבלת fees 
+          // זה חשוב כי fees מחושבים רק ב-calculate_totals()
+          $cart->calculate_totals();
+          
+          // הצגת שורות מבצעים (fees) וחישוב סה"כ אחרי מבצעים 
+          $fees = $cart->get_fees();
+          $subtotal_after_promotions = $cart->get_subtotal();
+          
+          // DEBUG: var_dump לבדיקה
+            echo '<!-- DEBUG: Fees count: ' . count($fees) . ' -->';
+            echo '<!-- DEBUG: Fees: ';
+            var_dump($fees);
+            echo ' -->';
+
+          if ( !empty($fees) ) :
+            foreach ( $fees as $fee ) :
+              // רק fees שליליים (הנחות)
+              if ( $fee->amount < 0 ) :
+                $subtotal_after_promotions += $fee->amount; // fees שליליים מוסיפים (כי הם הנחות)
+          ?>
+
+            <div class="ed-float-cart__row ed-float-cart__row--promotion">
+
+              <span><?php echo esc_html( $fee->name ); ?></span>
+
+              <strong><?php echo wp_kses_post( wc_cart_totals_fee_html( $fee ) ); ?></strong>
+
+            </div>
+
+          <?php
+              endif;
+            endforeach;
+            
+            // הצגת סה"כ אחרי הנחה (רק אם יש הנחות)
+            if ( $subtotal_after_promotions != $cart->get_subtotal() ) :
+          ?>
+
+            <div class="ed-float-cart__row ed-float-cart__row--total-after-discount">
+
+              <span><?php echo esc_html__('סה"כ אחרי הנחה', 'deliz-short'); ?></span>
+
+              <strong><?php echo wp_kses_post( wc_price( $subtotal_after_promotions ) ); ?></strong>
+
+            </div>
+
+          <?php
+            endif;
+          endif;
+          ?>
+
+
+
+          <?php
+
           // טקסט משלוח חינם/עלות משלוח (פשוט, בלי חישובים כבדים)
 
           $free_min = 0;
@@ -407,7 +461,7 @@ $cart = WC()->cart;
 
           if ( $free_min > 0 ) :
 
-            $remaining = max(0, $free_min - (float) $cart->get_subtotal());
+            $remaining = max(0, $free_min - (float) $subtotal_after_promotions);
 
           ?>
 
