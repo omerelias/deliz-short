@@ -1,7 +1,9 @@
-/* Promotions Admin Styles */
+/* Promotions Admin Styles - RTL Support */
 
 .ed-promotions-admin {
   max-width: 1200px;
+  direction: rtl;
+  text-align: right;
 }
 
 .ed-promotions-table {
@@ -45,7 +47,7 @@
 }
 
 .column-actions .button {
-  margin-right: 5px;
+  margin-left: 5px;
   margin-bottom: 5px;
 }
 
@@ -59,7 +61,7 @@
 }
 
 .ed-promotion-step {
-  max-width: 800px;
+  max-width: 100%;
 }
 
 .ed-promotion-step h2 {
@@ -121,6 +123,13 @@
   margin: 20px 0;
 }
 
+.ed-promotion-step-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 30px;
+  align-items: start;
+}
+
 .ed-form-field {
   margin-bottom: 20px;
 }
@@ -156,12 +165,12 @@
 }
 
 .ed-form-field .field-suffix {
-  margin-right: 5px;
+  margin-left: 5px;
   color: #646970;
 }
 
 .ed-form-field .field-label-after {
-  margin-right: 10px;
+  margin-left: 10px;
   color: #646970;
 }
 
@@ -214,6 +223,7 @@
   border-top: 1px solid #ccd0d4;
   display: flex;
   gap: 10px;
+  flex-direction: row-reverse; /* RTL: buttons order reversed */
 }
 
 .ed-promotion-form-actions .button {
@@ -232,18 +242,22 @@
 /* Date Picker */
 .ed-form-field .ed-datepicker {
   max-width: 200px;
-  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .ed-form-field .ed-select-date {
-  margin-right: 10px;
+  margin-left: 10px;
 }
 
 /* Preview Section */
 .ed-promotion-preview-section {
-  margin-top: 40px;
-  padding-top: 30px;
-  border-top: 2px solid #ccd0d4;
+  position: sticky;
+  top: 20px;
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .ed-promotion-preview-section h3 {
@@ -256,14 +270,6 @@
   margin: 0 0 20px 0;
   color: #646970;
   font-size: 13px;
-}
-
-.ed-promotion-preview {
-  background: #f6f7f7;
-  border: 1px solid #ccd0d4;
-  border-radius: 8px;
-  padding: 20px;
-  max-width: 400px;
 }
 
 .ed-promotion-preview-product {
@@ -312,7 +318,7 @@
 .ed-preview-badge-container {
   position: absolute;
   top: 10px;
-  right: 10px;
+  left: 10px;
   z-index: 10;
 }
 
@@ -352,6 +358,17 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .ed-promotion-step-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .ed-promotion-preview-section {
+    position: static;
+    margin-top: 30px;
+  }
+}
+
 @media (max-width: 782px) {
   .ed-promotion-type-selector {
     grid-template-columns: 1fr;
@@ -360,10 +377,6 @@
   .ed-form-field input[type="text"],
   .ed-form-field input[type="number"],
   .ed-form-field select {
-    max-width: 100%;
-  }
-  
-  .ed-promotion-preview {
     max-width: 100%;
   }
 }

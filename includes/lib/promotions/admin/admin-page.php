@@ -186,125 +186,129 @@ if ($promotion_id > 0 && $action === 'edit') {
           <h2><?php esc_html_e('שלב 2: הגדרות המבצע', 'deliz-short'); ?></h2>
           
           <div class="ed-promotion-step-content">
-            <!-- Common fields -->
-            <div class="ed-form-field">
-              <label for="promotion_name">
-                <?php esc_html_e('שם המבצע', 'deliz-short'); ?>
-                <span class="required">*</span>
-              </label>
-              <input type="text" id="promotion_name" name="promotion_name" value="<?php echo esc_attr($promotion_data['name'] ?? ''); ?>" required>
-            </div>
-            
-            <!-- Discount type fields -->
-            <div class="ed-promotion-type-fields ed-promotion-type-discount" style="display: none;">
-              <div class="ed-form-field">
-                <label for="discount_percent">
-                  <?php esc_html_e('קבל', 'deliz-short'); ?>
-                </label>
-                <input type="number" id="discount_percent" name="discount_percent" step="0.1" min="0" max="100" value="<?php echo esc_attr($promotion_data['discount_percent'] ?? ''); ?>">
-                <span class="field-suffix">%</span>
-                <span class="field-label-after"><?php esc_html_e('הנחה', 'deliz-short'); ?></span>
-              </div>
-              
-              <div class="ed-form-field">
-                <label for="target_type_discount">
-                  <?php esc_html_e('על', 'deliz-short'); ?>
-                </label>
-                <select id="target_type_discount" name="target_type_discount">
-                  <option value="product" <?php selected($promotion_data['target_type'] ?? '', 'product'); ?>><?php esc_html_e('מוצר', 'deliz-short'); ?></option>
-                  <option value="category" <?php selected($promotion_data['target_type'] ?? '', 'category'); ?>><?php esc_html_e('קטגוריה', 'deliz-short'); ?></option>
-                </select>
-              </div>
-              
-              <div class="ed-form-field">
-                <label for="target_search_discount">
-                  <?php esc_html_e('חיפוש מוצר / קטגוריה', 'deliz-short'); ?>
-                </label>
-                <input type="text" id="target_search_discount" class="ed-target-search" data-target-type-field="target_type_discount" placeholder="<?php esc_attr_e('התחל להקליד...', 'deliz-short'); ?>" value="<?php echo esc_attr(($promotion_data['type'] ?? '') === 'discount' ? ($promotion_data['target_name'] ?? '') : ''); ?>">
-                <input type="hidden" id="target_id_discount" name="target_id_discount" value="<?php echo esc_attr(($promotion_data['type'] ?? '') === 'discount' ? ($promotion_data['target_id'] ?? '') : ''); ?>">
-                <div id="target_results_discount" class="ed-target-results"></div>
-              </div>
-            </div>
-            
-            <!-- Buy X Pay Y type fields -->
-            <div class="ed-promotion-type-fields ed-promotion-type-buy_x_pay_y" style="display: none;">
-              <div class="ed-form-field">
-                <label for="buy_kg">
-                  <?php esc_html_e('קנה', 'deliz-short'); ?>
-                </label>
-                <input type="number" id="buy_kg" name="buy_kg" step="0.01" min="0" value="<?php echo esc_attr($promotion_data['buy_kg'] ?? ''); ?>">
-                <span class="field-suffix">ק"ג</span>
-              </div>
-              
-              <div class="ed-form-field">
-                <label for="target_type_buy">
-                  <?php esc_html_e('מ', 'deliz-short'); ?>
-                </label>
-                <select id="target_type_buy" name="target_type_buy">
-                  <option value="product" <?php selected($promotion_data['target_type'] ?? '', 'product'); ?>><?php esc_html_e('מוצר', 'deliz-short'); ?></option>
-                  <option value="category" <?php selected($promotion_data['target_type'] ?? '', 'category'); ?>><?php esc_html_e('קטגוריה', 'deliz-short'); ?></option>
-                </select>
-              </div>
-              
-              <div class="ed-form-field">
-                <label for="target_search_buy">
-                  <?php esc_html_e('חיפוש מוצר / קטגוריה', 'deliz-short'); ?>
-                </label>
-                <input type="text" id="target_search_buy" class="ed-target-search" data-target-type-field="target_type_buy" placeholder="<?php esc_attr_e('התחל להקליד...', 'deliz-short'); ?>" value="<?php echo esc_attr(($promotion_data['type'] ?? '') === 'buy_x_pay_y' ? ($promotion_data['target_name'] ?? '') : ''); ?>">
-                <input type="hidden" id="target_id_buy" name="target_id_buy" value="<?php echo esc_attr(($promotion_data['type'] ?? '') === 'buy_x_pay_y' ? ($promotion_data['target_id'] ?? '') : ''); ?>">
-                <div id="target_results_buy" class="ed-target-results"></div>
-              </div>
-              
-              <div class="ed-form-field">
-                <label for="pay_amount">
-                  <?php esc_html_e('שלם', 'deliz-short'); ?>
-                </label>
-                <input type="number" id="pay_amount" name="pay_amount" step="0.01" min="0" value="<?php echo esc_attr($promotion_data['pay_amount'] ?? ''); ?>">
-                <span class="field-suffix">ש"ח</span>
-              </div>
-            </div>
-            
-            <!-- Preview Section -->
-            <div class="ed-promotion-preview-section">
-              <h3><?php esc_html_e('תצוגה מקדימה', 'deliz-short'); ?></h3>
-              <p class="description"><?php esc_html_e('כך יראה המבצע על המוצרים באתר', 'deliz-short'); ?></p>
-              
-              <div class="ed-promotion-preview">
-                <div class="ed-promotion-preview-product">
-                  <?php
-                  // Get a random product for preview (or placeholder)
-                  $preview_product = null;
-                  $products = wc_get_products(['limit' => 1, 'orderby' => 'rand']);
-                  if (!empty($products)) {
-                    $preview_product = $products[0];
-                  }
-                  ?>
-                  <div class="ed-preview-product-image">
-                    <?php if ($preview_product && $preview_product->get_image_id()): ?>
-                      <?php echo wp_get_attachment_image($preview_product->get_image_id(), 'woocommerce_thumbnail'); ?>
-                    <?php else: ?>
-                      <div class="ed-preview-placeholder-image">
-                        <span class="dashicons dashicons-format-image"></span>
-                      </div>
-                    <?php endif; ?>
-                    <div class="ed-preview-badge-container">
-                      <span class="ed-promotion-badge ed-preview-badge" id="ed-preview-badge">
-                        <?php esc_html_e('תווית המבצע', 'deliz-short'); ?>
-                      </span>
-                    </div>
+            <div class="ed-promotion-step-layout">
+              <div class="ed-promotion-form-fields">
+                <!-- Common fields -->
+                <div class="ed-form-field">
+                  <label for="promotion_name">
+                    <?php esc_html_e('שם המבצע', 'deliz-short'); ?>
+                    <span class="required">*</span>
+                  </label>
+                  <input type="text" id="promotion_name" name="promotion_name" value="<?php echo esc_attr($promotion_data['name'] ?? ''); ?>" required>
+                </div>
+                
+                <!-- Discount type fields -->
+                <div class="ed-promotion-type-fields ed-promotion-type-discount" style="display: none;">
+                  <div class="ed-form-field">
+                    <label for="discount_percent">
+                      <?php esc_html_e('קבל', 'deliz-short'); ?>
+                    </label>
+                    <input type="number" id="discount_percent" name="discount_percent" step="0.1" min="0" max="100" value="<?php echo esc_attr($promotion_data['discount_percent'] ?? ''); ?>">
+                    <span class="field-suffix">%</span>
+                    <span class="field-label-after"><?php esc_html_e('הנחה', 'deliz-short'); ?></span>
                   </div>
-                  <div class="ed-preview-product-info">
-                    <h4 class="ed-preview-product-name">
-                      <?php echo $preview_product ? esc_html($preview_product->get_name()) : esc_html__('שם מוצר לדוגמה', 'deliz-short'); ?>
-                    </h4>
-                    <div class="ed-preview-product-price">
-                      <?php 
-                      if ($preview_product) {
-                        echo wp_kses_post($preview_product->get_price_html());
-                      } else {
-                        echo '<span class="price">₪99.00</span>';
-                      }
-                      ?>
+                  
+                  <div class="ed-form-field">
+                    <label for="target_type_discount">
+                      <?php esc_html_e('על', 'deliz-short'); ?>
+                    </label>
+                    <select id="target_type_discount" name="target_type_discount">
+                      <option value="product" <?php selected($promotion_data['target_type'] ?? '', 'product'); ?>><?php esc_html_e('מוצר', 'deliz-short'); ?></option>
+                      <option value="category" <?php selected($promotion_data['target_type'] ?? '', 'category'); ?>><?php esc_html_e('קטגוריה', 'deliz-short'); ?></option>
+                    </select>
+                  </div>
+                  
+                  <div class="ed-form-field">
+                    <label for="target_search_discount">
+                      <?php esc_html_e('חיפוש מוצר / קטגוריה', 'deliz-short'); ?>
+                    </label>
+                    <input type="text" id="target_search_discount" class="ed-target-search" data-target-type-field="target_type_discount" placeholder="<?php esc_attr_e('התחל להקליד...', 'deliz-short'); ?>" value="<?php echo esc_attr(($promotion_data['type'] ?? '') === 'discount' ? ($promotion_data['target_name'] ?? '') : ''); ?>">
+                    <input type="hidden" id="target_id_discount" name="target_id_discount" value="<?php echo esc_attr(($promotion_data['type'] ?? '') === 'discount' ? ($promotion_data['target_id'] ?? '') : ''); ?>">
+                    <div id="target_results_discount" class="ed-target-results"></div>
+                  </div>
+                </div>
+                
+                <!-- Buy X Pay Y type fields -->
+                <div class="ed-promotion-type-fields ed-promotion-type-buy_x_pay_y" style="display: none;">
+                  <div class="ed-form-field">
+                    <label for="buy_kg">
+                      <?php esc_html_e('קנה', 'deliz-short'); ?>
+                    </label>
+                    <input type="number" id="buy_kg" name="buy_kg" step="0.01" min="0" value="<?php echo esc_attr($promotion_data['buy_kg'] ?? ''); ?>">
+                    <span class="field-suffix">ק"ג</span>
+                  </div>
+                  
+                  <div class="ed-form-field">
+                    <label for="target_type_buy">
+                      <?php esc_html_e('מ', 'deliz-short'); ?>
+                    </label>
+                    <select id="target_type_buy" name="target_type_buy">
+                      <option value="product" <?php selected($promotion_data['target_type'] ?? '', 'product'); ?>><?php esc_html_e('מוצר', 'deliz-short'); ?></option>
+                      <option value="category" <?php selected($promotion_data['target_type'] ?? '', 'category'); ?>><?php esc_html_e('קטגוריה', 'deliz-short'); ?></option>
+                    </select>
+                  </div>
+                  
+                  <div class="ed-form-field">
+                    <label for="target_search_buy">
+                      <?php esc_html_e('חיפוש מוצר / קטגוריה', 'deliz-short'); ?>
+                    </label>
+                    <input type="text" id="target_search_buy" class="ed-target-search" data-target-type-field="target_type_buy" placeholder="<?php esc_attr_e('התחל להקליד...', 'deliz-short'); ?>" value="<?php echo esc_attr(($promotion_data['type'] ?? '') === 'buy_x_pay_y' ? ($promotion_data['target_name'] ?? '') : ''); ?>">
+                    <input type="hidden" id="target_id_buy" name="target_id_buy" value="<?php echo esc_attr(($promotion_data['type'] ?? '') === 'buy_x_pay_y' ? ($promotion_data['target_id'] ?? '') : ''); ?>">
+                    <div id="target_results_buy" class="ed-target-results"></div>
+                  </div>
+                  
+                  <div class="ed-form-field">
+                    <label for="pay_amount">
+                      <?php esc_html_e('שלם', 'deliz-short'); ?>
+                    </label>
+                    <input type="number" id="pay_amount" name="pay_amount" step="0.01" min="0" value="<?php echo esc_attr($promotion_data['pay_amount'] ?? ''); ?>">
+                    <span class="field-suffix">ש"ח</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Preview Section -->
+              <div class="ed-promotion-preview-section">
+                <h3><?php esc_html_e('תצוגה מקדימה', 'deliz-short'); ?></h3>
+                <p class="description"><?php esc_html_e('כך יראה המבצע על המוצרים באתר', 'deliz-short'); ?></p>
+                
+                <div class="ed-promotion-preview">
+                  <div class="ed-promotion-preview-product">
+                    <?php
+                    // Get a random product for preview (or placeholder)
+                    $preview_product = null;
+                    $products = wc_get_products(['limit' => 1, 'orderby' => 'rand']);
+                    if (!empty($products)) {
+                      $preview_product = $products[0];
+                    }
+                    ?>
+                    <div class="ed-preview-product-image">
+                      <?php if ($preview_product && $preview_product->get_image_id()): ?>
+                        <?php echo wp_get_attachment_image($preview_product->get_image_id(), 'woocommerce_thumbnail'); ?>
+                      <?php else: ?>
+                        <div class="ed-preview-placeholder-image">
+                          <span class="dashicons dashicons-format-image"></span>
+                        </div>
+                      <?php endif; ?>
+                      <div class="ed-preview-badge-container">
+                        <span class="ed-promotion-badge ed-preview-badge" id="ed-preview-badge">
+                          <?php esc_html_e('תווית המבצע', 'deliz-short'); ?>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="ed-preview-product-info">
+                      <h4 class="ed-preview-product-name">
+                        <?php echo $preview_product ? esc_html($preview_product->get_name()) : esc_html__('שם מוצר לדוגמה', 'deliz-short'); ?>
+                      </h4>
+                      <div class="ed-preview-product-price">
+                        <?php 
+                        if ($preview_product) {
+                          echo wp_kses_post($preview_product->get_price_html());
+                        } else {
+                          echo '<span class="price">₪99.00</span>';
+                        }
+                        ?>
+                      </div>
                     </div>
                   </div>
                 </div>
