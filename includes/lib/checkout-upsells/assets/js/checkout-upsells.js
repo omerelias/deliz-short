@@ -81,6 +81,27 @@
         if (response.success && response.data && response.data.html) {
           $container.html(response.data.html);
           
+          // Ensure all products have data-product-id attribute for popup handler
+          setTimeout(function() {
+            $container.find('li.product').each(function() {
+              const $product = $(this);
+              if (!$product.attr('data-product-id') && !$product.attr('data-product_id')) {
+                // Try to get from link
+                const $link = $product.find('a[href*="/product/"]').first();
+                if ($link.length) {
+                  const href = $link.attr('href');
+                  const match = href.match(/\/product\/([^\/\?]+)/);
+                  if (match) {
+                    const slug = match[1];
+                    // Try to extract ID from slug or use slug directly
+                    // The popup handler can handle slugs too
+                    $product.attr('data-product-id', slug);
+                  }
+                }
+              }
+            });
+          }, 50);
+          
           // Re-initialize WooCommerce scripts for the new products
           if (typeof $(document.body).trigger === 'function') {
             $(document.body).trigger('wc_fragment_refresh');
@@ -300,20 +321,71 @@
    * Open product popup
    */
   function openProductPopup(productId) {
+    console.log('🔵 openProductPopup called with:', productId);
+    
     if (!config.popupEnabled || !config.popupConfig) {
+      console.log('⚠️ Popup not enabled, opening in new tab');
       // Fallback: open product page in new tab
-      window.open(wc_add_to_cart_params.product_url.replace('%product_id%', productId), '_blank');
+      if (typeof wc_add_to_cart_params !== 'undefined' && wc_add_to_cart_params.product_url) {
+        window.open(wc_add_to_cart_params.product_url.replace('%product_id%', productId), '_blank');
+      } else {
+        window.open('/product/' + productId, '_blank');
+      }
       return;
     }
 
-    // Trigger product popup if available
-    if (window.ED_POPUP_CONFIG && typeof window.openProductPopup === 'function') {
-      window.openProductPopup(productId);
-    } else if (window.jQuery && window.jQuery.fn.edProductPopup) {
-      window.jQuery('#ed-product-popup').edProductPopup('open', productId);
+    // Try to use the REST API to open popup
+    if (config.popupConfig && config.popupConfig.endpoint) {
+      console.log('🔵 Using REST API to open popup');
+      $.ajax({
+        url: config.popupConfig.endpoint,
+        method: 'GET',
+        data: { id: productId },
+        beforeSend: function(xhr) {
+          xhr.setRequestHeader('X-WP-Nonce', config.popupConfig.restNonce);
+        },
+        success: function(response) {
+          console.log('✅ Popup data received:', response);
+          // The popup should handle this automatically via the product-popup.js handler
+          // But we can also trigger it manually if needed
+          if (window.ED_POPUP_CONFIG && typeof window.openProductPopup === 'function') {
+            window.openProductPopup(productId);
+          } else {
+            // Try to find and click the product element to trigger the popup
+            const $product = $('#ed-checkout-upsells-products li.product[data-product-id="' + productId + '"]');
+            if ($product.length) {
+              $product.trigger('click');
+            } else {
+              // Create a temporary element to trigger the popup
+              const $temp = $('<div>').attr('data-product-id', productId).addClass('product');
+              $('body').append($temp);
+              $temp.trigger('click');
+              $temp.remove();
+            }
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('❌ Error loading popup data:', error);
+          // Fallback: try to trigger via click
+          const $product = $('#ed-checkout-upsells-products li.product[data-product-id="' + productId + '"]');
+          if ($product.length) {
+            $product.trigger('click');
+          }
+        },
+      });
     } else {
-      // Fallback: try to trigger via data attribute
-      $('[data-product-id="' + productId + '"]').first().trigger('click');
+      // Fallback: try to trigger via click on product element
+      console.log('🔵 Trying to trigger popup via click');
+      const $product = $('#ed-checkout-upsells-products li.product[data-product-id="' + productId + '"]');
+      if ($product.length) {
+        $product.trigger('click');
+      } else {
+        // Create a temporary element to trigger the popup
+        const $temp = $('<div>').attr('data-product-id', productId).addClass('product');
+        $('body').append($temp);
+        $temp.trigger('click');
+        $temp.remove();
+      }
     }
   }
 
@@ -442,50 +514,9 @@
       }
     });
 
-    // Handle product links - open in popup if available
-    $(document).on('click', '#ed-checkout-upsells-products a.woocommerce-LoopProduct-link', function(e) {
-      if (config.popupEnabled) {
-        e.preventDefault();
-        const $product = $(this).closest('li.product');
-        const productId = $product.data('product-id') || $product.find('[data-product-id]').first().data('product-id');
-        
-        if (productId) {
-          openProductPopup(productId);
-        } else {
-          // Fallback: get from href
-          const href = $(this).attr('href');
-          if (href) {
-            const match = href.match(/\/product\/([^\/]+)/);
-            if (match) {
-              // Try to get product ID from slug
-              const slug = match[1];
-              $.ajax({
-                url: config.ajaxUrl,
-                type: 'POST',
-                data: {
-                  action: 'ed_get_product_id_by_slug',
-                  slug: slug,
-                  nonce: config.nonce,
-                },
-                success: function(response) {
-                  if (response.success && response.data && response.data.product_id) {
-                    openProductPopup(response.data.product_id);
-                  } else {
-                    window.open(href, '_blank');
-                  }
-                },
-                error: function() {
-                  window.open(href, '_blank');
-                },
-              });
-            } else {
-              window.open(href, '_blank');
-            }
-          }
-        }
-      }
-      // Otherwise, let the link work normally
-    });
+    // The existing product-popup.js handler should work automatically
+    // We just need to ensure products have data-product-id after they load
+    // No need for custom click handler - let product-popup.js handle it
 
     // ESC key to skip
     $(document).on('keydown', function(e) {

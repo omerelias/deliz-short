@@ -52,7 +52,7 @@
 
   bottom: 0;
 
-  z-index: 9999;
+  z-index: 99999999 !important;
 
   display: flex;
 
@@ -75,6 +75,14 @@
   opacity: 1;
 
   visibility: visible;
+
+}
+
+/* Ensure product popup is above checkout upsells popup */
+
+body.ed-checkout-upsells-popup-open .ed-product-popup {
+
+  z-index: 99999999 !important;
 
 }
 

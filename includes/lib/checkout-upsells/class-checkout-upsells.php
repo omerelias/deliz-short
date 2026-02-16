@@ -341,7 +341,28 @@ class ED_Checkout_Upsells {
         if (!$post_object) continue;
         
         setup_postdata($GLOBALS['post'] = $post_object);
+        
+        // Get product to ensure we have the ID
+        $product = wc_get_product($product_id);
+        if (!$product) continue;
+        
+        // Start output buffering to add data-product-id attribute
+        ob_start();
         wc_get_template_part('content', 'product');
+        $product_html = ob_get_clean();
+        
+        // Add data-product-id to li.product if it doesn't exist
+        if (strpos($product_html, 'data-product-id') === false && strpos($product_html, 'data-product_id') === false) {
+          // Try to add to li.product
+          $product_html = preg_replace(
+            '/(<li[^>]*class="[^"]*product[^"]*"[^>]*)(>)/i',
+            '$1 data-product-id="' . esc_attr($product_id) . '"$2',
+            $product_html,
+            1
+          );
+        }
+        
+        echo $product_html; // phpcs:ignore
       }
       wp_reset_postdata();
       ?>
