@@ -197,7 +197,7 @@ class ED_Product_Popup {
                 }
               }
               ?>
-              
+
               <div class="ed-float-cart__actions-row">
                 <div class="ed-float-cart__quantity-controls">
                   <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--decrease" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הפחת כמות', 'deliz-short'); ?>">-</button>
@@ -647,16 +647,103 @@ class ED_Product_Popup {
       defined('DELIZ_SHORT_VERSION') ? DELIZ_SHORT_VERSION : '1.0.0'
     );
 
+    // Enqueue modular popup scripts in correct order
+    $version = defined('DELIZ_SHORT_VERSION') ? DELIZ_SHORT_VERSION : '1.0.0';
+    $base_path = get_template_directory_uri() . '/assets/js/';
+    
+    // 1. State management (no dependencies)
     wp_enqueue_script(
-      'deliz-short-product-popup',
-      get_template_directory_uri() . '/assets/js/product-popup.js',
-      ['jquery'],
-      defined('DELIZ_SHORT_VERSION') ? DELIZ_SHORT_VERSION : '1.0.0',
+      'deliz-short-product-popup-state',
+      $base_path . 'product-popup-state.js',
+      [],
+      $version,
+      true
+    );
+    
+    // 2. Render functions (depends on state)
+    wp_enqueue_script(
+      'deliz-short-product-popup-render',
+      $base_path . 'product-popup-render.js',
+      ['deliz-short-product-popup-state'],
+      $version,
+      true
+    );
+    
+    // 3. Quantity inputs (depends on state)
+    wp_enqueue_script(
+      'deliz-short-product-popup-quantity',
+      $base_path . 'product-popup-quantity.js',
+      ['deliz-short-product-popup-state'],
+      $version,
+      true
+    );
+    
+    // 4. OCWSU fields (depends on state, quantity)
+    wp_enqueue_script(
+      'deliz-short-product-popup-ocwsu',
+      $base_path . 'product-popup-ocwsu.js',
+      ['deliz-short-product-popup-state', 'deliz-short-product-popup-quantity'],
+      $version,
+      true
+    );
+    
+    // 5. Variations (depends on state, ocwsu)
+    wp_enqueue_script(
+      'deliz-short-product-popup-variations',
+      $base_path . 'product-popup-variations.js',
+      ['deliz-short-product-popup-state', 'deliz-short-product-popup-ocwsu'],
+      $version,
+      true
+    );
+    
+    // 6. Events (depends on state)
+    wp_enqueue_script(
+      'deliz-short-product-popup-events',
+      $base_path . 'product-popup-events.js',
+      ['deliz-short-product-popup-state'],
+      $version,
+      true
+    );
+    
+    // 7. Cart functions (depends on state, ocwsu, variations, core)
+    wp_enqueue_script(
+      'deliz-short-product-popup-cart',
+      $base_path . 'product-popup-cart.js',
+      ['deliz-short-product-popup-state', 'deliz-short-product-popup-ocwsu', 'deliz-short-product-popup-variations'],
+      $version,
+      true
+    );
+    
+    // 8. Mini cart (depends on state, core)
+    wp_enqueue_script(
+      'deliz-short-product-popup-mini-cart',
+      $base_path . 'product-popup-mini-cart.js',
+      ['deliz-short-product-popup-state'],
+      $version,
+      true
+    );
+    
+    // 9. Core functions (depends on all others - initializes everything)
+    wp_enqueue_script(
+      'deliz-short-product-popup-core',
+      $base_path . 'product-popup-core.js',
+      [
+        'jquery',
+        'deliz-short-product-popup-state',
+        'deliz-short-product-popup-render',
+        'deliz-short-product-popup-quantity',
+        'deliz-short-product-popup-ocwsu',
+        'deliz-short-product-popup-variations',
+        'deliz-short-product-popup-events',
+        'deliz-short-product-popup-cart',
+        'deliz-short-product-popup-mini-cart'
+      ],
+      $version,
       true
     );
 
-    // Popup config
-    wp_localize_script('deliz-short-product-popup', 'ED_POPUP_CONFIG', [
+    // Popup config (localize to core script which initializes everything)
+    wp_localize_script('deliz-short-product-popup-core', 'ED_POPUP_CONFIG', [
       'endpoint' => rest_url('ed/v1/product-popup'),
       'addToCartUrl' => rest_url('ed/v1/add-to-cart'), // Use our custom endpoint for debugging
       'updateCartUrl' => rest_url('ed/v1/update-cart'),
