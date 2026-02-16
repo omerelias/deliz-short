@@ -418,10 +418,10 @@
     // Intercept checkout link click (from floating cart)
     $(document).on('click', '.ed-float-cart__btn--checkout', function(e) {
       e.preventDefault();
-      e.stopPropagation();
+      e.stopPropagation(); 
       e.stopImmediatePropagation();
       
-      console.log('🔵 Checkout button clicked - intercepting...');
+      console.log('🔵 Checkout button clicked - intercepting...'); 
       
       const $link = $(this);
       const checkoutUrl = $link.attr('href');
@@ -467,10 +467,20 @@
       return false;
     });
 
-    // Close popup (disabled - must skip)
-    $(document).on('click', '.ed-checkout-upsells-popup__close, .ed-checkout-upsells-popup__overlay', function(e) {
+    // Close popup button (X) - just close, don't proceed to checkout
+    $(document).on('click', '.ed-checkout-upsells-popup__close', function(e) {
       e.preventDefault();
-      // Don't allow closing - must skip or add products
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      hidePopup();
+      return false;
+    });
+
+    // Overlay click - also just close
+    $(document).on('click', '.ed-checkout-upsells-popup__overlay', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      hidePopup();
     });
 
     // Skip button
