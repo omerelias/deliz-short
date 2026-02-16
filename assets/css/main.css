@@ -417,7 +417,7 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    /*overscroll-behavior: contain;*/
     -webkit-overflow-scrolling: touch;
 }
 
@@ -1295,7 +1295,7 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
     display: block;
     text-align: center;
     cursor: pointer;
-    line-height: 45px;
+    line-height: 50px;
     height: 50px;
 }
 
@@ -1571,7 +1571,6 @@ form.woocommerce-checkout .ocws-days-with-slots-list-label{
 
     .choose-shipping .ship-choose .shipping-method-wraper label{
         font-size: 16px;
-        line-height: 47px;
     }
 
     .woocommerce ul.products li.product.outofstock .loop-thumb-wrap .badge-oos{
