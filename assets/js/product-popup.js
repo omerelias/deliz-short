@@ -1203,8 +1203,8 @@
               <div class="ed-product-popup__price">
 
                 ${ocwsu.average_weight && ocwsu.unit_weight_type !== 'variable' ? `<span class="ed-product-popup__price-label">משקל ממוצע: ${ocwsu.average_weight} ${ocwsu.average_weight_label}</span><span class="ed-product-popup__price-sep">-</span>` : ''}
-
-                <span class="ed-product-popup__price-value">${data.price_html}</span>
+ 
+                <span class="ed-product-popup__price-value">${data.price_html}</span> 
 
               </div>
 
@@ -1214,7 +1214,7 @@
 
               ${noteHTML}
 
-            </div>
+            </div> 
 
             <div class="ed-product-popup__footer">
 

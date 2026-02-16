@@ -64,7 +64,7 @@ class ED_Product_Popup {
     
     $cart = WC()->cart;
     ob_start();
-
+ 
     if (!$cart || $cart->is_empty()) {
       echo '<div class="ed-float-cart__empty">';
       echo '<svg width="80" height="80" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">';
