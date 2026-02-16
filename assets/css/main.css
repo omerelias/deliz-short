@@ -412,7 +412,7 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
 }
 
 .ed-float-cart__items{
-    margin-block-start: 35px;
+    margin-block-start: 15px;
     padding-inline: 15px;
     flex: 1 1 auto;
     min-height: 0;
@@ -1962,12 +1962,9 @@ div#lastPricePop .modal-dialog.modal-dialog-centered {
     background-color: #fff;
     background-clip: padding-box;
     border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 0.3rem;
+    border-radius: var(--popup-radius);
+    border: none;
     outline: 0;
-}
-
-.modal-content {
-    border-radius: 0;
 }
 
 .modal-header {
@@ -2040,4 +2037,8 @@ div#lastPricePop .modal-dialog.modal-dialog-centered {
 .modal.show .modal-ovelay{
     opacity: .5;
     visibility: visible;
+}
+
+.choose-shipping-popup, .redirect-dialog-popup{
+    z-index: 9999000;
 }
