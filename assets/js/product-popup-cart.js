@@ -12,7 +12,7 @@
      * Handle add to cart
      */
     async function handleAddToCart(e) {
-        const addBtn = e.target.closest('#popup-add-to-cart'); 
+        const addBtn = e.target.closest('#popup-add-to-cart');
         if (!addBtn || addBtn.disabled) return;
 
         e.preventDefault();

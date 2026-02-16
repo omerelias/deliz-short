@@ -201,7 +201,7 @@ class ED_Product_Popup {
               <div class="ed-float-cart__actions-row">
                 <div class="ed-float-cart__quantity-controls">
                   <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--decrease" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הפחת כמות', 'deliz-short'); ?>">-</button>
-                  <input type="number" class="ed-float-cart__qty-input" value="<?php echo esc_attr($qty); ?>" min="1" step="1" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>">
+                  <input type="text" class="ed-float-cart__qty-input" value="<?php echo esc_attr($qty); ?>" min="1" step="1" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>">
                   <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--increase" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+</button>
                 </div>
                 <button type="button" class="ed-float-cart__edit-btn" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" data-product-id="<?php echo esc_attr($product_id); ?>" data-variation-id="<?php echo esc_attr($variation_id); ?>" data-quantity="<?php echo esc_attr($quantity); ?>" data-variation="<?php echo $variation_attrs_json; ?>" data-product-note="<?php echo esc_attr($product_note); ?>" data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>" data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>" aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>"><?php esc_html_e('עריכה', 'deliz-short'); ?></button>
@@ -692,7 +692,7 @@ class ED_Product_Popup {
       'deliz-short-product-popup-variations',
       $base_path . 'product-popup-variations.js',
       ['deliz-short-product-popup-state', 'deliz-short-product-popup-ocwsu'],
-      $version,
+      $version, 
       true
     );
     
