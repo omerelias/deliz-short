@@ -864,6 +864,8 @@
 
     const canToggle = ocwsu.weighable && ocwsu.sold_by_units && ocwsu.sold_by_weight;
 
+    const footerClass = 'ed-product-popup__footer' + (canToggle ? ' ed-product-popup__footer--has-quantity-toggle' : '');
+
     
 
     // Generate toggle buttons if product can be sold both ways
@@ -932,7 +934,7 @@
 
                  class="ed-product-popup__qty-input">
 
-          <span class="ed-product-popup__qty-label">יחידות</span>
+          <span class="ed-product-popup__qty-label">יח'</span>
 
           </div>
 
@@ -962,7 +964,7 @@
 
                  class="ed-product-popup__qty-input">
 
-          <span class="ed-product-popup__qty-label">${unit}</span>
+          <span class="ed-product-popup__qty-label">ק"ג</span>
 
           </div>
 
@@ -1214,9 +1216,9 @@
 
               ${noteHTML}
 
-            </div> 
-
-            <div class="ed-product-popup__footer">
+            </div>  
+ 
+            <div class="${footerClass}">
 
               ${toggleHTML}
 
@@ -1247,6 +1249,22 @@
    * Initialize quantity inputs
 
    */
+
+  function syncQuantityLabelsFromToggle() {
+    if (!popupElement) return;
+
+    const toggleButtons = popupElement.querySelectorAll('.ed-product-popup__toggle-btn');
+    if (!toggleButtons || toggleButtons.length === 0) return;
+
+    const unitsText = popupElement.querySelector('.ed-product-popup__toggle-btn[data-mode="units"] span')?.textContent?.trim();
+    const weightText = popupElement.querySelector('.ed-product-popup__toggle-btn[data-mode="weight"] span')?.textContent?.trim();
+
+    const unitsLabel = popupElement.querySelector('#popup-quantity-units-container .ed-product-popup__qty-label');
+    const weightLabel = popupElement.querySelector('#popup-quantity-weight-container .ed-product-popup__qty-label');
+
+    if (unitsLabel && unitsText) unitsLabel.textContent = unitsText;
+    if (weightLabel && weightText) weightLabel.textContent = weightText;
+  }
 
   function initQuantityInputs() {
 
@@ -1291,6 +1309,7 @@
           if (weightContainer) weightContainer.style.display = 'none';
 
           popupElement.dataset.quantityMode = 'units';
+          syncQuantityLabelsFromToggle();
 
         } else if (mode === 'weight') {
 
@@ -1299,6 +1318,7 @@
           if (weightContainer) weightContainer.style.display = '';
 
           popupElement.dataset.quantityMode = 'weight';
+          syncQuantityLabelsFromToggle();
 
         }
 
@@ -1321,6 +1341,7 @@
     if (toggleButtons.length > 0) {
 
       popupElement.dataset.quantityMode = 'units'; // Default to units
+      syncQuantityLabelsFromToggle();
 
     }
 
@@ -3795,6 +3816,9 @@
         }
       }
     }
+
+    // Sync unit label from toggle (יח' / ק"ג)
+    syncQuantityLabelsFromToggle();
 
     // Update ocwsu fields
 
