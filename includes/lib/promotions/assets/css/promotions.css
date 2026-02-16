@@ -82,6 +82,24 @@
   font-weight: 600;
 }
 
+/* Promotion Messages in Floating Mini Cart */
+.ed-promotion-cart-message--float {
+  margin-top: 6px;
+  margin-bottom: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ed-promotion-cart-message--float .ed-promotion-label {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ed-float-cart__details .ed-promotion-cart-message--float {
+  margin-top: 4px;
+}
+
 /* Total After Discount Row */
 .ed-float-cart__row--total-after-discount {
   border-top: 1px solid #e0e0e0;
