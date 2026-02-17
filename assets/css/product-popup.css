@@ -1630,31 +1630,12 @@ display: flex;
 
 .ed-product-popup__quantity-toggle {
 
-
-
   display: flex;
-
-
-
-  gap: 0.5rem;
-
-
-
-  margin-bottom: 1rem;
-
-
-
-  padding: 0.25rem;
-
-
-
-  background: rgba(0, 0, 0, 0.05);
-
-
-
-  border-radius: var(--popup-radius, 8px);
-
-
+    gap: 0.5rem;
+    margin-bottom: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: var(--popup-radius, 8px);
 
 }
 
@@ -2640,30 +2621,21 @@ body.popup-open {
 
 }
 
+@media only screen and (max-width:650px) {
 
+.ed-product-popup__footer{
+  display: grid;
+  grid-template-columns:13% 40% 47%; 
+  gap: 4px;
+  align-items: center; /* אופציונלי */
+}
 
-@media only screen and (max-width:450px) {
+.ed-product-popup__quantity-toggle{ grid-column: 1;gap: 2px; flex-direction: column;}
+.ed-product-popup__quantity{        grid-column: 2;width: auto; }
+.ed-product-popup__add-btn{         grid-column: 3; }
 
-  .ed-product-popup__quantity {
-
-      width: 40%;
-
-  }
-
-
-
-  .ed-product-popup__qty-input{
-
-    padding-inline-start: 0;
-
-  }
-
-
-
-  .ed-product-popup__qty-label{
-
-    left: -4px;
-
-  }
+.ed-product-popup__toggle-btn{
+  padding: 0;
+}
 
 }
