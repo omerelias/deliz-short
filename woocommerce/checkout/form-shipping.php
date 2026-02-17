@@ -54,7 +54,7 @@ $local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pick
 	<?php endif; ?>
 </div>
 <div class="woocommerce-additional-fields">
-	<h2><?php esc_html_e( 'הערות למשלוח', 'woocommerce' ); ?></h2>
+	<h2><?php esc_html_e( 'Delivery Notes', 'deliz-short' ); ?></h2>
 	<?php do_action( 'woocommerce_before_order_notes', $checkout ); ?>
 
 	<?php if ( apply_filters( 'woocommerce_enable_order_notes_field', 'yes' === get_option( 'woocommerce_enable_order_comments', 'yes' ) ) ) : ?>

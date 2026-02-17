@@ -29,11 +29,27 @@ jQuery(function ($) {
     $('body').addClass('auth-active');
   });
 
+  $("a.login-panel").click(function(event) {
+    event.preventDefault(); 
+    $('body').addClass('auth-active');
+  });
+
   $(".site-overlay,button.auth__close,button.cart-close").click(function(event) {
     $('body').removeClass('auth-active');
     $('body').removeClass('basket-open');
     $('.site-overlay').removeClass('active');
   });
+
+    $(document).on( 'keyup', 'table.woocommerce-checkout-review-order-table .coupon-form input.input-text', function(e){
+        let code = $(this).val();
+        console.log( code, 'code' );
+        $('form.checkout_coupon input.input-text').val( code );
+    });  
+
+    $(document).on( 'click', 'table.woocommerce-checkout-review-order-table .apply-coupon-copy', function(e){
+        $('form.checkout_coupon .button').trigger( 'click' )
+        e.preventDefault();
+    });  
 
 
 	$(document).on( 'click', 'button.auth-btn', function(e){

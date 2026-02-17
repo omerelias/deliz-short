@@ -1760,3 +1760,38 @@ function oc_last_price_popup() {
 		</div>
 	<?php
 }
+
+add_action('wp', function () {
+  remove_action('woocommerce_before_checkout_form', 'woocommerce_checkout_login_form', 10);
+  //remove_action('woocommerce_before_checkout_form', 'woocommerce_checkout_coupon_form', 10);
+});
+
+add_action( 'woocommerce_review_order_after_cart_contents', 'woocommerce_checkout_coupon_form_custom' );
+function woocommerce_checkout_coupon_form_custom() {
+    echo '<tr class="coupon-form"><td colspan="2">';
+    oc_woo_coupon_form_copy_for_checkout();    
+    echo '</tr></td>';
+}
+
+// custom form | copy of reaL FORM  
+function oc_woo_coupon_form_copy_for_checkout(){
+	if(in_array('pw-woocommerce-gift-cards/pw-gift-cards.php', apply_filters('active_plugins', get_option('active_plugins')))){
+		$place = 'קוד קופון / שובר מתנה';
+		$btn = 'החל';
+	}else{
+		$place = 'קוד קופון';
+		$btn = 'החלת קופון';	
+	}
+?>
+	<div class="coupon-form copy-form" role="presentation">		
+        <div class="checkout-coupon-form-inner">		
+    		<input type="text" name="coupon_code_copy" class="input-text" placeholder="<?php echo $place; ?>" id="coupon_code_copy" value="">
+    		<button type="button" class="button apply-coupon-copy" name="apply_coupon" value="<?php echo $btn; ?>"><?php echo $btn; ?></button>
+        </div>
+	</div>
+	<?php //points mark ?>
+	<?php if(in_array('yith-woocommerce-points-and-rewards-premium/init.php', apply_filters('active_plugins', get_option('active_plugins')))): ?>
+		<div class="open-points" style="display:none;"><a href="javascript:void(0);"><?php echo __( "Click to use points", "deliz-short" ); ?></a></div>
+	<?php endif; ?>	
+<?php	
+}

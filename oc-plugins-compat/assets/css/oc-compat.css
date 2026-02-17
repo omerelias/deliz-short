@@ -1,0 +1,18 @@
+p.other-recipient-field label {
+    position: absolute;
+    right: 10px;
+}
+
+.shipping-settings-title,
+.ocws-days-with-slots-list-label {
+    font-size: 18px!important;
+    font-weight: bold!important;
+    margin: 20px 0;
+}
+.woocommerce-page form .form-row#billing_enter_code_field{
+    width: 33.333%;
+    order: 6;
+}
+.ocws-deli-style-checkout #billing_house_num_field {
+    display: none!important;
+}

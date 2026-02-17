@@ -8,6 +8,7 @@ if ( ! defined('ABSPATH') ) exit;
 define('DELIZ_SHORT_VERSION', '1.0.0');
 require 'helpers.php';
 require 'functions-front.php';
+include_once (get_stylesheet_directory() . '/oc-plugins-compat/oc-plugins-compat-functions.php');
 
 // SMS LOGIN
 require_once( 'inc/oc-sms-auth/class-oc-sms-auth.php' );

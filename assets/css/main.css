@@ -1323,7 +1323,7 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
     font-size: 16px;
     background-image: url('data:image/svg+xml,<svg width="12" height="16" viewBox="0 0 12 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.20524 0C3.01008 0 0.410645 2.59944 0.410645 5.79456C0.410645 9.75981 5.59624 15.581 5.81702 15.8269C6.02439 16.0579 6.38646 16.0575 6.59346 15.8269C6.81424 15.581 11.9998 9.75981 11.9998 5.79456C11.9998 2.59944 9.40036 0 6.20524 0ZM6.20524 8.70997C4.59768 8.70997 3.28986 7.40212 3.28986 5.79456C3.28986 4.187 4.59771 2.87919 6.20524 2.87919C7.81277 2.87919 9.12058 4.18703 9.12058 5.79459C9.12058 7.40216 7.81277 8.70997 6.20524 8.70997Z" fill="%23908B85"/></svg>');
     background-repeat: no-repeat;
-    background-position: right 2px;
+    background-position: right 6px;
     outline: none;
     padding-right: 18px;
     padding-top: 1px;
@@ -1378,6 +1378,7 @@ form.woocommerce-checkout .col2-set{
     max-width: 1630px;
     margin: 0 auto;
     padding-inline: 15px;
+    box-sizing: border-box;
 }
 
 body.woocommerce-checkout .breadcrumbs{
@@ -1390,6 +1391,7 @@ body.rtl.woocommerce-checkout .woocommerce .col2-set .col-1, body.rtl.woocommerc
     padding: 30px;
     padding-right: 0;
     padding-left: 0;
+    padding-block-start: 0;
 }
 
 .rtl.woocommerce-checkout .woocommerce .col2-set .col-2, .rtl.woocommerce-checkout .woocommerce-page .col2-set .col-2 {
@@ -1398,6 +1400,7 @@ body.rtl.woocommerce-checkout .woocommerce .col2-set .col-1, body.rtl.woocommerc
     padding: 30px;
     padding-left: 0;
     padding-right: 50px;
+    padding-block-start: 0;
 }
 
 .woocommerce form .form-row input.input-text, .woocommerce form .form-row textarea, .woocommerce form .form-row select {
@@ -1463,10 +1466,11 @@ form.woocommerce-checkout button.owl-prev,
 }
 
 form.woocommerce-checkout .ocws-days-with-slots-list-label{
-        font-weight: bold;
+    font-weight: bold;
     margin-block-start: 30px;
     font-size: 16px;
     color: #000;
+    text-align: right;
 }
 
 #oc-woo-shipping-additional .slot-list-container a.slot.selected, #oc-woo-pickup-additional .slot-list-container a.slot.selected,
@@ -2040,4 +2044,173 @@ div#lastPricePop .modal-dialog.modal-dialog-centered {
 
 .choose-shipping-popup, .redirect-dialog-popup{
     z-index: 9999000;
+}
+
+.woocommerce form.woocommerce-checkout .form-row.create-account .open-account-text{
+    display:none
+}
+
+.woocommerce form.woocommerce-checkout .woocommerce-account-fields{
+    margin-block-end: 30px;
+}
+
+.woocommerce form.woocommerce-checkout ul#shipping_method{
+    display: flex;
+    margin-block-start: 20px;
+        justify-content: space-between;
+    gap: 15px;
+}
+
+.woocommerce form.woocommerce-checkout ul#shipping_method li{
+        margin: 0 0 .5em;
+    line-height: 1.5em;
+    list-style: none outside;
+    padding: 0;
+    max-width: 100%;
+    margin-right: unset;
+    width: 100%;
+    display: block;
+    text-align: center;
+    cursor: pointer;
+    line-height: 50px;
+    height: 50px;
+}
+
+.woocommerce form.woocommerce-checkout ul#shipping_method li label{
+    display: block;
+    font-size: 18px;
+    font-weight: normal;
+    background: #fff;
+    border: 1px solid #000;
+    box-shadow: 0px 5px 30px 0 rgb(0 0 0 / 10%);
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+
+form.woocommerce-checkout #shipping_method input[type="radio"]:checked + label{
+      background-color: var(--color-primary-hover);
+    color: var(--main-text-color-hover);
+}
+
+.woocommerce form.woocommerce-checkout ul#shipping_method li input{
+    display: none;
+}
+
+.woocommerce form.woocommerce-checkout .ship-method{
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.woocommerce form .form-row .input-checkbox{
+    margin: -3px 0 0 3px;
+}
+
+.woocommerce form.woocommerce-checkout .woocommerce-account-fields{
+    font-size: 16px;
+    font-weight: normal;
+}
+
+.woocommerce form.woocommerce-checkout .checkout-login{
+    margin-block-end: 25px;
+}
+
+.woocommerce form.woocommerce-checkout .diff-address-shipping {
+    display: none;
+}
+
+.woocommerce form .form-row#billing_company_field,
+.woocommerce form .form-row#billing_postcode_field{
+    display: none;
+}
+
+
+body.rtl.woocommerce-checkout .woocommerce .col2-set .col-1 div.other-recipient-fields{
+    margin-block-start: 30px;
+}
+
+body p.other-recipient-field label{
+    position: static;
+}
+
+#ocws_recipient_firstname_field,
+ #ocws_recipient_lastname_field {
+    width: 49.5%;
+    clear: none;
+    float: right;
+    clear: none;
+}
+
+ #ocws_recipient_lastname_field{
+    float: left;
+ }
+
+ .woocommerce table.shop_table.woocommerce-checkout-review-order-table{
+    border: none;
+    margin: 0;
+ }
+
+  .woocommerce table.shop_table.woocommerce-checkout-review-order-table .coupon-form td{
+    padding-inline: 0;
+  }
+
+  .woocommerce table.shop_table.woocommerce-checkout-review-order-table .coupon-form td .coupon-form{
+        padding-block: 15px;
+  }
+
+  .woocommerce table.shop_table.woocommerce-checkout-review-order-table .coupon-form td .coupon-form .checkout-coupon-form-inner{
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+   .woocommerce table.shop_table.woocommerce-checkout-review-order-table .coupon-form td .coupon-form .checkout-coupon-form-inner input{
+    padding-right: 10px;
+    color: #34366D;
+    font-size: 14px;
+    width: 70%;
+    outline: none;
+    border-radius: var(--radius);
+    border: 1px solid #E4E6EA;
+    height: 45px;
+}
+
+.woocommerce table.shop_table.woocommerce-checkout-review-order-table .coupon-form td .coupon-form .checkout-coupon-form-inner button{
+    width: 27%;
+    height: 45px;
+    line-height: 45px;
+    font-size: 16px;
+}
+
+.woocommerce form.checkout_coupon{
+    display: none;   
+}
+
+body #add_payment_method #payment,body .woocommerce-cart #payment,body .woocommerce-checkout #payment{
+    background: transparent;
+}
+
+body .woocommerce #payment #place_order,body .woocommerce-page #payment #place_order{
+    width: 100%;
+        background-color: var(--color-primary);
+    color: var(--main-text-color);
+}
+
+body .woocommerce #payment #place_order:hover,body .woocommerce-page #payment #place_order:hover{
+    background-color: var(--color-primary-hover);
+    color: var(--main-text-color-hover);
+}
+
+@media (max-width: 767px) {
+    .woocommerce form.woocommerce-checkout ul#shipping_method li label{
+        font-size: 14px;
+    }
+
+    .woocommerce form.woocommerce-checkout ul#shipping_method{
+        gap: 5px;
+    }
+
+    .woocommerce table.shop_table.woocommerce-checkout-review-order-table .coupon-form td .coupon-form .checkout-coupon-form-inner button{
+        font-size: 14px;
+    }
 }

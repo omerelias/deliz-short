@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: deliz-short\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-17 09:30+0000\n"
+"POT-Creation-Date: 2026-02-17 09:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -51,10 +51,6 @@ msgstr ""
 
 #: woocommerce/checkout/form-billing.php:105
 msgid "Click for sign in"
-msgstr ""
-
-#: woocommerce/checkout/form-shipping.php:57
-msgid "Delivery Notes"
 msgstr ""
 
 #. Name of the theme

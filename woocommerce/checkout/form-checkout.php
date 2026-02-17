@@ -44,7 +44,7 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 			<div class="col-2">
 				<?php do_action( 'woocommerce_checkout_before_order_review_heading' ); ?>
 				
-				<h2 id="order_review_heading" class="col-title"><?php esc_html_e( 'Your order', 'oc-main-theme' ); ?></h2>
+				<h2 id="order_review_heading" class="col-title"><?php esc_html_e( 'Your order', 'deliz-short' ); ?></h2>
 				
 				<?php do_action( 'woocommerce_checkout_before_order_review' ); ?>
 
