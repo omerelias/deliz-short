@@ -46,7 +46,22 @@ foreach ( $packages as $i => $package ) {
 			<th class="product-total"><?php esc_html_e( 'Total', 'woocommerce' ); ?></th>
 		</tr>
 	</thead>
-	<tbody>
+	<tbody class="checkout-order-items-body is-open">
+        <?php
+        // Toggle row to open/close products list
+        $items_count = WC()->cart->get_cart_contents_count();
+        ?>
+        <tr class="order-items-toggle">
+            <td colspan="2">
+                <button type="button" class="order-items-toggle-btn">
+                    <?php
+                    /* translators: %d: items count */
+                    echo esc_html( sprintf( _n( 'פריט אחד בסל', '%d פריטים בסל', $items_count, 'deliz-short' ), $items_count ) );
+                    ?>
+                    <span class="order-items-toggle-icon">▼</span>
+                </button>
+            </td>
+        </tr>
 		<?php
 		do_action( 'woocommerce_review_order_before_cart_contents' );
         $all_cart_items = array_reverse(WC()->cart->get_cart());

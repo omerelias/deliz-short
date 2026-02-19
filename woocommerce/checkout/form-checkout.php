@@ -44,15 +44,18 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 			<div class="col-2">
 				<?php do_action( 'woocommerce_checkout_before_order_review_heading' ); ?>
 				
-				<h2 id="order_review_heading" class="col-title"><?php esc_html_e( 'Your order', 'deliz-short' ); ?></h2>
-				
-				<?php do_action( 'woocommerce_checkout_before_order_review' ); ?>
-
-				<div id="order_review" class="woocommerce-checkout-review-order">
-					<?php do_action( 'woocommerce_checkout_order_review' ); ?>
+				<div class="checkout-block checkout-block--order" data-block="order">
+					<div class="checkout-block__header">
+						<h3 class="checkout-block__title"><?php esc_html_e( 'ההזמנה שלי', 'deliz-short' ); ?></h3>
+					</div>
+					<div class="checkout-block__content">
+						<?php do_action( 'woocommerce_checkout_before_order_review' ); ?>
+						<div id="order_review" class="woocommerce-checkout-review-order">
+							<?php do_action( 'woocommerce_checkout_order_review' ); ?>
+						</div>
+						<?php do_action( 'woocommerce_checkout_after_order_review' ); ?>
+					</div>
 				</div>
-
-				<?php do_action( 'woocommerce_checkout_after_order_review' ); ?>				
 			</div>
 		</div>
 

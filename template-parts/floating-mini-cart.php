@@ -483,7 +483,7 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                                            value="<?php echo esc_attr($qty); ?>"
 
 
-                                           min="1"
+                                            min="1"
 
 
                                            step="1"
@@ -744,8 +744,9 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                 <div class="ed-float-cart__actions">
 
 
-                    <a class="ed-float-cart__btn ed-float-cart__btn--checkout"
-                       href="<?php echo esc_url(wc_get_checkout_url()); ?>">
+                    <a class="ed-float-cart__btn ed-float-cart__btn--checkout checkout-btn-trigger"
+                       href="<?php echo esc_url(wc_get_checkout_url()); ?>"
+                       data-checkout-url="<?php echo esc_url(wc_get_checkout_url()); ?>">
 
 
                         <?php echo esc_html__('לתשלום', 'deliz-short'); ?>

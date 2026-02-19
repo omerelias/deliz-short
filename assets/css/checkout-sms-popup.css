@@ -1,0 +1,192 @@
+/* Checkout SMS Popup Styles */
+.checkout-sms-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999999;
+    display: none;
+}
+
+.checkout-sms-popup__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.checkout-sms-popup__container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.checkout-sms-popup__content {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px 30px;
+    max-width: 450px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+.checkout-sms-popup__close {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 0;
+    z-index: 2;
+}
+
+.checkout-sms-popup__title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 30px;
+    text-align: center;
+    color: #333;
+}
+
+.checkout-sms-popup__subtitle {
+    font-size: 16px;
+    margin: 0 0 20px;
+    text-align: center;
+    color: #666;
+}
+
+.checkout-sms-popup__step {
+    display: none;
+}
+
+.checkout-sms-popup__step.active {
+    display: block;
+}
+
+.checkout-sms-popup .form-row-sms,
+.checkout-sms-popup .form-row {
+    margin-bottom: 20px;
+}
+
+.checkout-sms-popup .phone-input,
+.checkout-sms-popup .code-input,
+.checkout-sms-popup .input-text {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.checkout-sms-popup .phone-input:focus,
+.checkout-sms-popup .code-input:focus,
+.checkout-sms-popup .input-text:focus {
+    outline: none;
+    border-color: var(--color-primary, #007bff);
+}
+
+.checkout-sms-popup .button {
+    width: 100%;
+    padding: 14px;
+    background: var(--color-primary, #007bff);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+}
+
+.checkout-sms-popup .button:hover:not(.disabled) {
+    background: var(--color-primary-hover, #0056b3);
+}
+
+.checkout-sms-popup .button.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.checkout-sms-popup .confirm-sms-code {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.checkout-sms-popup .verification-code-input {
+    width: 100%;
+}
+
+.checkout-sms-popup .resend-code {
+    background: transparent;
+    color: var(--color-primary, #007bff);
+    border: 1px solid var(--color-primary, #007bff);
+}
+
+.checkout-sms-popup .resend-code:hover:not(.disabled) {
+    background: var(--color-primary, #007bff);
+    color: #fff;
+}
+
+.checkout-sms-popup__error {
+    margin-top: 15px;
+    min-height: 20px;
+}
+
+.checkout-sms-popup__error .woocommerce-error {
+    background: #fee;
+    color: #c00;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin: 0;
+    border: 1px solid #fcc;
+}
+
+.checkout-sms-popup__error .woocommerce-message {
+    background: #efe;
+    color: #060;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin: 0;
+    border: 1px solid #cfc;
+}
+
+.verification-code-timer {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    margin-top: 10px;
+}
+
+body.checkout-sms-popup-open {
+    overflow: hidden;
+}
+
+/* RTL Support */
+body.rtl .checkout-sms-popup__close {
+    left: auto;
+    right: 15px;
+}
+

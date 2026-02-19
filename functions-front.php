@@ -337,7 +337,7 @@ add_shortcode('ed_menu_sidebar', function ($atts) {
     'class' => 'ed-mp-sidebar',
   ], $atts, 'ed_menu_sidebar');
 
-  $menu_obj = wp_get_nav_menu_object($atts['menu']);
+  $menu_obj = wp_get_nav_menu_object($atts['menu']); 
   if (!$menu_obj) return '';
 
   $items = wp_get_nav_menu_items($menu_obj->term_id);
@@ -1414,6 +1414,79 @@ add_action( 'wp_footer', 'overlay_bg' );
 function overlay_bg(){
   echo '<div class="site-overlay"></div>';
 }
+
+// Checkout SMS popup
+add_action('wp_footer', function() {
+    if (!function_exists('WC') || !WC()->cart || WC()->cart->is_empty()) {
+        return;
+    }
+    get_template_part('template-parts/checkout-sms-popup');
+});
+
+// Enqueue checkout SMS flow scripts
+add_action('wp_enqueue_scripts', function() {
+    if (!function_exists('WC') || !WC()->cart || WC()->cart->is_empty()) {
+        return;
+    }
+    
+    // Checkout SMS flow JS
+    wp_enqueue_script(
+        'checkout-sms-flow',
+        get_template_directory_uri() . '/assets/js/checkout-sms-flow.js',
+        array('jquery'),
+        DELIZ_SHORT_VERSION,
+        true
+    );
+    
+    // Localize script with user login status
+    $sms_auth = class_exists('OC_SMS_Auth') ? OC_SMS_Auth::get_instance() : null;
+    $settings = $sms_auth ? $sms_auth->get_settings() : array();
+    
+    wp_localize_script('checkout-sms-flow', 'oc_sms_auth', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('oc_sms_auth'),
+        'is_logged_in' => is_user_logged_in() ? 1 : 0,
+        'code_expiry' => isset($settings['code_expiry']) ? $settings['code_expiry'] : 180,
+        'i18n' => array(
+            'invalid_phone' => __('מספר טלפון לא תקין', 'deliz-short'),
+            'code_sent' => __('קוד נשלח בהצלחה', 'deliz-short'),
+            'error_sending' => __('שגיאה בשליחת הקוד', 'deliz-short'),
+            'code_resent' => __('קוד נשלח מחדש', 'deliz-short'),
+            'error_verifying' => __('שגיאה באימות הקוד', 'deliz-short'),
+            'error_resending' => __('שגיאה בשליחה חוזרת של הקוד', 'deliz-short'),
+        )
+    ));
+    
+    // Checkout SMS popup CSS
+    wp_enqueue_style(
+        'checkout-sms-popup',
+        get_template_directory_uri() . '/assets/css/checkout-sms-popup.css',
+        array(),
+        DELIZ_SHORT_VERSION
+    );
+}, 30);
+
+// Enqueue checkout blocks styles and scripts
+add_action('wp_enqueue_scripts', function() {
+    if (!is_checkout()) {
+        return;
+    }
+    
+    wp_enqueue_style(
+        'checkout-blocks',
+        get_template_directory_uri() . '/assets/css/checkout-blocks.css',
+        array(),
+        DELIZ_SHORT_VERSION
+    );
+    
+    wp_enqueue_script(
+        'checkout-blocks',
+        get_template_directory_uri() . '/assets/js/checkout-blocks.js',
+        array('jquery'),
+        DELIZ_SHORT_VERSION,
+        true
+    );
+}, 25);
 
 remove_action('woocommerce_after_shop_loop_item','woocommerce_template_loop_add_to_cart');
 

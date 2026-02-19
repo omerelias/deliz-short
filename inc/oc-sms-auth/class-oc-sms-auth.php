@@ -112,6 +112,10 @@ class OC_SMS_Auth {
         add_action('wp_ajax_oc_send_auth_sms', array($this, 'ajax_send_code'));
         add_action('wp_ajax_oc_verify_auth_code', array($this, 'ajax_verify_sms_code'));
         add_action('wp_ajax_oc_resend_auth_code', array($this, 'ajax_resend_code'));
+        
+        // Registration handler for checkout flow
+        add_action('wp_ajax_nopriv_oc_register_user', array($this, 'ajax_register_user'));
+        add_action('wp_ajax_oc_register_user', array($this, 'ajax_register_user'));
     }
     /**
      * Enqueue required scripts and styles
@@ -208,11 +212,12 @@ class OC_SMS_Auth {
             'number' => 1,
             'count_total' => false
         ));
-        // If user doesn't exist and registration is not allowed
-        if (empty($users) && !$this->settings['allow_registration']) {
-            wp_send_json_error(array(
-                'message' => __('משתמש לא קיים במערכת', 'oc-main-theme'),
-                'show_register' => true,
+        // If user doesn't exist - always allow registration for checkout flow
+        if (empty($users)) {
+            // For checkout flow, we always show registration option
+            wp_send_json_success(array(
+                'resend_count' => 0,
+                'user_not_found' => true,
                 'phone' => $phone
             ));
         }
@@ -233,7 +238,8 @@ class OC_SMS_Auth {
         
         if ($result) {
             wp_send_json_success(array(
-                'resend_count' => 0
+                'resend_count' => 0,
+                'user_not_found' => empty($users)
             ));
         } else {
             wp_send_json_error(array(
@@ -522,6 +528,81 @@ class OC_SMS_Auth {
             'success' => false,
             'message' => 'User not found and registration is not allowed'
         );
+    }
+
+    /**
+     * AJAX handler for user registration from checkout flow
+     */
+    public function ajax_register_user() {
+        check_ajax_referer('oc_sms_auth', 'nonce');
+        
+        $phone = sanitize_text_field($_POST['phone']);
+        $first_name = sanitize_text_field($_POST['first_name']);
+        $last_name = sanitize_text_field($_POST['last_name']);
+        $email = sanitize_email($_POST['email']);
+        
+        // Validate required fields
+        if (empty($phone) || empty($first_name) || empty($last_name) || empty($email)) {
+            wp_send_json_error(array(
+                'message' => __('יש למלא את כל השדות', 'oc-main-theme')
+            ));
+        }
+        
+        // Validate phone
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        if (!$this->validate_phone($phone)) {
+            wp_send_json_error(array(
+                'message' => __('מספר טלפון לא תקין', 'oc-main-theme')
+            ));
+        }
+        
+        // Check if user already exists
+        $users = get_users(array(
+            'meta_key' => 'billing_phone',
+            'meta_value' => $phone,
+            'number' => 1,
+            'count_total' => false
+        ));
+        
+        if (!empty($users)) {
+            // User exists - log them in
+            $user = $users[0];
+            wp_set_auth_cookie($user->ID, true);
+            wp_send_json_success(array('message' => 'Login successful'));
+        }
+        
+        // Check if email already exists
+        if (email_exists($email)) {
+            wp_send_json_error(array(
+                'message' => __('כתובת האימייל כבר קיימת במערכת', 'oc-main-theme')
+            ));
+        }
+        
+        // Create new user
+        $username = 'user_' . $phone;
+        $password = wp_generate_password(12, false);
+        
+        $user_id = wp_create_user($username, $password, $email);
+        
+        if (is_wp_error($user_id)) {
+            wp_send_json_error(array(
+                'message' => $user_id->get_error_message()
+            ));
+        }
+        
+        // Update user meta
+        update_user_meta($user_id, 'billing_phone', $phone);
+        update_user_meta($user_id, 'billing_first_name', $first_name);
+        update_user_meta($user_id, 'billing_last_name', $last_name);
+        update_user_meta($user_id, 'first_name', $first_name);
+        update_user_meta($user_id, 'last_name', $last_name);
+        
+        // Log the new user in
+        wp_set_auth_cookie($user_id, true);
+        
+        wp_send_json_success(array(
+            'message' => __('הרשמה הושלמה בהצלחה', 'oc-main-theme')
+        ));
     }
 
     /**
