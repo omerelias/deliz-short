@@ -310,9 +310,21 @@ add_shortcode('ed_main_slider', function () {
       $d = is_array($row['desktop_image']) ? $row['desktop_image'] : null;
       $m = is_array($row['mobile_image'])  ? $row['mobile_image']  : null;
 
+      $d_id = isset($d['ID']) ? (int) $d['ID'] : 0;
+      $m_id = isset($m['ID']) ? (int) $m['ID'] : 0;
       $desktop_url = $d['url'] ?? '';
       $mobile_url  = $m['url'] ?? '';
-      $alt         = $d['alt'] ?? ($m['alt'] ?? '');
+      if ( $d_id ) {
+        $resized = wp_get_attachment_image_url($d_id, 'large');
+        if ( $resized ) $desktop_url = $resized;
+      }
+      if ( $m_id ) {
+        $resized = wp_get_attachment_image_url($m_id, 'medium_large');
+        if ( $resized ) $mobile_url = $resized;
+      }
+      $alt = $d['alt'] ?? ($m['alt'] ?? '');
+      $width  = isset($d['width']) ? (int) $d['width'] : '';
+      $height = isset($d['height']) ? (int) $d['height'] : '';
 
       if ( ! $desktop_url ) continue;
 
@@ -323,13 +335,14 @@ add_shortcode('ed_main_slider', function () {
       $btn_title  = $btn['title'] ?? '';
       $btn_target = $btn['target'] ?? '';
 
+      $is_first_slide = (int) $i === 1;
       echo '<div class="ed-slide ed-place--'.esc_attr($placement).'" data-ed-slide="'.(int)$i.'">';
       ?>
         <picture class="ed-slide__media">
           <?php if ($mobile_url): ?>
             <source media="(max-width: 767px)" srcset="<?php echo esc_url($mobile_url); ?>">
           <?php endif; ?>
-          <img class="ed-slide__img" src="<?php echo esc_url($desktop_url); ?>" alt="<?php echo esc_attr($alt); ?>" loading="lazy">
+          <img class="ed-slide__img" src="<?php echo esc_url($desktop_url); ?>" alt="<?php echo esc_attr($alt); ?>"<?php echo $width ? ' width="'.esc_attr($width).'"' : ''; ?><?php echo $height ? ' height="'.esc_attr($height).'"' : ''; ?> decoding="async"<?php echo $is_first_slide ? ' fetchpriority="high"' : ' loading="lazy"'; ?>>
         </picture>
 
         <?php if ($text || ($btn_url && $btn_title)): ?>
@@ -354,6 +367,33 @@ add_shortcode('ed_main_slider', function () {
   return ob_get_clean();
 });
 
+// Preload תמונת הסליידר הראשונה (LCP) בדף הבית
+add_action('wp_head', function () {
+  if ( ! is_front_page() || ! function_exists('have_rows') ) return;
+  if ( ! have_rows('slider_settings', 'option') ) return;
+  the_row();
+  $d = get_sub_field('desktop_image');
+  $m = get_sub_field('mobile_image');
+  if ( ! is_array($d) || empty($d['url']) ) return;
+  $d_id = isset($d['ID']) ? (int) $d['ID'] : 0;
+  $m_id = isset($m['ID']) && is_array($m) ? (int) $m['ID'] : 0;
+  $desktop_url = $d['url'];
+  $mobile_url  = is_array($m) && ! empty($m['url']) ? $m['url'] : '';
+  if ( $d_id ) {
+    $resized = wp_get_attachment_image_url($d_id, 'large');
+    if ( $resized ) $desktop_url = $resized;
+  }
+  if ( $m_id ) {
+    $resized = wp_get_attachment_image_url($m_id, 'medium_large');
+    if ( $resized ) $mobile_url = $resized;
+  }
+  if ( $mobile_url && $mobile_url !== $desktop_url ) {
+    echo '<link rel="preload" as="image" href="' . esc_url($desktop_url) . '" imagesrcset="' . esc_url($mobile_url) . ' 768w, ' . esc_url($desktop_url) . ' 1200w" imagesizes="100vw">' . "\n";
+  } else {
+    echo '<link rel="preload" as="image" href="' . esc_url($desktop_url) . '">' . "\n";
+  }
+}, 1);
+
 //menu shortcode
 add_shortcode('ed_menu_sidebar', function ($atts) {
   $atts = shortcode_atts([
@@ -373,7 +413,14 @@ add_shortcode('ed_menu_sidebar', function ($atts) {
     $term = get_term((int)$it->object_id, 'product_cat');
     if (!$term || is_wp_error($term)) continue;
 
-    $icon_url = function_exists('get_field') ? (string) get_field('menu_item_icon', (int)$it->ID) : '';
+    $icon_field = function_exists('get_field') ? get_field('menu_item_icon', (int) $it->ID) : null;
+    $icon_url   = '';
+    if ( is_array($icon_field) && ! empty($icon_field['ID']) ) {
+      $small = wp_get_attachment_image_url((int) $icon_field['ID'], 'ed_menu_icon');
+      $icon_url = $small ?: ($icon_field['url'] ?? '');
+    } elseif ( is_string($icon_field) ) {
+      $icon_url = $icon_field;
+    }
     $cats[] = [
       'title'    => $it->title,
       'slug'     => $term->slug,
@@ -1468,7 +1515,7 @@ function overlay_bg(){
 // Checkout SMS popup – always output when WC cart exists so it works after add-to-cart without refresh
 add_action('wp_footer', function() {
     if (!function_exists('WC') || !WC()->cart) {
-        return;
+        return; 
     }
     get_template_part('template-parts/checkout-sms-popup');
 });

@@ -44,6 +44,9 @@ add_action('after_setup_theme', function () {
     'flex-height' => true,
     'flex-width'  => true,
   ]);
+
+  // גודל אייקון תפריט (מוצג 50x50 – 100 לרטינה)
+  add_image_size('ed_menu_icon', 100, 100, true);
 });
 
 
