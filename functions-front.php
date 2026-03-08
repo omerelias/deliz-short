@@ -369,16 +369,17 @@ add_shortcode('ed_main_slider', function () {
 
 // Preload תמונת הסליידר הראשונה (LCP) בדף הבית
 add_action('wp_head', function () {
-  if ( ! is_front_page() || ! function_exists('have_rows') ) return;
-  if ( ! have_rows('slider_settings', 'option') ) return;
-  the_row();
-  $d = get_sub_field('desktop_image');
-  $m = get_sub_field('mobile_image');
-  if ( ! is_array($d) || empty($d['url']) ) return;
+  if ( ! is_front_page() || ! function_exists('get_field') ) return;
+  $slider = get_field('slider_settings', 'option');
+  if ( empty($slider) || ! is_array($slider) ) return;
+  $row = $slider[0];
+  $d = isset($row['desktop_image']) && is_array($row['desktop_image']) ? $row['desktop_image'] : null;
+  $m = isset($row['mobile_image']) && is_array($row['mobile_image']) ? $row['mobile_image'] : null;
+  if ( ! $d || empty($d['url']) ) return;
   $d_id = isset($d['ID']) ? (int) $d['ID'] : 0;
-  $m_id = isset($m['ID']) && is_array($m) ? (int) $m['ID'] : 0;
+  $m_id = $m && ! empty($m['ID']) ? (int) $m['ID'] : 0;
   $desktop_url = $d['url'];
-  $mobile_url  = is_array($m) && ! empty($m['url']) ? $m['url'] : '';
+  $mobile_url  = $m && ! empty($m['url']) ? $m['url'] : '';
   if ( $d_id ) {
     $resized = wp_get_attachment_image_url($d_id, 'large');
     if ( $resized ) $desktop_url = $resized;
@@ -1994,7 +1995,7 @@ function woocommerce_checkout_coupon_form_custom() {
     echo '</tr></td>';
 }
 
-// custom form | copy of reaL FORM  
+// custom form | copy of reaL FORM
 function oc_woo_coupon_form_copy_for_checkout(){
 	if(in_array('pw-woocommerce-gift-cards/pw-gift-cards.php', apply_filters('active_plugins', get_option('active_plugins')))){
 		$place = 'קוד קופון / שובר מתנה';
@@ -2015,7 +2016,7 @@ function oc_woo_coupon_form_copy_for_checkout(){
 		<div class="open-points" style="display:none;"><a href="javascript:void(0);"><?php echo __( "Click to use points", "deliz-short" ); ?></a></div>
 	<?php endif; ?>	
 <?php	
-}
+} 
 
 // Make billing postcode / P.O. Box optional (theme-level override).
 add_filter( 'woocommerce_billing_fields', function( $fields ) {
