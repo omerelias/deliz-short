@@ -5,9 +5,9 @@ jQuery(function ($) {
     arrows: false,
     dots: false,
     //adaptiveHeight: false,
-    //fade: true,
-    rtl:true,
-    //cssEase: 'linear',
+    //fade: true, 
+    rtl:true, 
+    //cssEase: 'linear', 
     autoplay: true,
     autoplaySpeed: 3000,
   });
@@ -34,22 +34,156 @@ jQuery(function ($) {
     $('body').addClass('auth-active');
   });
 
-  $(".site-overlay,button.auth__close,button.cart-close").click(function(event) {
+  function closeOverlays() {
     $('body').removeClass('auth-active');
     $('body').removeClass('basket-open');
     $('.site-overlay').removeClass('active');
+  }
+
+  $(".site-overlay,button.auth__close,button.cart-close").click(function(event) {
+    closeOverlays();
   });
 
-    $(document).on( 'keyup', 'table.woocommerce-checkout-review-order-table .coupon-form input.input-text', function(e){
-        let code = $(this).val();
-        console.log( code, 'code' );
-        $('form.checkout_coupon input.input-text').val( code );
-    });  
+  $(document).on('keyup', function(e) {
+    if (e.key === 'Escape' && ($('body').hasClass('basket-open') || $('body').hasClass('auth-active'))) {
+      closeOverlays();
+    }
+  });
 
-    $(document).on( 'click', 'table.woocommerce-checkout-review-order-table .apply-coupon-copy', function(e){
-        $('form.checkout_coupon .button').trigger( 'click' )
+    // Coupon "copy" form (used in checkout and float cart)
+    $(document).on('keyup', '.coupon-form.copy-form input.input-text', function () {
+        const code = $(this).val();
+        const $real = $('form.checkout_coupon input.input-text');
+        if ($real.length) {
+            $real.val(code);
+        }
+    });
+
+    // Enter key should behave like WooCommerce coupon form submit
+    $(document).on('keydown', '.coupon-form.copy-form input.input-text', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const $wrap = $(this).closest('.coupon-form.copy-form');
+            $wrap.find('.apply-coupon-copy').trigger('click');
+        }
+    });
+
+    function extractWooNotices(html) {
+        if (!html || typeof html !== 'string') return '';
+
+        // Prefer the standard Woo wrapper if present
+        const wrapperMatch = html.match(/<div[^>]*class="[^"]*woocommerce-notices-wrapper[^"]*"[^>]*>[\s\S]*?<\/div>/i);
+        if (wrapperMatch) return wrapperMatch[0];
+
+        // Otherwise, pick common notice blocks (Woo can return <div> or <ul>)
+        const blocks = [];
+        const reDiv = /<div[^>]*class="[^"]*woocommerce-(?:message|error|info)[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
+        const reUl = /<ul[^>]*class="[^"]*woocommerce-(?:message|error|info)[^"]*"[^>]*>[\s\S]*?<\/ul>/gi;
+        let m;
+        while ((m = reDiv.exec(html))) blocks.push(m[0]);
+        while ((m = reUl.exec(html))) blocks.push(m[0]);
+        return blocks.join('');
+    }
+
+    function setFloatCartCouponNotices(html) {
+        const el = document.querySelector('#ed-float-cart .ed-float-cart__coupon-notices');
+        if (!el) return;
+        el.innerHTML = html || '';
+        if (html) {
+            clearTimeout(el._hideTimeout);
+            el._hideTimeout = setTimeout(() => {
+                el.innerHTML = '';
+            }, 8000);
+        }
+    }
+
+    async function applyCouponAjax(code) {
+        const cartParams = window.wc_cart_params || window.wc_checkout_params || window.ED_COUPON_PARAMS;
+        console.log('[coupon] applyCouponAjax:start', { code, hasCartParams: !!cartParams });
+        if (!cartParams || !cartParams.wc_ajax_url) {
+            console.warn('[coupon] missing wc_cart_params/wc_checkout_params or wc_ajax_url', { cartParams });
+            return { ok: false, noticesHtml: '' };
+        }
+
+        const url = cartParams.wc_ajax_url.toString().replace('%%endpoint%%', 'apply_coupon');
+        const body = new URLSearchParams();
+        body.set('coupon_code', code || '');
+        if (cartParams.apply_coupon_nonce) {
+            body.set('security', cartParams.apply_coupon_nonce);
+        }
+        console.log('[coupon] wc_ajax apply_coupon request', {
+            url,
+            coupon_code: code || '',
+            has_security: !!cartParams.apply_coupon_nonce,
+        });
+
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: body.toString(),
+            });
+            const text = await res.text();
+            let noticesHtml = '';
+            try {
+                const json = JSON.parse(text);
+                noticesHtml =
+                    json?.messages ||
+                    json?.data?.messages ||
+                    json?.notices ||
+                    json?.data?.notices ||
+                    '';
+                if (!noticesHtml && typeof json === 'string') {
+                    noticesHtml = json;
+                }
+            } catch (_) {
+                noticesHtml = extractWooNotices(text);
+            }
+
+            console.log('[coupon] wc_ajax apply_coupon response', {
+                ok: res.ok,
+                status: res.status,
+                statusText: res.statusText,
+                bodyPreview: text?.slice?.(0, 500),
+            });
+
+            return { ok: !!res.ok, noticesHtml: noticesHtml || extractWooNotices(text) };
+        } catch (err) {
+            console.error('[coupon] wc_ajax apply_coupon failed', err);
+            return { ok: false, noticesHtml: '' };
+        }
+    }
+
+    $(document).on('click', '.coupon-form.copy-form .apply-coupon-copy', async function (e) {
         e.preventDefault();
-    });  
+
+        const $wrap = $(this).closest('.coupon-form.copy-form');
+        const code = $wrap.find('input.input-text').val() || '';
+        console.log('[coupon] click apply-coupon-copy', {
+            code,
+            inFloatCart: $wrap.closest('#ed-float-cart').length > 0,
+        });
+
+        // If we're on checkout, keep using the real checkout form behavior
+        const $checkoutBtn = $('form.checkout_coupon .button');
+        if ($checkoutBtn.length) {
+            console.log('[coupon] using checkout_coupon form submit');
+            $('form.checkout_coupon input.input-text').val(code);
+            $checkoutBtn.trigger('click');
+        } else {
+            const result = await applyCouponAjax(code);
+            console.log('[coupon] applyCouponAjax result', result);
+            if (result?.noticesHtml) {
+                setFloatCartCouponNotices(result.noticesHtml);
+            }
+            if (result?.ok && typeof jQuery !== 'undefined') {
+                console.log('[coupon] triggering wc_fragment_refresh + updated_wc_div');
+                jQuery('body').trigger('wc_fragment_refresh');
+                jQuery('body').trigger('updated_wc_div');
+            }
+        }
+    });
 
 
 	$(document).on( 'click', 'button.auth-btn', function(e){

@@ -740,6 +740,15 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                     <?php endif; ?>
                 </div>
 
+                <?php
+                // Coupon field (same UI as checkout "copy" form)
+                if (function_exists('oc_woo_coupon_form_copy_for_checkout') && wc_coupons_enabled()) :
+                    ?>
+                    <div class="ed-float-cart__coupon" aria-label="<?php esc_attr_e('קופון', 'deliz-short'); ?>">
+                        <?php oc_woo_coupon_form_copy_for_checkout(); ?>
+                        <div class="ed-float-cart__coupon-notices" aria-live="polite"></div>
+                    </div>
+                <?php endif; ?>
 
                 <div class="ed-float-cart__actions">
 

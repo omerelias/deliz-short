@@ -12,6 +12,35 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* Summary row: one compact row with info + edit (replaces header+title for billing/shipping/notes) */
+.checkout-block__summary-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 24px;
+    cursor: pointer;
+    user-select: none;
+    background: #fafafa;
+    border-bottom: 1px solid #e5e5e5;
+    transition: background 0.2s;
+}
+.checkout-block__summary-row:hover {
+    background: #f5f5f5;
+}
+.checkout-block__summary-row .checkout-block__summary {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    max-height: none;
+    opacity: 1;
+    display: block;
+}
+.checkout-block__summary-row .checkout-block__edit {
+    flex-shrink: 0;
+    margin-top: -2px;
+}
+
 .checkout-block__header {
     display: flex;
     align-items: center;
@@ -135,6 +164,168 @@
     display: block;
 }
 
+/* Checkout block popup (billing, shipping, notes) */
+.checkout-block-popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999998;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.checkout-block-popup.is-open {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+.checkout-block-popup__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+.checkout-block-popup__container {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    z-index: 1;
+    overflow: hidden;
+}
+.checkout-block-popup__close {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 0;
+    z-index: 2;
+}
+.checkout-block-popup__inner {
+    padding: 48px 24px 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+.checkout-block-popup__title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 20px;
+    color: #333;
+}
+.checkout-block-popup__actions {
+    margin: 24px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid #e5e5e5;
+}
+.checkout-block-popup__confirm {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    background: var(--color-primary, #007bff);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.checkout-block-popup__confirm:hover {
+    background: var(--color-primary-hover, #0056b3);
+}
+.checkout-block__content--in-popup {
+    max-height: none !important;
+    opacity: 1 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    transition: none !important;
+}
+body.checkout-block-popup-open {
+    overflow: hidden;
+}
+body.rtl .checkout-block-popup__close {
+    left: auto;
+    right: 12px;
+}
+
+/* Checkout page layout: single, narrower column (override main.css flex) */
+form.woocommerce-checkout .col2-set,
+.woocommerce-checkout .col2-set {
+    display: block !important;
+    flex-direction: unset;
+    max-width: 640px;
+    margin: 0 auto;
+}
+form.woocommerce-checkout .col2-set .col-1,
+form.woocommerce-checkout .col2-set .col-2,
+.woocommerce-checkout .col2-set .col-1,
+.woocommerce-checkout .col2-set .col-2 {
+    width: 100% !important;
+    float: none !important;
+    max-width: none;
+}
+
+/* Emphasize order total and note */
+.checkout-order-compact__total {
+    font-size: 22px;
+    font-weight: 700;
+}
+.checkout-order-compact__note {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Payment methods as full-width buttons */
+.woocommerce-checkout #payment ul.payment_methods {
+    margin: 0 0 16px;
+}
+.woocommerce-checkout #payment ul.payment_methods > li {
+    margin: 0 0 8px;
+}
+.woocommerce-checkout #payment ul.payment_methods > li > input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.woocommerce-checkout #payment ul.payment_methods > li > label {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #fafafa;
+    transition: all 0.2s ease;
+}
+.woocommerce-checkout #payment ul.payment_methods > li > input:checked + label {
+    border-color: var(--color-primary, #007bff);
+    background: rgba(0, 123, 255, 0.08);
+}
+
+/* Hide payment methods list when there is only one method (JS adds class) */
+.wc_payment_methods.payment_methods.methods.single-payment-method {
+    display: none;
+}
+
 .checkout-block__icon {
     margin-left: 8px;
     transition: transform 0.3s ease;
@@ -177,6 +368,131 @@
 
 .checkout-block--order .checkout-block__summary {
     display: none !important;
+}
+
+/* Order block: compact row (total + X products link) */
+.checkout-order-compact {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    padding: 20px 24px;
+    font-size: 16px;
+}
+.checkout-order-compact__total {
+    font-weight: 700;
+    color: #333;
+}
+.checkout-order-compact__sep {
+    color: #999;
+    margin: 0;
+    border: none;
+    font-weight: 400;
+}
+.checkout-order-compact__products-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+    color: var(--color-primary, #007bff);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.checkout-order-compact__products-link:hover {
+    color: var(--color-primary-hover, #0056b3);
+}
+.checkout-order-compact__hr {
+    margin: 0 24px;
+    border: none;
+    border-top: 1px solid #e5e5e5;
+}
+.checkout-order-payment-wrap {
+    padding: 20px 24px 24px;
+}
+.checkout-block-popup__container--order {
+    max-width: 520px;
+}
+.checkout-order-popup-content {
+    padding: 0;
+}
+
+/* Unified checkout summary under order block */
+.checkout-order-summary {
+    padding: 0 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+}
+.checkout-summary-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.checkout-summary-line__label {
+    flex: 0 0 auto;
+    font-weight: 500;
+    color: #777;
+}
+.checkout-summary-line__value {
+    flex: 1 1 auto;
+    text-align: right;
+}
+.checkout-summary-line--notes .checkout-summary-line__value.is-add-note {
+    cursor: pointer;
+    color: var(--color-primary, #007bff);
+}
+.checkout-summary-line--notes .checkout-notes-inline-input{
+    width: 100%;
+    background: #f3f3f3;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.2;
+    color: #333;
+    box-sizing: border-box;
+    text-align: right;
+}
+.checkout-summary-line--notes .checkout-notes-inline-input::placeholder{
+    color: #777;
+}
+.checkout-summary-line--notes .checkout-notes-inline-input:focus{
+    outline: none;
+    background: #fff;
+    border-color: var(--color-primary, #007bff);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.10);
+}
+.checkout-summary-line__edit {
+    flex: 0 0 auto;
+    border: none;
+    background: none;
+    color: var(--color-primary, #007bff);
+    cursor: pointer;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.checkout-summary-line:hover .checkout-summary-line__edit {
+    opacity: 1;
+}
+
+/* Hide legacy billing/shipping/notes summary cards, keep their popups */
+.checkout-block--billing,
+.checkout-block--shipping,
+.checkout-block--notes {
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+.checkout-block--billing .checkout-block__summary-row,
+.checkout-block--shipping .checkout-block__summary-row,
+.checkout-block--notes .checkout-block__summary-row,
+.checkout-block--billing .checkout-block__content,
+.checkout-block--shipping .checkout-block__content,
+.checkout-block--notes .checkout-block__content {
+    display: none;
 }
 
 /* Compact form fields inside blocks */

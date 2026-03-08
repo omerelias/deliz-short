@@ -53,7 +53,7 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
             
             <!-- Step 3: Registration Form (if user not found) -->
             <div class="checkout-sms-popup__step checkout-sms-popup__step--register">
-                <div class="checkout-sms-popup__subtitle"><?php echo esc_html__('השלם את הפרטים להשלמת ההזמנה', 'deliz-short'); ?></div>
+                <div class="checkout-sms-popup__subtitle"><?php echo esc_html__('נזכור את הפרטים להזמנה הבאה :)', 'deliz-short'); ?></div>
                 <form class="checkout-sms-register-form" method="post">
                     <div class="form-row">
                         <input type="text" name="first_name" class="input-text" required
@@ -70,6 +70,29 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
                     <input type="hidden" name="phone" class="register-phone-input" />
                     <button type="submit" class="button register-button">
                         <?php echo esc_html__('אישור והמשך', 'deliz-short'); ?>
+                    </button>
+                    <div class="checkout-sms-popup__error"></div>
+                </form>
+            </div>
+
+            <!-- Step 4: Shipping details after registration -->
+            <div class="checkout-sms-popup__step checkout-sms-popup__step--shipping">
+                <div class="checkout-sms-popup__subtitle"><?php echo esc_html__('השלמת פרטי משלוח', 'deliz-short'); ?></div>
+                <form class="checkout-sms-shipping-form" method="post">
+                    <div class="form-row">
+                        <input type="text" name="billing_floor" class="input-text"
+                               placeholder="<?php echo esc_attr__('קומה', 'deliz-short'); ?>" />
+                    </div>
+                    <div class="form-row">
+                        <input type="text" name="billing_apartment" class="input-text"
+                               placeholder="<?php echo esc_attr__('דירה', 'deliz-short'); ?>" />
+                    </div>
+                    <div class="form-row">
+                        <input type="text" name="billing_enter_code" class="input-text"
+                               placeholder="<?php echo esc_attr__('קוד כניסה', 'deliz-short'); ?>" />
+                    </div>
+                    <button type="submit" class="button shipping-button">
+                        <?php echo esc_html__('שמירת פרטי המשלוח והמשך', 'deliz-short'); ?>
                     </button>
                     <div class="checkout-sms-popup__error"></div>
                 </form>

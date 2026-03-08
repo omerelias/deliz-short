@@ -91,6 +91,30 @@ add_action('wp_enqueue_scripts', function () {
   wp_enqueue_style('deliz-short-main', $css, [], time());
   wp_enqueue_script('deliz-short-main', $js, [], DELIZ_SHORT_VERSION, true);
 
+  // Ensure wc_ajax_url + coupon nonce exist for float cart coupon apply (even on pages that don't enqueue WC cart scripts)
+  if (function_exists('WC')) {
+    $wc_ajax_url = null;
+    if (class_exists('WC_AJAX') && is_callable(['WC_AJAX', 'get_endpoint'])) {
+      $wc_ajax_url = WC_AJAX::get_endpoint('%%endpoint%%');
+    } else {
+      // Fallback format used by WooCommerce for wc-ajax endpoints
+      $wc_ajax_url = home_url('/?wc-ajax=%%endpoint%%');
+    }
+
+    $params = [
+      'wc_ajax_url'         => $wc_ajax_url,
+      'apply_coupon_nonce'  => wp_create_nonce('apply-coupon'),
+    ];
+
+    $inline = '(function(){'
+      . 'window.ED_COUPON_PARAMS=window.ED_COUPON_PARAMS||' . wp_json_encode($params) . ';'
+      . 'window.wc_cart_params=window.wc_cart_params||window.ED_COUPON_PARAMS;'
+      . 'window.wc_checkout_params=window.wc_checkout_params||window.wc_cart_params;'
+      . '})();';
+
+    wp_add_inline_script('deliz-short-main', $inline, 'before');
+  }
+
   // Product Popup functionality is loaded from includes/product-popup/class-product-popup.php
 });
 
@@ -1287,6 +1311,32 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
   return $fragments;
 });
 
+// Shipping popup: do not show on page load — only when user adds to cart or clicks delivery chip
+add_action('wp_footer', function () {
+  if (is_checkout()) return;
+  ?>
+  <script>
+  (function(){
+    function hideShippingPopupOnLoad() {
+      var popup = document.querySelector('.choose-shipping-popup');
+      if (popup && popup.classList.contains('shown')) {
+        popup.classList.remove('shown');
+        document.body.style.overflow = '';
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function run() {
+        document.removeEventListener('DOMContentLoaded', run);
+        setTimeout(hideShippingPopupOnLoad, 0);
+      });
+    } else {
+      setTimeout(hideShippingPopupOnLoad, 0);
+    }
+  })();
+  </script>
+  <?php
+}, 2);
+
 //ajax search
 add_action('rest_api_init', function () {
   register_rest_route('ed/v1', '/product-search', [
@@ -1415,17 +1465,17 @@ function overlay_bg(){
   echo '<div class="site-overlay"></div>';
 }
 
-// Checkout SMS popup
+// Checkout SMS popup – always output when WC cart exists so it works after add-to-cart without refresh
 add_action('wp_footer', function() {
-    if (!function_exists('WC') || !WC()->cart || WC()->cart->is_empty()) {
+    if (!function_exists('WC') || !WC()->cart) {
         return;
     }
     get_template_part('template-parts/checkout-sms-popup');
 });
 
-// Enqueue checkout SMS flow scripts
+// Enqueue checkout SMS flow scripts (always when WC cart exists, so popup works after first add-to-cart without refresh)
 add_action('wp_enqueue_scripts', function() {
-    if (!function_exists('WC') || !WC()->cart || WC()->cart->is_empty()) {
+    if (!function_exists('WC') || !WC()->cart) {
         return;
     }
     
@@ -1837,6 +1887,57 @@ function oc_last_price_popup() {
 add_action('wp', function () {
   remove_action('woocommerce_before_checkout_form', 'woocommerce_checkout_login_form', 10);
   //remove_action('woocommerce_before_checkout_form', 'woocommerce_checkout_coupon_form', 10);
+  // Split order review: table in popup, payment on page (see form-checkout order block)
+  remove_action('woocommerce_checkout_order_review', 'woocommerce_checkout_payment', 20);
+  add_action('woocommerce_checkout_payment', 'woocommerce_checkout_payment', 10);
+});
+
+// Change place order button text when only one payment method is available
+add_filter('woocommerce_order_button_text', function ($text) {
+    if (!function_exists('WC')) {
+        return $text;
+    }
+
+    $gateways = WC()->payment_gateways ? WC()->payment_gateways->get_available_payment_gateways() : array();
+    if (empty($gateways) || count($gateways) !== 1) {
+        return $text;
+    }
+
+    $gateway = reset($gateways);
+    $id      = $gateway->id;
+    $title   = strip_tags($gateway->get_title());
+
+    // Cash on delivery / מזומן
+    if ($id === 'cod' || mb_stripos($title, 'מזומן') !== false) {
+        return __('תשלום במזומן', 'deliz-short');
+    }
+
+    // Credit card
+    if (mb_stripos($title, 'אשראי') !== false || mb_stripos($title, 'credit') !== false || mb_stripos($title, 'card') !== false) {
+        return __('תשלום באשראי', 'deliz-short');
+    }
+
+    // Fallback: use generic but still action-like text
+    return sprintf(__('תשלום באמצעות %s', 'deliz-short'), $title ? $title : __('השיטה שנבחרה', 'deliz-short'));
+});
+
+// Set order_button_text per gateway so data-order_button_text is correct for JS (multiple payment methods)
+add_filter('woocommerce_available_payment_gateways', function ($gateways) {
+    if (empty($gateways)) {
+        return $gateways;
+    }
+    foreach ($gateways as $id => $gateway) {
+        $title = strip_tags($gateway->get_title());
+        if ($id === 'cod' || mb_stripos($title, 'מזומן') !== false) {
+            $gateway->order_button_text = __('ביצוע הזמנה', 'deliz-short');
+        } elseif (mb_stripos($title, 'אשראי') !== false || mb_stripos($title, 'credit') !== false || mb_stripos($title, 'card') !== false) {
+            $gateway->order_button_text = __('עבור לתשלום באשראי', 'deliz-short');
+        } else {
+            // cheque, etc.
+            $gateway->order_button_text = __('ביצוע הזמנה', 'deliz-short');
+        }
+    }
+    return $gateways;
 });
 
 add_action( 'woocommerce_review_order_after_cart_contents', 'woocommerce_checkout_coupon_form_custom' );
@@ -1868,3 +1969,11 @@ function oc_woo_coupon_form_copy_for_checkout(){
 	<?php endif; ?>	
 <?php	
 }
+
+// Make billing postcode / P.O. Box optional (theme-level override).
+add_filter( 'woocommerce_billing_fields', function( $fields ) {
+    if ( isset( $fields['billing_postcode'] ) ) {
+        $fields['billing_postcode']['required'] = false;
+    }
+    return $fields;
+}, 20 );

@@ -423,11 +423,26 @@
       
       console.log('🔵 Checkout button clicked - intercepting...'); 
       
-      const $link = $(this);
+      const $link = $(this); 
       const checkoutUrl = $link.attr('href');
       
       console.log('🔵 Checkout URL:', checkoutUrl);
       console.log('🔵 Config:', config);
+      
+      // Check if user needs SMS authentication first
+      if (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.is_logged_in == 0) {
+        console.log('🔵 User not logged in - checking SMS auth first');
+        // Store checkout URL for after SMS auth
+        window.edCheckoutUrl = checkoutUrl;
+        // Trigger SMS popup via CheckoutSMSFlow if available
+        if (typeof window.CheckoutSMSFlow !== 'undefined' && typeof window.CheckoutSMSFlow.showPopup === 'function') {
+          console.log('🔵 Opening SMS popup');
+          window.CheckoutSMSFlow.showPopup();
+          return false;
+        } else {
+          console.log('⚠️ CheckoutSMSFlow not available, proceeding with upsells check');
+        }
+      }
       
       // Check if upsells exist
       $.ajax({
@@ -541,6 +556,16 @@
   $(document).ready(function() {
     init();
   });
+
+  // Expose functions to global scope for use by other scripts
+  window.showCheckoutUpsellsPopup = function() {
+    const checkoutUrl = window.edCheckoutUrl;
+    if (checkoutUrl) {
+      window.edCheckoutUrl = checkoutUrl;
+    }
+    showPopup();
+    loadProducts();
+  };
 
 
 })(jQuery);

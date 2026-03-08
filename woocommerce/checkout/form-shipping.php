@@ -18,19 +18,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
- 
+
 $chosen_methods 	= WC()->session->get( 'chosen_shipping_methods' );
 $chosen_shipping 	= $chosen_methods[0];
 $local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pickup'));
-
+ 
 ?>
-<div class="checkout-block checkout-block--shipping is-closed <?php if ( $local_pickup_chosen == 1  ){ echo 'hidden'; } ?>" data-block="shipping" aria-expanded="false">
-	<div class="checkout-block__header">
-		<h3 class="checkout-block__title"><?php esc_html_e( 'משלוח', 'deliz-short' ); ?></h3>
-		<button type="button" class="checkout-block__edit"><?php esc_html_e( 'עריכה', 'deliz-short' ); ?></button>
-		<span class="checkout-block__icon">▼</span>
-	</div>
-	<div class="checkout-block__summary">
+<div class="checkout-block checkout-block--shipping is-closed <?php if ( $local_pickup_chosen == 1  ){ echo 'hidden'; } ?>" data-block="shipping" aria-expanded="false" data-popup-id="checkout-block-popup--shipping">
+	<div class="checkout-block__summary-row">
+		<div class="checkout-block__summary">
 		<?php
 		// Get shipping method
 		$chosen_methods = WC()->session->get('chosen_shipping_methods');
@@ -149,25 +145,42 @@ $local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pick
 			}
 		}
 		
-		// Display
-		if ($shipping_label && $shipping_label != __('משלוח', 'woocommerce')) {
-			echo '<strong>' . esc_html($shipping_label) . '</strong>';
+		// Display label based on method type
+		if ($is_pickup) {
+			echo '<strong>' . esc_html__( 'איסוף מ:', 'deliz-short' ) . '</strong> ';
+		} else {
+			echo '<strong>' . esc_html__( 'משלוח ל:', 'deliz-short' ) . '</strong> ';
 		}
+
+		// Then show address / branch and date/time
+		$first_line = '';
 		if ($address_string) {
-			if ($shipping_label && $shipping_label != __('משלוח', 'woocommerce')) {
-				echo '<br>';
-			}
-			echo esc_html($address_string);
+			$first_line = esc_html($address_string);
+		} elseif ($shipping_label && $shipping_label != __('משלוח', 'woocommerce')) {
+			$first_line = esc_html($shipping_label);
+		}
+		if ($first_line) {
+			echo $first_line;
 		}
 		if ($date_time_info) {
 			echo $date_time_info;
 		}
-		if (!$shipping_label && !$address_string && !$date_time_info) {
+		if (!$first_line && !$date_time_info) {
 			echo esc_html__('לא נבחר משלוח', 'deliz-short');
 		}
 		?>
+		</div>
+		<button type="button" class="checkout-block__edit"><?php esc_html_e( 'עריכה', 'deliz-short' ); ?></button>
 	</div>
-	<div class="checkout-block__content">
+	<div class="checkout-block-popup" id="checkout-block-popup--shipping" aria-hidden="true">
+		<div class="checkout-block-popup__overlay"></div>
+		<div class="checkout-block-popup__container">
+			<button type="button" class="checkout-block-popup__close default-close-btn btn-empty" aria-label="<?php esc_attr_e( 'סגור', 'deliz-short' ); ?>">
+				<svg xmlns="http://www.w3.org/2000/svg" class="Icon Icon--close" viewBox="0 0 16 14"><path d="M15 0L1 14m14 0L1 0" stroke="currentColor" fill="none" fill-rule="evenodd"></path></svg>
+			</button>
+			<div class="checkout-block-popup__inner">
+				<h3 class="checkout-block-popup__title"><?php esc_html_e( 'משלוח', 'deliz-short' ); ?></h3>
+				<div class="checkout-block__content checkout-block__content--in-popup">
 		<!-- Shipping Methods -->
 		<div class="ship-method">
 			<?php if ( ! is_user_logged_in() && $checkout->is_registration_enabled() ) : ?>
@@ -220,19 +233,6 @@ $local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pick
 				</label>
 			</h3>
 		</div>
-		
-		<?php if ($checkout_style == 'deli') { ?>
-			<?php do_action('ocws_delivery_data_deli_style'); ?>
-			<div class="other-recipient-fields">
-				<?php do_action('ocws_send_to_other_person_fields'); ?>
-			</div>
-		<?php } ?>
-		
-		<?php if ($checkout_style == 'regular') { ?>
-			<div class="other-recipient-fields">
-				<?php do_action('ocws_send_to_other_person_fields'); ?>
-			</div>
-		<?php } ?>
 		
 		<!-- Billing address fields for shipping (when not shipping to different address) -->
 		<?php 
@@ -300,21 +300,34 @@ $local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pick
 		// This includes #oc-woo-shipping-additional with slot-list-container
 		do_action( 'woocommerce_after_checkout_billing_form', $checkout ); 
 		?>
+				<p class="checkout-block-popup__actions">
+					<button type="button" class="checkout-block-popup__confirm button"><?php esc_html_e( 'אישור', 'deliz-short' ); ?></button>
+				</p>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
-<div class="checkout-block checkout-block--notes is-closed" data-block="notes" aria-expanded="false">
-	<div class="checkout-block__header">
-		<h3 class="checkout-block__title"><?php esc_html_e( 'הערות למשלוח', 'deliz-short' ); ?></h3>
-		<button type="button" class="checkout-block__edit"><?php esc_html_e( 'עריכה', 'deliz-short' ); ?></button>
-		<span class="checkout-block__icon">▼</span>
-	</div>
-	<div class="checkout-block__summary">
+<div class="checkout-block checkout-block--notes is-closed" data-block="notes" aria-expanded="false" data-popup-id="checkout-block-popup--notes">
+	<div class="checkout-block__summary-row">
+		<div class="checkout-block__summary">
 		<?php
 		$order_notes = $checkout->get_value('order_comments');
+		echo '<strong>' . esc_html__( 'הערות למשלוח', 'deliz-short' ) . ':</strong> ';
 		echo $order_notes ? esc_html(wp_trim_words($order_notes, 10)) : esc_html__('אין הערות', 'deliz-short');
 		?>
+		</div>
+		<button type="button" class="checkout-block__edit"><?php esc_html_e( 'עריכה', 'deliz-short' ); ?></button>
 	</div>
-	<div class="checkout-block__content">
+	<div class="checkout-block-popup" id="checkout-block-popup--notes" aria-hidden="true">
+		<div class="checkout-block-popup__overlay"></div>
+		<div class="checkout-block-popup__container">
+			<button type="button" class="checkout-block-popup__close default-close-btn btn-empty" aria-label="<?php esc_attr_e( 'סגור', 'deliz-short' ); ?>">
+				<svg xmlns="http://www.w3.org/2000/svg" class="Icon Icon--close" viewBox="0 0 16 14"><path d="M15 0L1 14m14 0L1 0" stroke="currentColor" fill="none" fill-rule="evenodd"></path></svg>
+			</button>
+			<div class="checkout-block-popup__inner">
+				<h3 class="checkout-block-popup__title"><?php esc_html_e( 'הוספת הערה להזמנה', 'deliz-short' ); ?></h3>
+				<div class="checkout-block__content checkout-block__content--in-popup">
 		<div class="woocommerce-additional-fields">
 	<?php do_action( 'woocommerce_before_order_notes', $checkout ); ?>
 
@@ -329,6 +342,9 @@ $local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pick
 	<?php endif; ?>
 
 	<?php do_action( 'woocommerce_after_order_notes', $checkout ); ?>
+		</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

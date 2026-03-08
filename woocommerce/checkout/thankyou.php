@@ -46,18 +46,7 @@ defined( 'ABSPATH' ) || exit;
 				<h1>THANK YOU</h1>
 				<div class="thanks">הזמנתכם התקבלה. תודה שרכשתם אצלנו!</div>
 				<div class="order-num">מספר הזמנתכם הינו: <b><?php echo $order->get_order_number(); ?></b><br/>אישור ופרטי ההזמנה נשלחו אליכם במייל.</div>
-				<div class="contact">
-					<p>מוקד שירות הלקוחות שלנו זמין עבורכם לכל שאלה:</p>
-					<p class="contact-inner">
-						<span class="phone">טלפון - <?php echo do_shortcode('[oc_theme_contact_phone]'); ?></span>
-						<span class="mail">אימייל - <?php echo do_shortcode('[oc_theme_contact_email]'); ?></span>
-					<p>
-				</div>
-				<div class="social">
-					<h2>LET’S BE FRIENDS</h2>
-					<div class="social-txt">בקרו אותנו ברשתות החברתיות והישארו מעודכנים בכל הפריטים החדשים וההנחות המתחלפות.</div>
-					<?php echo do_shortcode('[oc_footer_social_network_list]'); ?>
-				</div>
+
 			</div>
         <?php
         // Add the missing action here

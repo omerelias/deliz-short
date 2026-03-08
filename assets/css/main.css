@@ -1395,12 +1395,9 @@ body.rtl.woocommerce-checkout .woocommerce .col2-set .col-1, body.rtl.woocommerc
 }
 
 .rtl.woocommerce-checkout .woocommerce .col2-set .col-2, .rtl.woocommerce-checkout .woocommerce-page .col2-set .col-2 {
-    float: left;
+    float: left; 
     width: 50%;
-    padding: 30px;
-    padding-left: 0;
-    padding-right: 50px;
-    padding-block-start: 0;
+    padding: 0; 
 }
 
 .woocommerce form .form-row input.input-text, .woocommerce form .form-row textarea, .woocommerce form .form-row select {
@@ -1427,10 +1424,10 @@ body.woocommerce-edit-address.woocommerce-page form p.form-row {
     width: 50%;
 }
 
-.woocommerce form .form-row {
+.woocommerce form .form-row { 
     padding: 0;
     margin: 0 0 6px;
-    flex: 0 0 calc(50% - 3px);
+    flex: 0 0 calc(50% - 6px );
 }
 
 .woocommerce-checkout .shipping-settings-title{
@@ -2043,6 +2040,11 @@ div#lastPricePop .modal-dialog.modal-dialog-centered {
     visibility: visible;
 }
 
+/* Google address autocomplete above shipping popup and checkout block popups */
+.pac-container {
+    z-index: 99999999 !important;
+}
+
 .choose-shipping-popup, .redirect-dialog-popup{
     z-index: 9999000;
 }
@@ -2185,6 +2187,74 @@ body p.other-recipient-field label{
 
 .woocommerce form.checkout_coupon{
     display: none;   
+}
+
+/* Float cart coupon field (match checkout look) */
+.ed-float-cart__coupon .coupon-form{
+    padding-block: 15px;
+}
+
+.ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner{
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner input{
+    padding-right: 10px;
+    color: #34366D;
+    font-size: 14px;
+    width: 70%;
+    outline: none;
+    border-radius: var(--radius);
+    border: 1px solid #E4E6EA;
+    height: 45px;
+}
+
+.ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner button{
+    width: 27%;
+    height: 45px;
+    line-height: 45px;
+    font-size: 16px;
+}
+
+.ed-float-cart__coupon-notices{
+    margin-top: 10px;
+}
+
+.ed-float-cart__coupon-notices .woocommerce-notices-wrapper,
+.ed-float-cart__coupon-notices .woocommerce-message,
+.ed-float-cart__coupon-notices .woocommerce-error,
+.ed-float-cart__coupon-notices .woocommerce-info{
+    margin: 0;
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.35;
+}
+
+.ed-float-cart__coupon-notices .woocommerce-message{
+    background: #e8f7ee;
+    color: #0f5132;
+    border: 1px solid #b7e4c7;
+}
+
+.ed-float-cart__coupon-notices .woocommerce-error{
+    background: #fdecec;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+}
+
+.ed-float-cart__coupon-notices ul{
+    margin: 0;
+    padding-right: 18px;
+}
+
+@media (max-width: 767px) {
+    .ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner button{
+        font-size: 14px;
+    }
 }
 
 body #add_payment_method #payment,body .woocommerce-cart #payment,body .woocommerce-checkout #payment{

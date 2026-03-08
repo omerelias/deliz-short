@@ -39,7 +39,7 @@
             <div class="container">
                 <div class="row">
                     <div class="fcol-logo">
-                        <img src="<?php the_field("f_logo", 'option'); ?>" alt="logo">
+                        <img src="<?php the_field("f_logo", 'option'); ?>" alt="<?php echo esc_attr(get_bloginfo('name')); ?>" width="120" height="40" loading="lazy">
                         <?php
                         if( have_rows('fb_social', 'option') ){
                             ?><ul class="social-f"><?php
@@ -48,7 +48,7 @@
                                 $fb_social_icon = get_sub_field('fb_social_icon');
                                 $fb_social_link = get_sub_field('fb_social_link');
                                 ?>
-                                <li><a target="_blank" href="<?php echo $fb_social_link ?>"><img src="<?php echo $fb_social_icon; ?>" alt=""></a></li>
+                                <li><a target="_blank" href="<?php echo esc_url($fb_social_link); ?>" rel="noopener noreferrer"><img src="<?php echo esc_url($fb_social_icon); ?>" alt="" width="32" height="32" loading="lazy"></a></li>
                                 <?php
                             }
                             ?></ul><?php
@@ -104,9 +104,9 @@
         <div class="footer-bottom">
             <div class="container">
                 <div class="row align-items-center">
-                    <div class="col-sm pay-img"><img src="<?php the_field("f_img_r", 'option'); ?>" alt=""></div>
+                    <div class="col-sm pay-img"><img src="<?php the_field("f_img_r", 'option'); ?>" alt="<?php esc_attr_e('אמצעי תשלום', 'deliz-short'); ?>" width="200" height="40" loading="lazy"></div>
                     <div class="col-sm text-center" style="font-size: 14px;line-height: 15px;">© <?php echo date("Y"); ?> <?php the_field("f_text_m", 'option'); ?></div>
-                    <div class="col-sm text-right copyright" style="display: flex;align-items: flex-start;justify-content: flex-end;gap: 5px;"><a href="https://onlinestore.co.il/meat-and-fish-shop/" style="font-size: 14px;margin-top: 0;" target="_blank"><?php _e('בניית אתר לקצביה', 'oc_transalte'); ?></a> | <a href="https://onlinestore.co.il/" target="_blank"><img width="40" style="margin-right: 0;" src="<?php echo get_stylesheet_directory_uri() ?>/assets/images/original-concepts.svg" alt="onlinestore"></a></div>
+                    <div class="col-sm text-right copyright" style="display: flex;align-items: flex-start;justify-content: flex-end;gap: 5px;"><a href="https://onlinestore.co.il/meat-and-fish-shop/" style="font-size: 14px;margin-top: 0;" target="_blank"><?php _e('בניית אתר לקצביה', 'oc_transalte'); ?></a> | <a href="https://onlinestore.co.il/" target="_blank" rel="noopener noreferrer"><img width="40" height="40" style="margin-right: 0;" src="<?php echo get_stylesheet_directory_uri() ?>/assets/images/original-concepts.svg" alt="onlinestore"></a></div>
                 </div>
             </div>
         </div>

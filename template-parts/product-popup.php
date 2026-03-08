@@ -54,9 +54,18 @@ $options = $product_data['options'] ?? [];
 
       <div class="ed-product-popup__image">
 
-        <img src="<?php echo esc_url($product_data['image']['url']); ?>" 
+        <?php
+        $img = $product_data['image'];
+        $img_w = isset($img['width']) ? (int) $img['width'] : 400;
+        $img_h = isset($img['height']) ? (int) $img['height'] : 400;
+        ?>
+        <img src="<?php echo esc_url($img['url']); ?>"
 
-             alt="<?php echo esc_attr($product_data['image']['alt']); ?>" 
+             alt="<?php echo esc_attr($img['alt']); ?>"
+
+             width="<?php echo $img_w; ?>"
+
+             height="<?php echo $img_h; ?>"
 
              id="popup-product-image"
 
@@ -340,7 +349,7 @@ $options = $product_data['options'] ?? [];
 
                 <div class="ed-product-popup__related-item" data-product-id="<?php echo esc_attr($rel['id']); ?>">
 
-                  <img src="<?php echo esc_url($rel['image']); ?>" alt="<?php echo esc_attr($rel['name']); ?>" loading="lazy">
+                  <img src="<?php echo esc_url($rel['image']); ?>" alt="<?php echo esc_attr($rel['name']); ?>" width="100" height="100" loading="lazy">
 
                   <div class="ed-product-popup__related-info">
 

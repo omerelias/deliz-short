@@ -2,15 +2,17 @@ jQuery(function($) {
     'use strict';
     console.log('[Checkout Blocks] Script loaded');
 
+    const ORDER_COMMENTS_STORAGE_KEY = 'deliz_checkout_order_comments';
+
     // Initialize checkout blocks
-    function initCheckoutBlocks() { 
+    function initCheckoutBlocks() {  
         console.log('[Checkout Blocks] initCheckoutBlocks called');
         
         const $blocks = $('.checkout-block');
         const $headers = $('.checkout-block__header');
         const $editButtons = $('.checkout-block__edit');
         
-        console.log('[Checkout Blocks] Found blocks:', $blocks.length); 
+        console.log('[Checkout Blocks] Found blocks:', $blocks.length);
         console.log('[Checkout Blocks] Found headers:', $headers.length);
         console.log('[Checkout Blocks] Found edit buttons:', $editButtons.length);
         
@@ -24,42 +26,63 @@ jQuery(function($) {
         });
         
         // Remove existing handlers to prevent duplicates
-        $('.checkout-block__header').off('click.checkoutBlocks');
+        $('.checkout-block__header, .checkout-block__summary-row').off('click.checkoutBlocks');
         $('.checkout-block__edit').off('click.checkoutBlocks');
         
-        // Header click - toggle block
-        $('.checkout-block__header').on('click.checkoutBlocks', function(e) {
-            console.log('[Checkout Blocks] Header clicked', e.target);
-            
-            // Don't toggle if clicking edit button
-            if ($(e.target).closest('.checkout-block__edit').length) {
-                console.log('[Checkout Blocks] Click was on edit button, ignoring');
-                return;
-            }
+        // Summary row or header click - open popup or toggle block
+        $(document).on('click.checkoutBlocks', '.checkout-block__summary-row, .checkout-block__header', function(e) {
+            if ($(e.target).closest('.checkout-block__edit').length) return;
             
             const $block = $(this).closest('.checkout-block');
-            const blockType = $block.data('block') || 'unknown';
-            console.log('[Checkout Blocks] Toggling block:', blockType);
+            if ($block.hasClass('checkout-block--order')) return;
             
-            // Don't toggle order block
-            if ($block.hasClass('checkout-block--order')) {
-                console.log('[Checkout Blocks] Order block, skipping toggle');
-                return;
+            const popupId = $block.data('popup-id');
+            if (popupId) {
+                e.preventDefault();
+                openBlockPopup($block);
+            } else {
+                toggleBlock($block);
             }
-            
-            toggleBlock($block);
         });
         
-        // Edit button click - open block
+        // Edit button click - open popup or block
         $('.checkout-block__edit').on('click.checkoutBlocks', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
             const $block = $(this).closest('.checkout-block');
-            const blockType = $block.data('block') || 'unknown';
-            console.log('[Checkout Blocks] Edit button clicked for block:', blockType);
-            
-            openBlock($block);
+            const popupId = $block.data('popup-id');
+            if (popupId) {
+                openBlockPopup($block);
+            } else {
+                openBlock($block);
+            }
+        });
+        
+        // Popup close: overlay, close button, and confirm button (shipping block)
+        $(document).on('click.checkoutBlocks', '.checkout-block-popup__overlay, .checkout-block-popup__close, .checkout-block-popup__confirm', function(e) {
+            e.preventDefault();
+            const $popup = $(this).closest('.checkout-block-popup');
+            if (!$popup.length) return;
+            const popupId = $popup.attr('id');
+            const $block = $('.checkout-block[data-popup-id="' + popupId + '"]');
+            if ($block.length) {
+                closeBlockPopup($block);
+                if (!$block.hasClass('checkout-block--order')) {
+                    updateBlockSummary($block);
+                }
+                if ($block.hasClass('checkout-block--shipping')) {
+                    $(document.body).trigger('update_checkout');
+                }
+            }
+        });
+        
+        // Order block: "X מוצרים" opens order details popup
+        $(document).on('click.checkoutBlocks', '.checkout-order-compact__products-link', function(e) {
+            e.preventDefault();
+            const popupId = $(this).data('popup-id');
+            const $block = $('.checkout-block[data-popup-id="' + popupId + '"]');
+            if ($block.length) openBlockPopup($block);
         });
         
         // Initialize summaries for all blocks
@@ -88,67 +111,52 @@ jQuery(function($) {
         }
     }
     
+    function openBlockPopup($block) {
+        const popupId = $block.data('popup-id');
+        if (!popupId) return;
+        const $popup = $('#' + popupId);
+        if (!$popup.length) return;
+        $popup.attr('aria-hidden', 'false').addClass('is-open').fadeIn(200);
+        $('body').addClass('checkout-block-popup-open');
+    }
+    
+    function closeBlockPopup($block) {
+        const popupId = $block.data('popup-id');
+        if (!popupId) return;
+        const $popup = $('#' + popupId);
+        if (!$popup.length) return;
+        $popup.attr('aria-hidden', 'true').removeClass('is-open').fadeOut(200);
+        $('body').removeClass('checkout-block-popup-open');
+    }
+    
     function openBlock($block) {
+        const popupId = $block.data('popup-id');
+        if (popupId) {
+            openBlockPopup($block);
+            return;
+        }
         const blockType = $block.data('block') || 'unknown';
-        console.log('[Checkout Blocks] openBlock called for:', blockType);
-        console.log('[Checkout Blocks] Block before:', {
-            hasIsOpen: $block.hasClass('is-open'),
-            hasIsClosed: $block.hasClass('is-closed'),
-            ariaExpanded: $block.attr('aria-expanded')
-        });
-        
         $block.removeClass('is-closed').addClass('is-open');
         $block.attr('aria-expanded', 'true');
-        
-        console.log('[Checkout Blocks] Block after:', {
-            hasIsOpen: $block.hasClass('is-open'),
-            hasIsClosed: $block.hasClass('is-closed'),
-            ariaExpanded: $block.attr('aria-expanded')
-        });
-        
-        // Hide edit button when open
-        const $editBtn = $block.find('.checkout-block__edit');
-        console.log('[Checkout Blocks] Edit button found:', $editBtn.length);
-        $editBtn.hide();
-        
-        // Scroll to block if needed
+        $block.find('.checkout-block__edit').hide();
         try {
-            const offset = $block.offset().top - 100;
-            $('html, body').animate({
-                scrollTop: offset
-            }, 300);
-        } catch (e) {
-            console.error('[Checkout Blocks] Error scrolling:', e);
-        }
+            $('html, body').animate({ scrollTop: $block.offset().top - 100 }, 300);
+        } catch (e) {}
     }
     
     function closeBlock($block) {
-        const blockType = $block.data('block') || 'unknown';
-        console.log('[Checkout Blocks] closeBlock called for:', blockType);
-        console.log('[Checkout Blocks] Block before:', {
-            hasIsOpen: $block.hasClass('is-open'),
-            hasIsClosed: $block.hasClass('is-closed'),
-            ariaExpanded: $block.attr('aria-expanded')
-        });
-        
+        const popupId = $block.data('popup-id');
+        if (popupId) {
+            closeBlockPopup($block);
+            updateBlockSummary($block);
+            return;
+        }
         $block.removeClass('is-open').addClass('is-closed');
         $block.attr('aria-expanded', 'false');
-        
-        console.log('[Checkout Blocks] Block after:', {
-            hasIsOpen: $block.hasClass('is-open'),
-            hasIsClosed: $block.hasClass('is-closed'),
-            ariaExpanded: $block.attr('aria-expanded')
-        });
-        
-        // Show edit button when closed
-        const $editBtn = $block.find('.checkout-block__edit');
-        console.log('[Checkout Blocks] Edit button found:', $editBtn.length);
-        $editBtn.show();
-        
-        // Update summary when block is closed
+        $block.find('.checkout-block__edit').show();
         updateBlockSummary($block);
     }
-    
+
     function updateBlockSummary($block) {
         const blockType = $block.data('block');
         const $summary = $block.find('.checkout-block__summary');
@@ -163,16 +171,31 @@ jQuery(function($) {
                     const $firstName = $('#billing_first_name');
                     const $lastName = $('#billing_last_name');
                     const $phone = $('#billing_phone');
-                    const $email = $('#billing_email');
                     const $city = $('#billing_city');
                     const $street = $('#billing_street');
                     const $houseNum = $('#billing_house_num');
                     const $address1 = $('#billing_address_1');
+                    const $otherRecipientCheckbox = $('input[name=\"ocws_other_recipient\"]');
+                    const $recipientFirstName = $('#ocws_recipient_firstname');
+                    const $recipientLastName = $('#ocws_recipient_lastname');
+                    const $recipientPhone = $('#ocws_recipient_phone');
 
-                    const firstName = ($firstName.length && $firstName.is('input, select, textarea')) ? $firstName.val() : '';
-                    const lastName = ($lastName.length && $lastName.is('input, select, textarea')) ? $lastName.val() : '';
-                    const phone = ($phone.length && $phone.is('input, select, textarea')) ? $phone.val() : '';
-                    const email = ($email.length && $email.is('input, select, textarea')) ? $email.val() : '';
+                    let firstName = ($firstName.length && $firstName.is('input, select, textarea')) ? $firstName.val() : '';
+                    let lastName = ($lastName.length && $lastName.is('input, select, textarea')) ? $lastName.val() : '';
+                    let phone = ($phone.length && $phone.is('input, select, textarea')) ? $phone.val() : '';
+
+                    const isOtherRecipient = $otherRecipientCheckbox.length && $otherRecipientCheckbox.is(':checked');
+                    if (isOtherRecipient) {
+                        const otherFirstName = ($recipientFirstName.length && $recipientFirstName.is('input, select, textarea')) ? $recipientFirstName.val() : '';
+                        const otherLastName = ($recipientLastName.length && $recipientLastName.is('input, select, textarea')) ? $recipientLastName.val() : '';
+                        const otherPhone = ($recipientPhone.length && $recipientPhone.is('input, select, textarea')) ? $recipientPhone.val() : '';
+
+                        if (otherFirstName || otherLastName || otherPhone) {
+                            firstName = otherFirstName || firstName;
+                            lastName = otherLastName || lastName;
+                            phone = otherPhone || phone;
+                        }
+                    }
 
                     // Get city - try to get Hebrew name from select option text
                     let city = '';
@@ -204,12 +227,18 @@ jQuery(function($) {
                     if (city) addressParts.push(city);
                     const address = addressParts.join(' ');
 
-                    if (firstName || lastName) summaryText += '<strong>' + (firstName + ' ' + lastName).trim() + '</strong><br>';
-                    if (phone) summaryText += phone + '<br>';
-                    if (email) summaryText += email + '<br>';
-                    if (address) summaryText += address;
+                    let mainLine = '';
+                    if (firstName || lastName) {
+                        mainLine = (firstName + ' ' + lastName).trim();
+                    }
+                    if (!mainLine) {
+                        mainLine = 'לא הוזנו פרטים';
+                    }
 
-                    if (!summaryText) summaryText = 'לא הוזנו פרטים';
+                    summaryText = '<strong>עבור:</strong> ' + mainLine;
+
+                    // Update unified summary line under order block
+                    $('.js-checkout-summary-billing').html(mainLine);
                     break;
                 }
 
@@ -305,6 +334,7 @@ jQuery(function($) {
 
                     // Get date/time info
                     let dateTimeInfo = '';
+                    let pickupBranch = '';
                     if (isPickup) {
                         // Pickup: branch, date, time
                         const $pickupAffId = $('#ocws_lp_pickup_aff_id');
@@ -313,7 +343,6 @@ jQuery(function($) {
                         const $pickupSlotStart = $('#ocws_lp_pickup_slot_start');
                         const $pickupSlotEnd = $('#ocws_lp_pickup_slot_end');
 
-                        let pickupBranch = '';
                         if ($pickupAffId.length && $pickupAffId.is('select')) {
                             pickupBranch = $pickupAffId.find('option:selected').text() || '';
                         }
@@ -355,16 +384,18 @@ jQuery(function($) {
                         }
 
                         if (pickupDate) {
-                            if (pickupBranch) {
-                                dateTimeInfo += '<br><strong>סניף:</strong> ' + pickupBranch;
-                            }
-                            dateTimeInfo += '<br><strong>תאריך:</strong> ' + pickupDate;
+                            let line = pickupDate;
+                            let timeRange = '';
                             if (pickupSlotStart) {
-                                dateTimeInfo += '<br><strong>שעה:</strong> ' + pickupSlotStart;
+                                timeRange = pickupSlotStart;
                                 if (pickupSlotEnd && pickupSlotEnd !== pickupSlotStart) {
-                                    dateTimeInfo += ' - ' + pickupSlotEnd;
+                                    timeRange += ' - ' + pickupSlotEnd;
                                 }
                             }
+                            if (timeRange) {
+                                line += ' | ' + timeRange;
+                            }
+                            dateTimeInfo = '<br>' + line;
                         }
                     } else if (isShippingMethod) {
                         // Shipping: date, time
@@ -406,42 +437,82 @@ jQuery(function($) {
                         }
 
                         if (shippingDate) {
-                            dateTimeInfo += '<br><strong>תאריך:</strong> ' + shippingDate;
+                            let line = shippingDate;
+                            let timeRange = '';
                             if (shippingSlotStart) {
-                                dateTimeInfo += '<br><strong>שעה:</strong> ' + shippingSlotStart;
+                                timeRange = shippingSlotStart;
                                 if (shippingSlotEnd && shippingSlotEnd !== shippingSlotStart) {
-                                    dateTimeInfo += ' - ' + shippingSlotEnd;
+                                    timeRange += ' - ' + shippingSlotEnd;
                                 }
                             }
+                            if (timeRange) {
+                                line += ' | ' + timeRange;
+                            }
+                            dateTimeInfo = '<br>' + line;
                         }
                     }
 
                     // Build summary
-                    if (shippingMethod && shippingMethod !== 'משלוח') {
-                        summaryText = '<strong>' + shippingMethod + '</strong>';
-                        if (addressString) {
-                            summaryText += '<br>' + addressString;
-                        }
-                        if (dateTimeInfo) {
-                            summaryText += dateTimeInfo;
-                        }
+                    let mainLine = '';
+                    if (isPickup && pickupBranch) {
+                        mainLine = pickupBranch;
                     } else if (addressString) {
-                        summaryText = addressString;
-                        if (dateTimeInfo) {
-                            summaryText += dateTimeInfo;
-                        }
-                    } else if (dateTimeInfo) {
-                        summaryText = dateTimeInfo.replace(/^<br>/, '');
-                    } else {
-                        summaryText = 'לא נבחר משלוח';
+                        mainLine = addressString;
+                    } else if (shippingMethod && shippingMethod !== 'משלוח') {
+                        mainLine = shippingMethod;
                     }
+                    if (!mainLine) {
+                        mainLine = 'לא נבחר משלוח';
+                    }
+
+                    const shippingLabel = isPickup ? 'איסוף מ:' : 'משלוח ל:';
+                    summaryText = '<strong>' + shippingLabel + '</strong> ' + mainLine + (dateTimeInfo || '');
+
+                    // Update unified summary line under order block
+                    $('.js-checkout-summary-shipping-label').text(shippingLabel);
+                    $('.js-checkout-summary-shipping').html(mainLine + (dateTimeInfo || ''));
                     break;
                 }
 
                 case 'notes': {
                     const $orderComments = $('#order_comments');
                     const notes = ($orderComments.length && $orderComments.is('input, textarea')) ? $orderComments.val() : '';
-                    summaryText = notes ? (notes.length > 50 ? notes.substring(0, 50) + '...' : notes) : 'אין הערות';
+                    let shortNotes, unifiedText;
+                    const $unifiedLabel = $('.checkout-summary-line--notes .checkout-summary-line__label');
+                    const $unifiedValue = $('.js-checkout-summary-notes');
+                    const $unifiedEdit  = $('.checkout-summary-line--notes .checkout-summary-line__edit');
+                    if (notes) {
+                        shortNotes  = notes.length > 50 ? notes.substring(0, 50) + '...' : notes;
+                        if ($unifiedLabel.length) {
+                            $unifiedLabel.text('הערות להזמנה');
+                        }
+                        if ($unifiedEdit.length) {
+                            $unifiedEdit.show();
+                        }
+                    } else {
+                        shortNotes  = 'אין הערות';
+                        if ($unifiedLabel.length) {
+                            $unifiedLabel.text('');
+                        }
+                        if ($unifiedEdit.length) {
+                            $unifiedEdit.hide();
+                        }
+                    }
+                    summaryText = '<strong>הערות להזמנה (אופציונלי): </strong> ' + shortNotes;
+
+                    // Update unified summary line under order block
+                    if ($unifiedValue.length) {
+                        if (notes) {
+                            $unifiedValue.empty().text(shortNotes);
+                            $unifiedValue.removeClass('is-add-note');
+                        } else {
+                            unifiedText = 'הוספת הערה להזמנה &gt;';
+                            $unifiedValue
+                                .empty()
+                                .html(unifiedText)
+                                .addClass('is-add-note');
+                        }
+                    }
                     break;
                 }
             }
@@ -454,7 +525,7 @@ jQuery(function($) {
     }
 
     // Update summaries on field change
-    $(document).on('change', '#billing_first_name, #billing_last_name, #billing_phone, #billing_email, #billing_city, #billing_address_1', function() {
+    $(document).on('change', '#billing_first_name, #billing_last_name, #billing_phone, #billing_email, #billing_city, #billing_address_1, #ocws_recipient_firstname, #ocws_recipient_lastname, #ocws_recipient_phone, input[name=\"ocws_other_recipient\"]', function() {
         const $block = $('.checkout-block--billing');
         if (!$block.hasClass('is-open')) {
             updateBlockSummary($block);
@@ -484,6 +555,7 @@ jQuery(function($) {
         if (!$block.hasClass('is-open')) {
             updateBlockSummary($block);
         }
+        syncUnifiedNotesLine();
     });
 
     // Set initial state for blocks
@@ -523,16 +595,179 @@ jQuery(function($) {
         console.log('[Checkout Blocks] setInitialBlockStates complete');
     }
 
+    // Hide payment methods list when only one method is available
+    function updatePaymentMethodsVisibility() {
+        const $list = $('.wc_payment_methods.payment_methods.methods');
+        if (!$list.length) return;
+        const $items = $list.children('li.wc_payment_method');
+        if ($items.length === 1) {
+            $list.addClass('single-payment-method');
+        } else {
+            $list.removeClass('single-payment-method');
+        }
+    }
+
+    // Update place order button text from selected payment method (data-order_button_text)
+    function updatePlaceOrderButtonText() {
+        const $checked = $('input[name="payment_method"]:checked');
+        const $btn = $('#place_order');
+
+        console.log('[Checkout Blocks] updatePlaceOrderButtonText called', {
+            hasButton: !!$btn.length,
+            hasChecked: !!$checked.length
+        });
+
+        if (!$btn.length || !$checked.length) {
+            return;
+        }
+
+        const id = $checked.attr('id');
+        const gateway = $checked.val();
+        const dataText = $checked.attr('data-order_button_text');
+        const currentVal = $btn.val();
+        const currentText = $btn.text();
+        const text = dataText || currentVal || currentText;
+
+        console.log('[Checkout Blocks] payment method -> button text', {
+            id,
+            gateway,
+            dataText,
+            currentVal,
+            currentText,
+            finalText: text
+        });
+
+        if (text) {
+            $btn.val(text).text(text);
+        }
+    }
+
+    // Inline single-line order notes input (replaces notes popup)
+    function beginInlineNotesInput(initialValue) {
+        const $value = $('.checkout-summary-line--notes .js-checkout-summary-notes');
+        const $comments = $('#order_comments');
+        if (!$value.length || !$comments.length) return;
+
+        // Replace value with input
+        $value
+            .empty()
+            .append('<input type="text" class="checkout-notes-inline-input" placeholder="הוספת הערה להזמנה" autocomplete="off" />')
+            .addClass('is-add-note');
+
+        const $input = $value.find('.checkout-notes-inline-input');
+        $input.val(initialValue || '');
+
+        // Hide edit while editing (clean)
+        $('.checkout-summary-line--notes .checkout-summary-line__edit').hide();
+
+        try {
+            $input.trigger('focus');
+            $input[0] && $input[0].setSelectionRange && $input[0].setSelectionRange($input.val().length, $input.val().length);
+        } catch (e) {}
+    }
+
+    function commitInlineNotesInput($input) {
+        const $comments = $('#order_comments');
+        if (!$comments.length || !$input || !$input.length) return;
+        const val = ($input.val() || '').trim();
+        try {
+            if (val) {
+                window.localStorage.setItem(ORDER_COMMENTS_STORAGE_KEY, val);
+            } else {
+                window.localStorage.removeItem(ORDER_COMMENTS_STORAGE_KEY);
+            }
+        } catch (e) {}
+
+        $comments.val(val).trigger('change');
+        $(document.body).trigger('update_checkout');
+    }
+
+    // Keep unified notes line always in sync (even if default PHP markup is shown first)
+    function syncUnifiedNotesLine() {
+        const $comments = $('#order_comments');
+        const $unifiedLabel = $('.checkout-summary-line--notes .checkout-summary-line__label');
+        const $unifiedValue = $('.checkout-summary-line--notes .js-checkout-summary-notes');
+        const $unifiedEdit  = $('.checkout-summary-line--notes .checkout-summary-line__edit');
+        if (!$comments.length || !$unifiedValue.length) return;
+
+        // If user is currently typing, don't overwrite the input UI.
+        if ($unifiedValue.find('input.checkout-notes-inline-input').length) return;
+
+        let notes = ($comments.is('input, textarea')) ? (($comments.val() || '').trim()) : '';
+        if (!notes) {
+            try { notes = (window.localStorage.getItem(ORDER_COMMENTS_STORAGE_KEY) || '').trim(); } catch (e) { notes = ''; }
+            if (notes) {
+                $comments.val(notes);
+            }
+        }
+
+        if (notes) {
+            const shortNotes = notes.length > 50 ? notes.substring(0, 50) + '...' : notes;
+            if ($unifiedLabel.length) $unifiedLabel.text('הערות להזמנה');
+            if ($unifiedEdit.length) $unifiedEdit.show();
+            $unifiedValue.removeClass('is-add-note').empty().text(shortNotes);
+        } else {
+            if ($unifiedLabel.length) $unifiedLabel.text('');
+            if ($unifiedEdit.length) $unifiedEdit.hide();
+            $unifiedValue
+                .addClass('is-add-note')
+                .empty()
+                .html('הוספת הערה להזמנה &gt;');
+        }
+    }
+
     // Initialize on page load
     console.log('[Checkout Blocks] Starting initialization...');
     setInitialBlockStates();
-    initCheckoutBlocks();
+    initCheckoutBlocks(); 
+    updatePaymentMethodsVisibility();
+    updatePlaceOrderButtonText();
+    syncUnifiedNotesLine();
+    // Initialize unified summary lines once on load
+    $('.checkout-block--billing, .checkout-block--shipping, .checkout-block--notes').each(function() {
+        updateBlockSummary($(this));
+    });
+
+    // Handle WooCommerce update_order_review -1 issue after AJAX login:
+    // if we get -1 for the checkout update request, reload once so nonces match the logged-in user.
+    let updateOrderReviewReloaded = false;
+    $(document).ajaxError(function(event, jqXHR, settings) {
+        if (
+            !updateOrderReviewReloaded &&
+            settings &&
+            typeof settings.url === 'string' &&
+            settings.url.indexOf('update_order_review') !== -1 &&
+            jqXHR &&
+            (jqXHR.status === 0 || jqXHR.responseText === '-1')
+        ) {
+            updateOrderReviewReloaded = true;
+            console.warn('[Checkout Blocks] update_order_review returned -1; reloading checkout once to refresh nonces.');
+            window.location.reload();
+        }
+    });
+
     console.log('[Checkout Blocks] Initial page load complete');
 
     // Re-initialize after WooCommerce updates (fragments)
     $(document.body).on('updated_checkout', function() {
         setInitialBlockStates();
         initCheckoutBlocks();
+        updatePaymentMethodsVisibility();
+        updatePlaceOrderButtonText();
+        syncUnifiedNotesLine();
+        $('.checkout-block--billing, .checkout-block--shipping, .checkout-block--notes').each(function() {
+            updateBlockSummary($(this));
+        });
+    });
+
+    // When payment method changes, update place order button text (with logging)
+    $(document.body).on('change', 'input[name="payment_method"]', function() {
+        console.log('[Checkout Blocks] payment_method changed', {
+            id: this.id,
+            value: this.value,
+            dataText: $(this).attr('data-order_button_text')
+        });
+        updatePlaceOrderButtonText();
     });
 
     /**
@@ -544,8 +779,49 @@ jQuery(function($) {
         if ($tbody.hasClass('is-closed')) {
             $tbody.removeClass('is-closed').addClass('is-open');
         } else {
-            $tbody.removeClass('is-open').addClass('is-closed');
+            $tbody.removeClass('is-open').addClass('is-closed'); 
         }
+    });
+ 
+    // Open popups from unified summary "שינוי" buttons
+    $(document).on('click', '.checkout-summary-line__edit', function(e) {
+        e.preventDefault();
+        const target = $(this).data('checkout-block-target');
+        if (!target) return;
+        if (target === 'notes') {
+            const $comments = $('#order_comments');
+            beginInlineNotesInput($comments.length ? ($comments.val() || '') : '');
+            return;
+        }
+        const $block = $('.checkout-block--' + target);
+        if ($block.length) { 
+            openBlockPopup($block); 
+        }
+    }); 
+
+    // Click the "add note" area to start typing inline
+    $(document).on('click', '.checkout-summary-line--notes .js-checkout-summary-notes.is-add-note', function(e) {
+        // If already an input, let it focus naturally
+        if ($(e.target).is('input')) return;
+        const $comments = $('#order_comments');
+        let val = $comments.length ? ($comments.val() || '') : '';
+        if (!val) {
+            try { val = window.localStorage.getItem(ORDER_COMMENTS_STORAGE_KEY) || ''; } catch (err) {}
+        }
+        beginInlineNotesInput(val);
+    });
+
+    // Commit notes on blur / Enter
+    $(document).on('keydown', '.checkout-summary-line--notes .checkout-notes-inline-input', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            $(this).trigger('blur');
+        }
+    });
+    $(document).on('blur', '.checkout-summary-line--notes .checkout-notes-inline-input', function() {
+        commitInlineNotesInput($(this));
+        // After saving, return to unified display (text or add-link)
+        syncUnifiedNotesLine();
     });
 });
 

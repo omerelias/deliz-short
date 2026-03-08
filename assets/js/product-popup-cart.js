@@ -8,7 +8,7 @@
 
     const state = window.EDProductPopupState; // Access shared state
 
-    /**
+    /**  
      * Handle add to cart
      */
     async function handleAddToCart(e) {
@@ -262,6 +262,15 @@
 
             console.log('📤 Sending request...');
 
+            // Trigger WooCommerce-style events so shipping popup logic (oc-woo-shipping) runs on first add-to-cart
+            if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.trigger) {
+                console.log('[משלוחים] מפעיל אירועים adding_to_cart + orak_adding_to_cart');
+                jQuery('body').trigger('adding_to_cart');
+                jQuery('body').trigger('orak_adding_to_cart');
+            } else {
+                console.warn('[משלוחים] jQuery לא זמין – פופאפ בחירת משלוח לא יופעל');
+            }
+
             // Convert FormData to JSON for REST API
             const requestData = {};
             for (const [key, value] of formData.entries()) {
@@ -449,12 +458,17 @@
         if (!state.popupElement) return;
 
         const image = state.popupElement.querySelector('#popup-product-image');
-        const cartTarget = document.querySelector('.ed-float-cart__inner');
+        const isMobile = typeof window.matchMedia !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+        // On mobile: fly down to the button that opens the cart (basket bar or header icon)
+        const cartTarget = isMobile
+            ? (document.querySelector('#ed-basket-toggle') || document.querySelector('.ed-basket-bar__btn') || document.querySelector('.mini-cart-icon') || document.querySelector('.site-header-minicart button'))
+            : document.querySelector('.ed-float-cart__inner');
+        const targetEl = cartTarget || document.querySelector('.ed-float-cart__inner');
 
-        if (!image || !cartTarget) return;
+        if (!image || !targetEl) return;
 
         const imageRect = image.getBoundingClientRect();
-        const cartRect = cartTarget.getBoundingClientRect();
+        const cartRect = targetEl.getBoundingClientRect();
 
         // Create flying image
         const flyingImg = image.cloneNode(true);

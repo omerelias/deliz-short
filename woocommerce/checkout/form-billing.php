@@ -22,7 +22,6 @@ $checkout_style = apply_filters('ocws_checkout_page_style', 'regular');
 
 $ar_billing_fields_first = array(
 	'billing_google_autocomplete',
-	'billing_address_1',
 	'billing_city',
 	'billing_postcode',
 	'billing_country',
@@ -49,17 +48,13 @@ if ( isset( $_COOKIE['oc_shipping_to_other_address'] ) && $_COOKIE['oc_shipping_
 }
 ?>
 
-<div class="checkout-block checkout-block--billing is-open" data-block="billing" aria-expanded="true">
-	<div class="checkout-block__header">
-		<h3 class="checkout-block__title"><?php esc_html_e( 'פרטי המזמין', 'deliz-short' ); ?></h3>
-		<button type="button" class="checkout-block__edit"><?php esc_html_e( 'עריכה', 'deliz-short' ); ?></button>
-		<span class="checkout-block__icon">▼</span>
-	</div>
-	<div class="checkout-block__summary">
+<div class="checkout-block checkout-block--billing is-closed" data-block="billing" aria-expanded="false" data-popup-id="checkout-block-popup--billing">
+	<div class="checkout-block__summary-row">
+		<div class="checkout-block__summary">
 		<?php
+		echo '<strong>' . esc_html__( 'פרטי המזמין', 'deliz-short' ) . '</strong><br>';
 		$billing_name = $checkout->get_value('billing_first_name') . ' ' . $checkout->get_value('billing_last_name');
 		$billing_phone = $checkout->get_value('billing_phone');
-		$billing_email = $checkout->get_value('billing_email');
 		$billing_city_code = $checkout->get_value('billing_city');
 		$billing_street = $checkout->get_value('billing_street');
 		$billing_house_num = $checkout->get_value('billing_house_num');
@@ -102,19 +97,25 @@ if ( isset( $_COOKIE['oc_shipping_to_other_address'] ) && $_COOKIE['oc_shipping_
 		}
 		$billing_address = implode(' ', $address_parts);
 		
-		if ($billing_name || $billing_phone || $billing_email || $billing_address) {
+		if ($billing_name || $billing_phone) {
 			if ($billing_name) echo '<strong>' . esc_html(trim($billing_name)) . '</strong><br>';
-			if ($billing_phone) echo esc_html($billing_phone) . '<br>';
-			if ($billing_email) echo esc_html($billing_email) . '<br>';
-			if ($billing_address) {
-				echo esc_html(trim($billing_address));
-			}
+			if ($billing_phone) echo esc_html($billing_phone);
 		} else {
 			echo esc_html__('לא הוזנו פרטים', 'deliz-short');
 		}
 		?>
+		</div>
+		<button type="button" class="checkout-block__edit"><?php esc_html_e( 'עריכה', 'deliz-short' ); ?></button>
 	</div>
-	<div class="checkout-block__content">
+	<div class="checkout-block-popup" id="checkout-block-popup--billing" aria-hidden="true">
+		<div class="checkout-block-popup__overlay"></div>
+		<div class="checkout-block-popup__container">
+			<button type="button" class="checkout-block-popup__close default-close-btn btn-empty" aria-label="<?php esc_attr_e( 'סגור', 'deliz-short' ); ?>">
+				<svg xmlns="http://www.w3.org/2000/svg" class="Icon Icon--close" viewBox="0 0 16 14"><path d="M15 0L1 14m14 0L1 0" stroke="currentColor" fill="none" fill-rule="evenodd"></path></svg>
+			</button>
+			<div class="checkout-block-popup__inner">
+				<h3 class="checkout-block-popup__title"><?php esc_html_e( 'פרטי המזמין', 'deliz-short' ); ?></h3>
+				<div class="checkout-block__content checkout-block__content--in-popup">
 		<div class="woocommerce-billing-fields">
 	<?php if ( ! is_user_logged_in() ) : ?>
 		<div class="checkout-login">
@@ -162,7 +163,24 @@ if ( isset( $_COOKIE['oc_shipping_to_other_address'] ) && $_COOKIE['oc_shipping_
 		?>
 	</div>
 
+	<?php 
+	$checkout_style = apply_filters( 'ocws_checkout_page_style', 'regular' );
+	if ( $checkout_style == 'deli' ) { ?>
+		<div class="other-recipient-fields">
+			<?php do_action( 'ocws_send_to_other_person_fields' ); ?>
+		</div>
+	<?php } ?>
+
+	<?php if ( $checkout_style == 'regular' ) { ?>
+		<div class="other-recipient-fields">
+			<?php do_action( 'ocws_send_to_other_person_fields' ); ?>
+		</div>
+	<?php } ?>
+
 	<?php //do_action( 'woocommerce_after_checkout_billing_form', $checkout ); ?>
+		</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

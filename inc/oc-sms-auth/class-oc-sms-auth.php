@@ -116,6 +116,10 @@ class OC_SMS_Auth {
         // Registration handler for checkout flow
         add_action('wp_ajax_nopriv_oc_register_user', array($this, 'ajax_register_user'));
         add_action('wp_ajax_oc_register_user', array($this, 'ajax_register_user'));
+
+        // Extra shipping details after registration (checkout flow)
+        add_action('wp_ajax_oc_update_shipping_details', array($this, 'ajax_update_shipping_details'));
+        add_action('wp_ajax_nopriv_oc_update_shipping_details', array($this, 'ajax_update_shipping_details'));
     }
     /**
      * Enqueue required scripts and styles
@@ -602,6 +606,39 @@ class OC_SMS_Auth {
         
         wp_send_json_success(array(
             'message' => __('הרשמה הושלמה בהצלחה', 'oc-main-theme')
+        ));
+    }
+
+    /**
+     * AJAX: update extra shipping details after registration (checkout SMS flow)
+     */
+    public function ajax_update_shipping_details() {
+//        check_ajax_referer('oc_sms_auth', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array(
+                'message' => __('המשתמש אינו מחובר', 'oc-main-theme')
+            ));
+        }
+
+        $user_id = get_current_user_id();
+
+        $floor       = isset($_POST['billing_floor']) ? sanitize_text_field($_POST['billing_floor']) : '';
+        $apartment   = isset($_POST['billing_apartment']) ? sanitize_text_field($_POST['billing_apartment']) : '';
+        $enter_code  = isset($_POST['billing_enter_code']) ? sanitize_text_field($_POST['billing_enter_code']) : '';
+
+        if ($floor !== '') {
+            update_user_meta($user_id, 'billing_floor', $floor);
+        }
+        if ($apartment !== '') {
+            update_user_meta($user_id, 'billing_apartment', $apartment);
+        }
+        if ($enter_code !== '') {
+            update_user_meta($user_id, 'billing_enter_code', $enter_code);
+        }
+
+        wp_send_json_success(array(
+            'message' => __('פרטי המשלוח נשמרו בהצלחה', 'oc-main-theme')
         ));
     }
 
