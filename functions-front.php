@@ -2016,7 +2016,7 @@ function oc_woo_coupon_form_copy_for_checkout(){
 		<div class="open-points" style="display:none;"><a href="javascript:void(0);"><?php echo __( "Click to use points", "deliz-short" ); ?></a></div>
 	<?php endif; ?>	
 <?php	
-} 
+}
 
 // Make billing postcode / P.O. Box optional (theme-level override).
 add_filter( 'woocommerce_billing_fields', function( $fields ) {

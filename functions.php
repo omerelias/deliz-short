@@ -77,3 +77,141 @@ add_action('after_setup_theme', function () {
 //    echo '</pre>';
 //    die;
 //});
+
+/**
+ * זמני – dequeue לרשימת ה־assets הכבדים (לפי PageSpeed).
+ * להפעלה: הוסף ?dequeue_slow=1 ל־URL. למחוק אחרי הבדיקה.
+ */
+//add_action('wp_enqueue_scripts', function () {
+//  if ( ! isset($_GET['dequeue_slow']) || ( $_GET['dequeue_slow'] !== '1' && $_GET['dequeue_slow'] !== '' ) ) {
+//    return;
+//  }
+//  $styles_to_dequeue = [
+////    'oc-sms-auth',           // sms-auth.css
+//    'woocommerce-general',   // woocommerce-rtl.css
+//    'slick',                 // slick.css
+//    'slick-theme',           // slick-theme.css
+//    'checkout-sms-popup',   // checkout-sms-popup.css
+//    'theme-options',        // theme-options.css
+//    'ed-checkout-upsells',  // checkout-upsells.css
+////    'deliz-short-main',      // main.css
+//    'deliz-short-product-popup', // product-popup.css
+//    'woocommerce-smallscreen',   // woocommerce-smallscreen-rtl.css
+//    'ed-promotions',         // promotions.css
+//    'wc-blocks-style',       // wc-blocks-rtl.css
+////    'deliz-short-style',     // style.css
+//    'woocommerce-layout',    // woocommerce-layout-rtl.css
+//    'oc-compat-css',         // oc-compat.css
+//  ];
+//  $scripts_to_dequeue = [
+//    'jquery-migrate',        // jquery-migrate.min.js
+//    'jquery',                // jquery.min.js
+//    'oc-compat-js',          // oc-compat.js
+//  ];
+//  foreach ( $styles_to_dequeue as $handle ) {
+//    wp_dequeue_style($handle);
+//  }
+//  foreach ( $scripts_to_dequeue as $handle ) {
+//    wp_dequeue_script($handle);
+//  }
+//  // Google Fonts – כל סטייל שמקורו ב־fonts.googleapis.com
+//  $wp_styles = wp_styles();
+//  foreach ( $wp_styles->registered as $handle => $obj ) {
+//    if ( ! empty($obj->src) && strpos($obj->src, 'fonts.googleapis.com') !== false ) {
+//      wp_dequeue_style($handle);
+//    }
+//  }
+//}, 9999);
+
+//add_action('wp_enqueue_scripts', function () {
+//    $is_list    = isset($_GET['list_assets']) && $_GET['list_assets'] === '1';
+//    $is_range   = isset($_GET['dequeue_script_range']) || isset($_GET['dequeue_style_range']);
+//    $is_all     = isset($_GET['dequeue_all']) && ( $_GET['dequeue_all'] === '1' || $_GET['dequeue_all'] === '' );
+//    $is_scripts = isset($_GET['dequeue_scripts']) && ( $_GET['dequeue_scripts'] === '1' || $_GET['dequeue_scripts'] === '' );
+//    $is_styles  = isset($_GET['dequeue_styles']) && ( $_GET['dequeue_styles'] === '1' || $_GET['dequeue_styles'] === '' );
+//    if ( ! $is_list && ! $is_range && ! $is_all && ! $is_scripts && ! $is_styles ) {
+//        return;
+//    }
+//    $wp_scripts = wp_scripts();
+//    $wp_styles  = wp_styles();
+//    $GLOBALS['_ed_asset_queues'] = [
+//        'scripts' => array_values($wp_scripts->queue),
+//        'styles'  => array_values($wp_styles->queue),
+//    ];
+//}, 9998);
+
+//add_action('wp_enqueue_scripts', function () {
+//    $q = $GLOBALS['_ed_asset_queues'] ?? null;
+//    if ( ! $q ) {
+//        return;
+//    }
+//    if ( isset($_GET['dequeue_all']) && ( $_GET['dequeue_all'] === '1' || $_GET['dequeue_all'] === '' ) ) {
+//        foreach ( wp_styles()->registered as $handle => $obj ) {
+//            wp_dequeue_style($handle);
+//        }
+//        foreach ( wp_scripts()->registered as $handle => $obj ) {
+//            wp_dequeue_script($handle);
+//        }
+//        return;
+//    }
+//    if ( isset($_GET['dequeue_scripts']) && ( $_GET['dequeue_scripts'] === '1' || $_GET['dequeue_scripts'] === '' ) ) {
+//        foreach ( wp_scripts()->registered as $handle => $obj ) {
+//            wp_dequeue_script($handle);
+//        }
+//    }
+//    if ( isset($_GET['dequeue_styles']) && ( $_GET['dequeue_styles'] === '1' || $_GET['dequeue_styles'] === '' ) ) {
+//        foreach ( wp_styles()->registered as $handle => $obj ) {
+//            wp_dequeue_style($handle);
+//        }
+//    }
+//    if ( isset($_GET['dequeue_script_range']) && preg_match('/^(\d+)[_\-](\d+)$/', sanitize_text_field($_GET['dequeue_script_range']), $m) ) {
+//        $from = (int) $m[1];
+//        $to   = (int) $m[2];
+//        $list = $q['scripts'];
+//        for ( $i = $from; $i <= $to && $i < count($list); $i++ ) {
+//            wp_dequeue_script($list[ $i ]);
+//        }
+//    }
+//    if ( isset($_GET['dequeue_style_range']) && preg_match('/^(\d+)[_\-](\d+)$/', sanitize_text_field($_GET['dequeue_style_range']), $m) ) {
+//        $from = (int) $m[1];
+//        $to   = (int) $m[2];
+//        $list = $q['styles'];
+//        for ( $i = $from; $i <= $to && $i < count($list); $i++ ) {
+//            wp_dequeue_style($list[ $i ]);
+//        }
+//    }
+//}, 9999);
+
+//add_action('wp_footer', function () {
+//    if ( ! isset($_GET['list_assets']) || $_GET['list_assets'] !== '1' ) {
+//        return;
+//    }
+//    $q = $GLOBALS['_ed_asset_queues'] ?? null;
+//    if ( ! $q ) {
+//        return;
+//    }
+//    $n_scripts = count($q['scripts']);
+//    $n_styles  = count($q['styles']);
+//    $mid_s = $n_scripts > 0 ? (int) floor(($n_scripts - 1) / 2) : 0;
+//    $mid_c = $n_styles > 0 ? (int) floor(($n_styles - 1) / 2) : 0;
+//    echo '<pre style="position:fixed;bottom:0;left:0;right:0;max-height:55vh;overflow:auto;background:#111;color:#0f0;padding:1em;font-size:12px;z-index:999999;text-align:left;direction:ltr;border:2px solid #0f0;">';
+//    echo "=== SCRIPTS (total: $n_scripts) ===\n";
+//    echo "Binary: first half = dequeue_script_range=0_{$mid_s}\n\n";
+//    $wp_scripts = wp_scripts();
+//    foreach ( $q['scripts'] as $i => $handle ) {
+//        $obj = $wp_scripts->registered[ $handle ] ?? null;
+//        $src = $obj ? $obj->src : '';
+//        echo sprintf("%3d: %s\n    %s\n", $i, $handle, $src);
+//    }
+//    echo "\n=== STYLES (total: $n_styles) ===\n";
+//    echo "Binary: first half = dequeue_style_range=0_{$mid_c}\n\n";
+//    $wp_styles = wp_styles();
+//    foreach ( $q['styles'] as $i => $handle ) {
+//        $obj = $wp_styles->registered[ $handle ] ?? null;
+//        $src = $obj ? $obj->src : '';
+//        echo sprintf("%3d: %s\n    %s\n", $i, $handle, $src);
+//    }
+//    echo '</pre>';
+//}, 9999);
+
+
