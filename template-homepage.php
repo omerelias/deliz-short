@@ -15,7 +15,7 @@
 get_header(); ?>
 
 <main id="site-content" class="site-content">
-<?php if ( function_exists( 'yoast_breadcrumb' ) ) : ?> 
+<?php if ( function_exists( 'yoast_breadcrumb' ) ) : ?>
   <nav class="breadcrumbs" aria-label="<?php esc_attr_e( 'Breadcrumbs', 'deliz-short' ); ?>">
     <?php yoast_breadcrumb(); ?>
   </nav>
