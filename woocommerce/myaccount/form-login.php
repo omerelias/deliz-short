@@ -61,7 +61,7 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
 	<div class="register-form-link">
             <span class="title"></span>
             <span class="subtitle"></span>
-            <button class="register-form auth-btn btn" type="button" value="register">הרשמה
+            <button class="register-form auth-btn btn" type="button" value="register"><?php esc_html_e( 'הרשמה', 'deliz-short' ); ?>
         </button></div>	
 
 	</div>
@@ -113,7 +113,7 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
 		</form>
 
 		<div class="register-form-link">
-            <button class="register-form auth-btn btn" type="button" value="login">התחברות
+            <button class="register-form auth-btn btn" type="button" value="login"><?php esc_html_e( 'התחברות', 'deliz-short' ); ?>
         </button></div>		
 
 	</div>

@@ -79,9 +79,9 @@ if ( have_rows('top_header_msg', 'option') ) : ?>
           <div class="header-user-inner">
             <svg xmlns="http://www.w3.org/2000/svg" width="31.23" height="28.5" viewBox="0 0 31.23 28.5"><g id="Account" transform="translate(-0.609 -0.65)"><g id="Layer_1" data-name="Layer 1" transform="translate(1.653 1.65)"><g id="Layer_1-2" data-name="Layer 1-2" transform="translate(0)"><g id="elements"><path id="Path_688" data-name="Path 688" d="M2.973,50.385H29.5a1.329,1.329,0,0,0,1.341-1.306h0a1.183,1.183,0,0,0-.043-.347C29.217,42.816,23.3,38.37,16.239,38.37S3.257,42.812,1.7,48.733a1.321,1.321,0,0,0,.947,1.609h0a1.578,1.578,0,0,0,.331.043Z" transform="translate(-1.653 -23.885)" fill="none" stroke="<?php echo $icon_color; ?>" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"></path><path id="Path_689" data-name="Path 689" d="M29.256,1.65a6.106,6.106,0,1,0,6.106,6.106h0A6.114,6.114,0,0,0,29.256,1.65Z" transform="translate(-14.67 -1.65)" fill="none" stroke="<?php echo $icon_color; ?>" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"></path></g></g></g></g></svg> 
             <?php if(is_user_logged_in()): ?>          
-              <span><?php echo __('Hi', 'deliz-short'); ?> </span> <a href="<?php echo get_home_url(); ?>/my-account" aria-label="מעבר לחשבון שלי "><?php echo $current_user->first_name; ?></a>
+              <span><?php echo esc_html( __( 'Hi', 'deliz-short' ) ); ?> </span> <a href="<?php echo esc_url( trailingslashit( get_home_url() ) . 'my-account' ); ?>" aria-label="<?php esc_attr_e( 'מעבר לחשבון שלי', 'deliz-short' ); ?>"><?php echo esc_html( $current_user->first_name ); ?></a>
             <?php else: ?>
-              <span><?php echo __('Hi,', 'deliz-short'); ?> </span> <a href="<?php echo get_home_url(); ?>/my-account" aria-label="מעבר לחשבון שלי "><?php echo __('Login', 'deliz-short'); ?></a>
+              <span><?php echo esc_html( __( 'Hi,', 'deliz-short' ) ); ?> </span> <a href="<?php echo esc_url( trailingslashit( get_home_url() ) . 'my-account' ); ?>" aria-label="<?php esc_attr_e( 'מעבר לחשבון שלי', 'deliz-short' ); ?>"><?php echo esc_html( __( 'Login', 'deliz-short' ) ); ?></a>
             <?php endif; ?>
           </div>
         </div>    

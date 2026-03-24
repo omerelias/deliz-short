@@ -309,7 +309,7 @@ add_filter(
   'wpseo_breadcrumb_single_link',
   function ( $link_output, $link ) {
     if ( ! empty( $link['url'] ) && $link['url'] === home_url( '/' ) ) {
-      $text = 'דף הבית';
+      $text = __( 'דף הבית', 'deliz-short' );
       $link_output = sprintf(
         '<a href="%s">%s</a>',
         esc_url( $link['url'] ),

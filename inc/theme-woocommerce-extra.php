@@ -82,7 +82,7 @@ function oc_theme_woo_add_checkout_fields( $fields ){
 	$fields['billing']['billing_email']['class'][] 		= 'form-row-last';
 	$fields['billing']['billing_address_2']['class'][] 	= 'form-row-last';
 	// $fields['billing']['billing_address_2']['label'] 	= __( 'Floor', 	 'woocommerce' );
-    $fields['billing']['billing_city']['label'] = 'עיר';
+    $fields['billing']['billing_city']['label'] = __( 'עיר', 'woocommerce' );
 	$fields['billing']['billing_address_1']['label'] = __( 'רחוב ומספר בית', 'woocommerce' );
 	$fields['billing']['billing_address_2']['label'] = __( "מספר דירה", 'woocommerce' );
 	$fields['billing']['billing_floor']['label'] = __( 'קומה', 'woocommerce' );
@@ -167,7 +167,7 @@ add_action('woocommerce_before_shop_loop_item_title', function () {
 
   // מציג רק כשהמוצר לא במלאי
   if ( ! $product->is_in_stock() ) {
-    echo '<span class="badge-oos">זמנית אזל המלאי</span>';
+    echo '<span class="badge-oos">' . esc_html__( 'זמנית אזל המלאי', 'deliz-short' ) . '</span>';
   }
 }, 10);
 
@@ -227,11 +227,11 @@ add_filter( 'woocommerce_registration_errors', 'oc_theme_woo_validate_register_f
 function oc_theme_woo_validate_register_form( $validation_errors, $username, $email ) {
     
     if ( isset( $_POST['user_first_name'] ) && empty( $_POST['user_first_name'] ) ) {
-        $validation_errors->add( 'user_first_name_error', __( '<strong>Error</strong>: First name is required!', '' ) );
+        $validation_errors->add( 'user_first_name_error', __( '<strong>Error</strong>: First name is required!', 'woocommerce' ) );
     }
 
     if ( isset( $_POST['user_last_name'] ) && empty( $_POST['user_last_name'] ) ) {
-        $validation_errors->add( 'user_last_name_error', __( '<strong>Error</strong>: Last name is required!', '' ) );
+        $validation_errors->add( 'user_last_name_error', __( '<strong>Error</strong>: Last name is required!', 'woocommerce' ) );
     }
 
     return $validation_errors;
@@ -349,17 +349,17 @@ function woocommerce_checkout_coupon_form_custom() {
 // custom form | copy of reaL FORM
 function oc_woo_coupon_form_copy_for_checkout(){
 	if(in_array('pw-woocommerce-gift-cards/pw-gift-cards.php', apply_filters('active_plugins', get_option('active_plugins')))){
-		$place = 'קוד קופון / שובר מתנה';
-		$btn = 'החל';
+		$place = __( 'קוד קופון / שובר מתנה', 'deliz-short' );
+		$btn = __( 'החל', 'deliz-short' );
 	}else{
-		$place = 'קוד קופון';
-		$btn = 'החלת קופון';	
+		$place = __( 'קוד קופון', 'deliz-short' );
+		$btn = __( 'החלת קופון', 'deliz-short' );
 	}
 ?>
 	<div class="coupon-form copy-form" role="presentation">		
         <div class="checkout-coupon-form-inner">		
-    		<input type="text" name="coupon_code_copy" class="input-text" placeholder="<?php echo $place; ?>" id="coupon_code_copy" value="">
-    		<button type="button" class="button apply-coupon-copy" name="apply_coupon" value="<?php echo $btn; ?>"><?php echo $btn; ?></button>
+    		<input type="text" name="coupon_code_copy" class="input-text" placeholder="<?php echo esc_attr( $place ); ?>" id="coupon_code_copy" value="">
+    		<button type="button" class="button apply-coupon-copy" name="apply_coupon" value="<?php echo esc_attr( $btn ); ?>"><?php echo esc_html( $btn ); ?></button>
         </div>
 	</div>
 	<?php //points mark ?>

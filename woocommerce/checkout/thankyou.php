@@ -43,9 +43,9 @@ defined( 'ABSPATH' ) || exit;
 			
 			<?php //wc_get_template( 'checkout/order-received.php', array( 'order' => $order ) ); ?>
 			<div class="thankyou-content">
-				<h1>THANK YOU</h1>
-				<div class="thanks">הזמנתכם התקבלה. תודה שרכשתם אצלנו!</div>
-				<div class="order-num">מספר הזמנתכם הינו: <b><?php echo $order->get_order_number(); ?></b><br/>אישור ופרטי ההזמנה נשלחו אליכם במייל.</div>
+				<h1><?php esc_html_e( 'THANK YOU', 'deliz-short' ); ?></h1>
+				<div class="thanks"><?php esc_html_e( 'הזמנתכם התקבלה. תודה שרכשתם אצלנו!', 'deliz-short' ); ?></div>
+				<div class="order-num"><?php esc_html_e( 'מספר הזמנתכם הינו:', 'deliz-short' ); ?> <b><?php echo esc_html( $order->get_order_number() ); ?></b><br/><?php esc_html_e( 'אישור ופרטי ההזמנה נשלחו אליכם במייל.', 'deliz-short' ); ?></div>
 
 			</div>
         <?php

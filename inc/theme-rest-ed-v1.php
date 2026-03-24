@@ -26,7 +26,7 @@ function ed_rest_get_products_html(\WP_REST_Request $req) {
 
   $term = get_term_by('slug', $slug, 'product_cat');
   if (!$term || is_wp_error($term)) {
-    return new \WP_REST_Response(['html' => '<p>קטגוריה לא נמצאה</p>'], 404);
+    return new \WP_REST_Response(['html' => '<p>' . esc_html__('קטגוריה לא נמצאה', 'deliz-short') . '</p>'], 404);
   }
 
   $shortcode = sprintf(
@@ -59,7 +59,7 @@ add_action('rest_api_init', function () {
     'methods'  => WP_REST_Server::READABLE,
     'callback' => function () {
       if (!is_user_logged_in()) {
-        return new WP_REST_Response(['html' => '<p>יש להתחבר כדי לצפות בהיסטוריית רכישה.</p>'], 401);
+        return new WP_REST_Response(['html' => '<p>' . esc_html__('יש להתחבר כדי לצפות בהיסטוריית רכישה.', 'deliz-short') . '</p>'], 401);
       }
 
       ob_start();
@@ -69,7 +69,7 @@ add_action('rest_api_init', function () {
       if (file_exists($file)) {
         include $file;
       } else {
-        echo '<p>קובץ תצוגה לא נמצא: ed-rebuy-view.php</p>';
+        echo '<p>' . esc_html__('קובץ תצוגה לא נמצא.', 'deliz-short') . '</p>';
       }
 
       $html = ob_get_clean();
@@ -85,7 +85,7 @@ function ed_rest_rebuy(\WP_REST_Request $req) {
   $per_page = max(1, min(48, (int)$req->get_param('per_page')));
 
   $user_id = get_current_user_id();
-  $cache_key = 'ed_rebuy_' . $user_id . '_' . $mode . '_' . $per_page;
+  $cache_key = 'ed_rebuy_' . get_locale() . '_' . $user_id . '_' . $mode . '_' . $per_page;
   
   // ✅ Always include fresh cart fragments (don't cache them)
   $fragments = [];
@@ -112,8 +112,8 @@ function ed_rest_rebuy(\WP_REST_Request $req) {
 
   if (empty($orders)) {
     $payload = [
-      'title' => ($mode === 'last') ? 'שחזור הזמנה קודמת' : 'מוצרים שקניתי',
-      'html'  => '<p>לא נמצאו רכישות קודמות.</p>',
+      'title' => ($mode === 'last') ? __('שחזור הזמנה קודמת', 'deliz-short') : __('מוצרים שקניתי', 'deliz-short'),
+      'html'  => '<p>' . esc_html__('לא נמצאו רכישות קודמות.', 'deliz-short') . '</p>',
       'count' => 0,
       'fragments' => $fragments,
       'fragment_hash' => function_exists('wc_get_cart_hash') ? wc_get_cart_hash() : '',
@@ -149,8 +149,8 @@ function ed_rest_rebuy(\WP_REST_Request $req) {
 
   if (empty($ids)) {
     $payload = [
-      'title' => ($mode === 'last') ? 'שחזור הזמנה קודמת' : 'מוצרים שקניתי',
-      'html'  => '<p>לא נמצאו מוצרים להצגה.</p>',
+      'title' => ($mode === 'last') ? __('שחזור הזמנה קודמת', 'deliz-short') : __('מוצרים שקניתי', 'deliz-short'),
+      'html'  => '<p>' . esc_html__('לא נמצאו מוצרים להצגה.', 'deliz-short') . '</p>',
       'count' => 0,
       'fragments' => $fragments,
       'fragment_hash' => function_exists('wc_get_cart_hash') ? wc_get_cart_hash() : '',
@@ -171,7 +171,7 @@ function ed_rest_rebuy(\WP_REST_Request $req) {
   );
 
   $payload = [
-    'title' => ($mode === 'last') ? 'שחזור הזמנה קודמת' : 'מוצרים שקניתי',
+    'title' => ($mode === 'last') ? __('שחזור הזמנה קודמת', 'deliz-short') : __('מוצרים שקניתי', 'deliz-short'),
     'html'  => do_shortcode($shortcode),
     'count' => count($ids),
     'fragments' => $fragments,
@@ -230,7 +230,7 @@ add_action('rest_api_init', function () {
         while ($loop->have_posts()) { $loop->the_post(); wc_get_template_part('content', 'product'); }
         wc_get_template('loop/loop-end.php');
       } else {
-        echo '<p class="woocommerce-info">לא נמצאו מוצרים.</p>';
+        echo '<p class="woocommerce-info">' . esc_html__('לא נמצאו מוצרים.', 'deliz-short') . '</p>';
       }
 
       echo '</div>';

@@ -59,7 +59,7 @@
                         <?php if($footer_hours = get_field('footer_hours', 'option')): ?>
                           <div class="title">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path id="Path_1068" data-name="Path 1068" d="M27,969.362a10,10,0,1,0,10,10A10.014,10.014,0,0,0,27,969.362Zm0,1.818a8.182,8.182,0,1,1-8.182,8.182A8.168,8.168,0,0,1,27,971.18Zm0,1.515a.909.909,0,0,0-.909.909v5.758a.908.908,0,0,0,.265.644L30,983.652a.911.911,0,0,0,1.288-1.288l-3.381-3.381V973.6A.909.909,0,0,0,27,972.7Z" transform="translate(-17 -969.362)" fill="<?php echo get_field('fb_txt_color', 'option'); ?>"></path></svg> 
-                                <span>שעות פעילות</span>
+                                <span><?php esc_html_e( 'שעות פעילות', 'deliz-short' ); ?></span>
                           </div>
                           <div class="content"><?php echo $footer_hours; ?></div>
                         <?php endif; ?>
@@ -75,7 +75,7 @@
                         <?php if($footer_address = get_field('footer_address', 'option')): ?>
                           <div class="title">
                               <svg xmlns="http://www.w3.org/2000/svg" id="Component_21_3" data-name="Component 21 – 3" width="14.86" height="22.823" viewBox="0 0 14.86 22.823"><path id="Path_1069" data-name="Path 1069" d="M29.43,959.356a7.3,7.3,0,0,0-7.43,7.43,11.36,11.36,0,0,0,1.327,4.884l5.4,10.083a.8.8,0,0,0,1.41,0l5.4-10.083a11.361,11.361,0,0,0,1.327-4.884,7.3,7.3,0,0,0-7.43-7.43Zm0,1.592a5.606,5.606,0,0,1,5.838,5.838,10.793,10.793,0,0,1-1.136,4.13l-4.7,8.765-4.7-8.765a10.8,10.8,0,0,1-1.136-4.13A5.606,5.606,0,0,1,29.43,960.948Zm0,2.123a3.715,3.715,0,1,0,3.715,3.715A3.727,3.727,0,0,0,29.43,963.071Zm0,1.592a2.123,2.123,0,1,1-2.123,2.123A2.111,2.111,0,0,1,29.43,964.663Z" transform="translate(-22 -959.356)" fill="<?php echo get_field('fb_txt_color', 'option'); ?>"></path></svg> 
-                              <span>כתובת</span>
+                              <span><?php esc_html_e( 'כתובת', 'deliz-short' ); ?></span>
                           </div>
                           <div class="content"><?php echo $footer_address; ?></div>
                         <?php endif; ?>  
@@ -106,7 +106,7 @@
                 <div class="row align-items-center">
                     <div class="col-sm pay-img"><img src="<?php the_field("f_img_r", 'option'); ?>" alt="<?php esc_attr_e('אמצעי תשלום', 'deliz-short'); ?>" width="200" height="40" loading="lazy"></div>
                     <div class="col-sm text-center" style="font-size: 14px;line-height: 15px;">© <?php echo date("Y"); ?> <?php the_field("f_text_m", 'option'); ?></div>
-                    <div class="col-sm text-right copyright" style="display: flex;align-items: flex-start;justify-content: flex-end;gap: 5px;"><a href="https://onlinestore.co.il/meat-and-fish-shop/" style="font-size: 14px;margin-top: 0;" target="_blank"><?php _e('בניית אתר לקצביה', 'oc_transalte'); ?></a> | <a href="https://onlinestore.co.il/" target="_blank" rel="noopener noreferrer"><img width="40" height="40" style="margin-right: 0;" src="<?php echo get_stylesheet_directory_uri() ?>/assets/images/original-concepts.svg" alt="onlinestore"></a></div>
+                    <div class="col-sm text-right copyright" style="display: flex;align-items: flex-start;justify-content: flex-end;gap: 5px;"><a href="https://onlinestore.co.il/meat-and-fish-shop/" style="font-size: 14px;margin-top: 0;" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'בניית אתר לקצביה', 'deliz-short' ); ?></a> | <a href="https://onlinestore.co.il/" target="_blank" rel="noopener noreferrer"><img width="40" height="40" style="margin-right: 0;" src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/images/original-concepts.svg' ); ?>" alt="<?php esc_attr_e( 'OnlineStore', 'deliz-short' ); ?>"></a></div>
                 </div>
             </div>
         </div>

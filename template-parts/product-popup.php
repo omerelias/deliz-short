@@ -95,7 +95,7 @@ $options = $product_data['options'] ?? [];
 
             <span class="ed-product-popup__price-label">
 
-              משקל ממוצע: <?php echo esc_html($ocwsu['average_weight']); ?> <?php echo esc_html($ocwsu['average_weight_label']); ?>
+              <?php echo esc_html( sprintf( __( 'משקל ממוצע: %1$s %2$s', 'deliz-short' ), $ocwsu['average_weight'], $ocwsu['average_weight_label'] ) ); ?>
 
             </span>
 
@@ -111,13 +111,13 @@ $options = $product_data['options'] ?? [];
 
               <span class="ed-product-popup__price-unit">
 
-                / <?php echo $ocwsu['product_weight_units'] === 'kg' ? 'ק"ג' : '100 גרם'; ?>
+                / <?php echo esc_html( $ocwsu['product_weight_units'] === 'kg' ? __( 'ק"ג', 'deliz-short' ) : __( '100 גרם', 'deliz-short' ) ); ?>
 
               </span>
 
             <?php elseif ($ocwsu['sold_by_units'] && !$ocwsu['weighable']): ?>
 
-              <span class="ed-product-popup__price-unit">/ יחידה</span>
+              <span class="ed-product-popup__price-unit"><?php echo esc_html( __( '/ יחידה', 'deliz-short' ) ); ?></span>
 
             <?php endif; ?>
 
@@ -159,7 +159,7 @@ $options = $product_data['options'] ?? [];
 
             <div class="ed-product-popup__option-group">
 
-              <label class="ed-product-popup__option-label">בחירת משקל ליחידה</label>
+              <label class="ed-product-popup__option-label"><?php esc_html_e( 'בחירת משקל ליחידה', 'deliz-short' ); ?></label>
 
               <div class="ed-product-popup__radio-group" data-option="unit_weight">
 
@@ -169,13 +169,13 @@ $options = $product_data['options'] ?? [];
 
                   $show_weight = $weight;
 
-                  $label = $ocwsu['product_weight_units'] === 'kg' ? 'ק"ג' : 'גרם';
+                  $label = $ocwsu['product_weight_units'] === 'kg' ? __( 'ק"ג', 'deliz-short' ) : __( 'גרם', 'deliz-short' );
 
                   if ($ocwsu['product_weight_units'] === 'kg' && $weight < 1) {
 
                     $show_weight = $weight * 1000;
 
-                    $label = 'גרם';
+                    $label = __( 'גרם', 'deliz-short' );
 
                   }
 
@@ -215,7 +215,7 @@ $options = $product_data['options'] ?? [];
 
             <div class="ed-product-popup__option-group">
 
-              <label class="ed-product-popup__option-label">צורות חיתוך</label>
+              <label class="ed-product-popup__option-label"><?php esc_html_e( 'צורות חיתוך', 'deliz-short' ); ?></label>
 
               <div class="ed-product-popup__radio-group" data-option="cutting_shape">
 
@@ -263,7 +263,7 @@ $options = $product_data['options'] ?? [];
 
             <div class="ed-product-popup__option-group">
 
-              <label class="ed-product-popup__option-label">הערות לקצב</label>
+              <label class="ed-product-popup__option-label"><?php esc_html_e( 'הערות לקצב', 'deliz-short' ); ?></label>
 
               <div class="ed-product-popup__radio-group" data-option="butcher_note">
 
@@ -313,7 +313,7 @@ $options = $product_data['options'] ?? [];
 
           <div class="ed-product-popup__error" id="popup-option-error" style="display: none;">
 
-            נא לבחור אפשרות
+            <?php esc_html_e( 'נא לבחור אפשרות', 'deliz-short' ); ?>
 
           </div>
 
@@ -323,7 +323,7 @@ $options = $product_data['options'] ?? [];
 
         <div class="ed-product-popup__note">
 
-          <label for="popup-product-note">הערה למוצר השקיל</label>
+          <label for="popup-product-note"><?php esc_html_e( 'הערה למוצר השקיל', 'deliz-short' ); ?></label>
 
           <textarea id="popup-product-note" 
 
@@ -331,7 +331,7 @@ $options = $product_data['options'] ?? [];
 
                     rows="2" 
 
-                    placeholder="הערות נוספות..."></textarea>
+                    placeholder="<?php echo esc_attr__( 'הערות נוספות...', 'deliz-short' ); ?>"></textarea>
 
         </div>        
 
@@ -341,7 +341,7 @@ $options = $product_data['options'] ?? [];
 
           <div class="ed-product-popup__related">
 
-            <h3 class="ed-product-popup__related-title">מוצרים נלווים</h3>
+            <h3 class="ed-product-popup__related-title"><?php esc_html_e( 'מוצרים נלווים', 'deliz-short' ); ?></h3>
 
             <div class="ed-product-popup__related-list">
 
@@ -404,7 +404,7 @@ $options = $product_data['options'] ?? [];
 
                 disabled>
 
-          <span class="ed-product-popup__add-btn-text">הוסף לסל</span>
+          <span class="ed-product-popup__add-btn-text"><?php esc_html_e( 'הוסף לסל', 'deliz-short' ); ?></span>
 
         </button>
 

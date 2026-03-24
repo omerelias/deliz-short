@@ -157,7 +157,7 @@ add_shortcode('ed_menu_sidebar', function ($atts) {
 
   if (is_user_logged_in()) {
     array_unshift($cats, [
-      'title'    => 'קנייה חוזרת',
+      'title'    => __( 'קנייה חוזרת', 'deliz-short' ),
       'slug'     => 'rebuy',
       'icon_url' => 'https://deliz-short.mywebsite.co.il/wp-content/uploads/2026/01/%D7%91%D7%A9%D7%A8-%D7%91%D7%A7%D7%A8.jpg', // אם תרצה אייקון קבוע תגיד לי
     ]);
@@ -260,9 +260,25 @@ add_shortcode('ed_products_box', function ($atts) {
 });
 
 function ed_menu_products_js_shared() {
+  $ed_mp_i18n = wp_json_encode(
+    array(
+      'loadError'            => __( 'שגיאה בטעינה. נסה שוב.', 'deliz-short' ),
+      'rebuyTitle'           => __( 'קנייה חוזרת', 'deliz-short' ),
+      'contentUnavailable'   => __( 'תוכן לא זמין.', 'deliz-short' ),
+      'rebuyLoadError'       => __( 'שגיאה בטעינת קנייה חוזרת.', 'deliz-short' ),
+      'purchaseHistoryTitle' => __( 'הסטוריית הרכישה שלכם', 'deliz-short' ),
+      'rebuyTabAll'          => __( 'מוצרים שקניתי', 'deliz-short' ),
+      'rebuyTabLast'         => __( 'שחזור הזמנה קודמת', 'deliz-short' ),
+      'searchAria'           => __( 'חפש', 'deliz-short' ),
+      'clearSearchAria'      => __( 'נקה חיפוש', 'deliz-short' ),
+      'searchResultsPrefix'  => __( 'תוצאות חיפוש עבור - ', 'deliz-short' ),
+      'searchError'          => __( 'שגיאה בחיפוש. נסה שוב.', 'deliz-short' ),
+    )
+  );
   return <<<JS
 (function () {
   const cfg = window.ED_MENU_PRODUCTS;
+  const I18N = {$ed_mp_i18n};
   if (!cfg) return;
  
   const box   = document.querySelector(cfg.productsSelector);
@@ -397,14 +413,14 @@ function ed_menu_products_js_shared() {
     } catch (e) {
       if (e.name === 'AbortError') return;
       box.classList.remove('is-loading');
-      box.innerHTML = '<p>שגיאה בטעינה. נסה שוב.</p>';
+      box.innerHTML = '<p>' + I18N.loadError + '</p>';
     }
   }
 
 async function loadRebuyFromPhp({push=false} = {}) {
   current = 'rebuy';
   setActive('rebuy');
-  setTitle('קנייה חוזרת');
+  setTitle(I18N.rebuyTitle);
   fadeOutBox();
   box.classList.add('is-loading');
 
@@ -437,7 +453,7 @@ async function loadRebuyFromPhp({push=false} = {}) {
       throw e;
     }
 
-    box.innerHTML = (data && data.html) ? data.html : '<p>תוכן לא זמין.</p>';
+    box.innerHTML = (data && data.html) ? data.html : '<p>' + I18N.contentUnavailable + '</p>';
     box.classList.remove('is-loading');
     fadeInBox();
 
@@ -449,7 +465,7 @@ async function loadRebuyFromPhp({push=false} = {}) {
   } catch (e) {
     console.error('rebuy-view error', e);
     box.classList.remove('is-loading');
-    box.innerHTML = '<p>שגיאה בטעינת קנייה חוזרת.</p>';
+    box.innerHTML = '<p>' + I18N.rebuyLoadError + '</p>';
   }
 }
 
@@ -460,21 +476,19 @@ async function loadRebuyFromPhp({push=false} = {}) {
 
   current = 'rebuy';
   setActive('rebuy');
-  setTitle('הסטוריית הרכישה שלכם');
+  setTitle(I18N.purchaseHistoryTitle);
 
   fadeOutBox();
   box.classList.add('is-loading');
 
   const makeTabs = () => {
-    return `
-      <div class="ed-rb">
-        <div class="ed-rb__tabs" role="tablist">
-          <button class="ed-rb__tab is-active" type="button" data-rb-tab="all">מוצרים שקניתי</button>
-          <button class="ed-rb__tab" type="button" data-rb-tab="last">שחזור הזמנה קודמת</button>
-        </div>
-        <div class="ed-rb__panel" data-rb-panel="1"></div>
-      </div>
-    `;
+    return '<div class="ed-rb">' +
+      '<div class="ed-rb__tabs" role="tablist">' +
+      '<button class="ed-rb__tab is-active" type="button" data-rb-tab="all">' + I18N.rebuyTabAll + '</button>' +
+      '<button class="ed-rb__tab" type="button" data-rb-tab="last">' + I18N.rebuyTabLast + '</button>' +
+      '</div>' +
+      '<div class="ed-rb__panel" data-rb-panel="1"></div>' +
+      '</div>';
   };
 
   box.innerHTML = makeTabs();
@@ -536,7 +550,7 @@ async function loadRebuyFromPhp({push=false} = {}) {
 
   } catch (e) {
     box.classList.remove('is-loading');
-    box.innerHTML = '<p>שגיאה בטעינת קנייה חוזרת.</p>';
+    box.innerHTML = '<p>' + I18N.rebuyLoadError + '</p>';
   }
 }
 
@@ -558,7 +572,7 @@ async function loadRebuyFromPhp({push=false} = {}) {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'ed-search-btn';
-      b.setAttribute('aria-label', 'חפש');
+      b.setAttribute('aria-label', I18N.searchAria);
       b.innerHTML = '🔍';
       wrap.appendChild(b);
     }
@@ -568,7 +582,7 @@ async function loadRebuyFromPhp({push=false} = {}) {
       const c = document.createElement('button');
       c.type = 'button';
       c.className = 'ed-search-clear';
-      c.setAttribute('aria-label', 'נקה חיפוש');
+      c.setAttribute('aria-label', I18N.clearSearchAria);
       c.style.display = 'none';
       c.innerHTML = '✕';
       wrap.appendChild(c);
@@ -608,7 +622,7 @@ async function loadRebuyFromPhp({push=false} = {}) {
 
     // UI
     setActive('');               // אין active קטגוריה בזמן חיפוש
-    setTitle(`תוצאות חיפוש עבור - \${query}`);  // הכותרת לפי דרישתך
+    setTitle(I18N.searchResultsPrefix + query);
     showClear(true);
 
     if (controller) controller.abort();
@@ -638,7 +652,7 @@ async function loadRebuyFromPhp({push=false} = {}) {
     } catch (e) {
       if (e.name === 'AbortError') return;
       box.classList.remove('is-loading');
-      box.innerHTML = '<p>שגיאה בחיפוש. נסה שוב.</p>';
+      box.innerHTML = '<p>' + I18N.searchError + '</p>';
     }
   }
 

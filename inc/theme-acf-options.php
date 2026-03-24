@@ -10,22 +10,22 @@ add_action('acf/init', function () {
   if ( ! function_exists('acf_add_options_page') ) return;
 
   acf_add_options_page([
-    'page_title'  => 'הגדרות אתר',
-    'menu_title'  => 'הגדרות אתר',
+    'page_title'  => __( 'הגדרות אתר', 'deliz-short' ),
+    'menu_title'  => __( 'הגדרות אתר', 'deliz-short' ),
     'menu_slug'   => 'site-settings',
     'capability'  => 'manage_options',
     'redirect'    => false,
     'position'    => 59,
     'icon_url'    => 'dashicons-admin-generic',
-    'update_button' => 'שמור',
-    'updated_message' => 'ההגדרות נשמרו',
+    'update_button' => __( 'שמור', 'deliz-short' ),
+    'updated_message' => __( 'ההגדרות נשמרו', 'deliz-short' ),
   ]);
 });
 
 if ( function_exists('acf_add_options_page') ) {
   acf_add_options_page([
-    'page_title' => 'סליידר ראשי',
-    'menu_title' => 'סליידר ראשי',
+    'page_title' => __( 'סליידר ראשי', 'deliz-short' ),
+    'menu_title' => __( 'סליידר ראשי', 'deliz-short' ),
     'menu_slug'  => 'main-slider',
     'capability' => 'manage_options',
     'redirect'   => false,

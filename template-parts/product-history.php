@@ -2,12 +2,12 @@
 if (!defined('ABSPATH')) exit;
 
 if (!function_exists('wc_get_orders')) {
-  echo '<p>WooCommerce לא זמין.</p>';
+  echo '<p>' . esc_html__( 'WooCommerce לא זמין.', 'deliz-short' ) . '</p>';
   return;
 }
 
 if (!is_user_logged_in()) {
-  echo '<p>יש להתחבר כדי לצפות בהיסטוריית רכישה.</p>';
+  echo '<p>' . esc_html__( 'יש להתחבר כדי לצפות בהיסטוריית רכישה.', 'deliz-short' ) . '</p>';
   return;
 }
 
@@ -119,7 +119,7 @@ if (!empty($orders)) {
     <header class="woocommerce-products-header">
       <div class="archive-tax-content">
         <?php do_action('oc_woo_archive_before_title'); ?>
-        <p class="sub">סידרנו לכם את כל המוצרים שכבר אהבתם והזמנתם במקום אחד.<br/>להזמנה חוזרת, קלה ומהירה.</p>
+        <p class="sub"><?php echo esc_html__( 'סידרנו לכם את כל המוצרים שכבר אהבתם והזמנתם במקום אחד.', 'deliz-short' ); ?><br/><?php echo esc_html__( 'להזמנה חוזרת, קלה ומהירה.', 'deliz-short' ); ?></p>
       </div>
     </header>
 
@@ -154,6 +154,6 @@ if (!empty($orders)) {
       ?>
 
     <?php else: ?>
-      <p>לא נמצאו מוצרים בהיסטוריית הרכישה.</p>
+      <p><?php echo esc_html__( 'לא נמצאו מוצרים בהיסטוריית הרכישה.', 'deliz-short' ); ?></p>
     <?php endif; ?>
 

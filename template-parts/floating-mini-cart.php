@@ -66,7 +66,7 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
 
             <button class="cart-close default-close-btn btn-empty" type="button"
-                    aria-label="<?php _e('סגירה של סל הקניות', 'deliz-short') ?>">
+                    aria-label="<?php esc_attr_e( 'סגירה של סל הקניות', 'deliz-short' ); ?>">
 
 
                 <svg xmlns="http://www.w3.org/2000/svg" class="Icon Icon--close" role="presentation"
@@ -186,28 +186,19 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                         $weight_qty = floatval($cart_item['quantity']);
 
 
-                        $weight_value = $weight_qty;
+                        $use_grams = ($weight_qty > 0 && $weight_qty < 1);
 
 
-                        $weight_unit = 'ק"ג';
+                        $weight_value = $use_grams ? $weight_qty * 1000 : $weight_qty;
 
 
-                        if ($weight_qty > 0 && $weight_qty < 1) {
-
-
-                            $weight_value = $weight_qty * 1000; // grams
-
-
-                            $weight_unit = 'גרם';
-
-
-                        }
+                        $weight_unit = $use_grams ? __( 'גרם', 'deliz-short' ) : __( 'ק"ג', 'deliz-short' );
 
 
                         // Format numbers nicely
 
 
-                        if ($weight_unit === 'גרם') {
+                        if ($use_grams) {
 
 
                             $weight_value = wc_format_decimal($weight_value, 0);
@@ -228,7 +219,7 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                             // Example: "2 יחידות, 500 גרם"
 
 
-                            $units_label = ($quantity_in_units == 1) ? 'יחידה' : 'יחידות';
+                            $units_label = ($quantity_in_units == 1) ? __( 'יחידה', 'deliz-short' ) : __( 'יחידות', 'deliz-short' );
 
 
                             $ocwsu_display = sprintf(
@@ -446,9 +437,9 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                                             $remaining = $buy_kg - $quantity;
                                             // פורמט יפה של המספר
                                             if ($remaining < 1) {
-                                                $remaining_display = wc_format_decimal($remaining * 1000, 0) . ' גרם';
+                                                $remaining_display = sprintf( __( '%s גרם', 'deliz-short' ), wc_format_decimal( $remaining * 1000, 0 ) );
                                             } else {
-                                                $remaining_display = wc_format_decimal($remaining, 2) . ' ק"ג';
+                                                $remaining_display = sprintf( __( '%s ק"ג', 'deliz-short' ), wc_format_decimal( $remaining, 2 ) );
                                             }
                                             echo '<div class="ed-promotion-cart-message ed-promotion-cart-message--float ed-promotion-pending">';
                                             echo '<span class="ed-promotion-label">' . sprintf(__('חסר לך רק עוד %s כדי לקבל את המבצע: %s', 'deliz-short'), $remaining_display, esc_html($badge_text)) . '</span>';
@@ -730,7 +721,7 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                             <?php if ($remaining > 0) : ?>
 
 
-                                <?php echo esc_html('חסר לך רק ' . wc_price($remaining) . ' למשלוח חינם!'); ?>
+                                <?php echo wp_kses_post( sprintf( __( 'חסר לך רק %s למשלוח חינם!', 'deliz-short' ), wc_price( $remaining ) ) ); ?>
 
 
                             <?php else : ?>
