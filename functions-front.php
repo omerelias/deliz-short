@@ -1302,7 +1302,45 @@ add_action(
   0
 );
 
-// לא מאפשר 404 על /cat/{slug} (גם אם slug לא קיים) — אבל לא דורסים 404 של ‎/cat/…/product/‎ כשהמוצר לא קיים
+// שלב SEO: ‎/cat/{slug}/‎ בלי ‎product_cat‎ תואם → 404 (לא soft-404 עם 200). חריג: ‎rebuy‎ (נתיב קנייה חוזרת ב-JS)
+add_action(
+  'template_redirect',
+  function () {
+    if ( ! get_query_var( 'mp_cat' ) || get_query_var( 'mp_product' ) ) {
+      return;
+    }
+
+    $slug = ed_get_cat_slug_from_request();
+    if ( $slug === '' ) {
+      return;
+    }
+
+    if ( $slug === 'rebuy' ) {
+      return;
+    }
+
+    $term = get_term_by( 'slug', $slug, 'product_cat' );
+    if ( $term && ! is_wp_error( $term ) ) {
+      return;
+    }
+
+    global $wp_query;
+    $wp_query->set_404();
+    status_header( 404 );
+    nocache_headers();
+
+    $template_404 = get_query_template( '404' );
+    if ( $template_404 ) {
+      include $template_404;
+    } else {
+      wp_die( esc_html__( 'Page not found.', 'deliz-short' ), '', array( 'response' => 404 ) );
+    }
+    exit;
+  },
+  5
+);
+
+// אם WP סימן 404 ל־‎/cat/{slug}/‎ תקף — מחזירים 200 (ה-rewrite תקין). לא דורסים 404 של מוצר/קטגוריה לא קיימים (כבר יצאו ב־0 / 5)
 add_action(
   'template_redirect',
   function () {
@@ -1363,9 +1401,9 @@ function ed_get_cat_canonical_url() {
   $slug = ed_get_cat_slug_from_request();
   if (!$slug) return '';
 
-  // canonical רק אם זו באמת קטגוריית מוצר קיימת
+  // canonical רק אם זו באמת קטגוריית מוצר קיימת (בלי זה — לא מפנים לבית בדפי 404)
   $term = get_term_by('slug', $slug, 'product_cat');
-  if (!$term || is_wp_error($term)) return home_url('/');
+  if (!$term || is_wp_error($term)) return '';
 
   return home_url('/cat/' . $slug . '/');
 }
@@ -2090,7 +2128,7 @@ add_filter('wpseo_breadcrumb_single_link', function ($link_output, $link) {
     return $link_output;
 }, 10, 2);
 
- 
+  
 // Last price popup html 
 add_action('wp_footer', 'oc_last_price_popup');
 function oc_last_price_popup() {
