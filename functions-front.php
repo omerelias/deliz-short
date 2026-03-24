@@ -1409,6 +1409,17 @@ function ed_get_cat_canonical_url() {
 }
 
 /**
+ * ‎/cat/rebuy/‎ — נתיב אישי; לא לאינדוקס.
+ */
+function ed_is_mp_cat_rebuy_route() {
+  if ( get_query_var( 'mp_product' ) ) {
+    return false;
+  }
+
+  return ( ed_get_cat_slug_from_request() === 'rebuy' );
+}
+
+/**
  * קטגוריית מוצר תקפה לפי ‎mp_cat‎ או נתיב ‎/cat/{slug}/‎ (לכותרת ומטא).
  *
  * @return WP_Term|null
@@ -1503,6 +1514,32 @@ add_filter( 'rank_math/frontend/description', function ( $desc ) {
   $term = ed_get_mp_cat_product_term();
   return $term ? ed_get_mp_cat_seo_description( $term ) : $desc;
 } );
+
+// noindex ל־‎/cat/rebuy/‎ (Yoast / Rank Math / ליבת וורדפרס)
+add_filter( 'wpseo_robots', function ( $robots ) {
+  return ed_is_mp_cat_rebuy_route() ? 'noindex, follow' : $robots;
+}, 20 );
+
+add_filter( 'rank_math/robots', function ( $robots ) {
+  if ( ! ed_is_mp_cat_rebuy_route() ) {
+    return $robots;
+  }
+  if ( is_array( $robots ) ) {
+    $robots['index'] = 'noindex';
+
+    return $robots;
+  }
+
+  return 'noindex, follow';
+}, 99 );
+
+add_filter( 'wp_robots', function ( array $robots ) {
+  if ( ed_is_mp_cat_rebuy_route() ) {
+    $robots['noindex'] = true;
+  }
+
+  return $robots;
+}, 20 );
 
 // ללא תוסף SEO נפוץ — meta description בסיסי
 add_action( 'wp_head', function () {
@@ -2112,8 +2149,88 @@ function oc_user_save_account_data( $user_id ) {
 add_filter('woocommerce_account_menu_items', function ($items) {
     unset($items['downloads']); // removes "הורדות"
     return $items;
-}, 99);
+}, 99 );
 
+/**
+ * Yoast: שביל ניווט לנתיב וירטואלי ‎/cat/{slug}/‎ (דף הבית + קטגוריה / קנייה חוזרת).
+ */
+add_filter(
+  'wpseo_breadcrumb_links',
+  function ( $links ) {
+    if ( ! get_query_var( 'mp_cat' ) || get_query_var( 'mp_product' ) ) {
+      return $links;
+    }
+
+    if ( ! is_array( $links ) ) {
+      $links = [];
+    }
+
+    $slug = ed_get_cat_slug_from_request();
+    if ( $slug === '' ) {
+      return $links;
+    }
+
+    $link_url_exists = static function ( array $links, $target ) {
+      $t = untrailingslashit( $target );
+      foreach ( $links as $item ) {
+        if ( empty( $item['url'] ) ) {
+          continue;
+        }
+        if ( untrailingslashit( $item['url'] ) === $t ) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    $ensure_home_crumb = static function () use ( &$links ) {
+      if ( ! empty( $links ) ) {
+        return;
+      }
+      $links[] = [
+        'url'  => home_url( '/' ),
+        'text' => __( 'דף הבית', 'deliz-short' ),
+      ];
+    };
+
+    if ( $slug === 'rebuy' ) {
+      $target = home_url( '/cat/rebuy/' );
+      if ( $link_url_exists( $links, $target ) ) {
+        return $links;
+      }
+      $ensure_home_crumb();
+      $links[] = [
+        'url'  => $target,
+        'text' => __( 'קנייה חוזרת', 'deliz-short' ),
+      ];
+
+      return $links;
+    }
+
+    $term = get_term_by( 'slug', $slug, 'product_cat' );
+    if ( ! $term || is_wp_error( $term ) ) {
+      return $links;
+    }
+
+    $url = ed_get_cat_canonical_url();
+    if ( ! $url ) {
+      return $links;
+    }
+    if ( $link_url_exists( $links, $url ) ) {
+      return $links;
+    }
+
+    $ensure_home_crumb();
+    $links[] = [
+      'url'  => $url,
+      'text' => $term->name,
+    ];
+
+    return $links;
+  },
+  20
+);
 
 add_filter('wpseo_breadcrumb_single_link', function ($link_output, $link) {
     // Only change the Home crumb
@@ -2129,7 +2246,7 @@ add_filter('wpseo_breadcrumb_single_link', function ($link_output, $link) {
 }, 10, 2);
 
   
-// Last price popup html 
+// Last price popup html  
 add_action('wp_footer', 'oc_last_price_popup');
 function oc_last_price_popup() {
     ?>

@@ -15,6 +15,11 @@
 get_header(); ?>
 
 <main id="site-content" class="site-content">
+<?php if ( function_exists( 'yoast_breadcrumb' ) ) : ?> 
+  <nav class="breadcrumbs" aria-label="<?php esc_attr_e( 'Breadcrumbs', 'deliz-short' ); ?>">
+    <?php yoast_breadcrumb(); ?>
+  </nav>
+<?php endif; ?>
   <?php while ( have_posts() ) : the_post(); ?>
     <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
 
