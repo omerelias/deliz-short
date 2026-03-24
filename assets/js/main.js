@@ -211,6 +211,15 @@ jQuery(function ($) {
       $('.modal').removeClass( 'show' );
   });  
 
+  // Scroll to top when clicking category links in the sidebar slider
+  $(document).on('click', '.ed-mp__link', function () {
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      window.scrollTo(0, 0);
+    }
+  });
+
 });
 
 //mobile menu

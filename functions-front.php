@@ -1294,6 +1294,111 @@ function ed_get_cat_canonical_url() {
   return home_url('/cat/' . $slug . '/');
 }
 
+/**
+ * קטגוריית מוצר תקפה לפי ‎mp_cat‎ או נתיב ‎/cat/{slug}/‎ (לכותרת ומטא).
+ *
+ * @return WP_Term|null
+ */
+function ed_get_mp_cat_product_term() {
+  $slug = ed_get_cat_slug_from_request(); 
+  if ( $slug === '' ) {
+    return null;
+  }
+  $term = get_term_by( 'slug', $slug, 'product_cat' );
+  if ( ! $term || is_wp_error( $term ) ) {
+    return null;
+  }
+  return $term;
+}
+
+/**
+ * כותרת דף מלאה לקטגוריה הווירטואלית (שם קטגוריה + מפריד + שם האתר).
+ */
+function ed_get_mp_cat_seo_document_title( WP_Term $term ) {
+  $sep = apply_filters( 'document_title_separator', '-' );
+
+  return $term->name . ' ' . $sep . ' ' . get_bloginfo( 'name', 'display' );
+}
+
+/**
+ * תיאור מטא: מתיאור הקטגוריה ב-WooCommerce, או ניסוח ברירת מחדל.
+ */
+function ed_get_mp_cat_seo_description( WP_Term $term ) {
+  $raw = term_description( $term->term_id, 'product_cat' );
+  $raw = wp_strip_all_tags( (string) $raw );
+  $raw = preg_replace( '/\s+/u', ' ', $raw );
+  $raw = trim( $raw );
+  if ( $raw !== '' ) {
+    if ( function_exists( 'mb_substr' ) ) {
+      return mb_substr( $raw, 0, 155 );
+    }
+    return substr( $raw, 0, 155 );
+  }
+
+  return sprintf(
+    /* translators: 1: category name, 2: site name */
+    __( 'מוצרים בקטגוריית %1$s — %2$s', 'deliz-short' ),
+    $term->name,
+    get_bloginfo( 'name', 'display' )
+  );
+}
+
+// כותרת דף (ללא Yoast / כשהתוסף לא דורס)
+add_filter( 'document_title_parts', function ( $parts ) {
+  $term = ed_get_mp_cat_product_term();
+  if ( ! $term ) {
+    return $parts;
+  }
+  $parts['title'] = $term->name;
+
+  return $parts;
+}, 20 );
+
+// Yoast SEO
+add_filter( 'wpseo_title', function ( $title ) {
+  $term = ed_get_mp_cat_product_term();
+  return $term ? ed_get_mp_cat_seo_document_title( $term ) : $title;
+} );
+
+add_filter( 'wpseo_metadesc', function ( $desc ) {
+  $term = ed_get_mp_cat_product_term();
+  return $term ? ed_get_mp_cat_seo_description( $term ) : $desc;
+} );
+
+add_filter( 'wpseo_opengraph_title', function ( $title ) {
+  $term = ed_get_mp_cat_product_term();
+  return $term ? ed_get_mp_cat_seo_document_title( $term ) : $title;
+} );
+
+add_filter( 'wpseo_opengraph_desc', function ( $desc ) {
+  $term = ed_get_mp_cat_product_term();
+  return $term ? ed_get_mp_cat_seo_description( $term ) : $desc;
+} );
+
+// Rank Math
+add_filter( 'rank_math/frontend/title', function ( $title ) {
+  $term = ed_get_mp_cat_product_term();
+  return $term ? ed_get_mp_cat_seo_document_title( $term ) : $title;
+} );
+
+add_filter( 'rank_math/frontend/description', function ( $desc ) {
+  $term = ed_get_mp_cat_product_term();
+  return $term ? ed_get_mp_cat_seo_description( $term ) : $desc;
+} );
+
+// ללא תוסף SEO נפוץ — meta description בסיסי
+add_action( 'wp_head', function () {
+  if ( defined( 'WPSEO_VERSION' ) || defined( 'RANK_MATH_VERSION' ) ) {
+    return;
+  }
+  $term = ed_get_mp_cat_product_term();
+  if ( ! $term ) {
+    return;
+  }
+  $desc = ed_get_mp_cat_seo_description( $term );
+  echo '<meta name="description" content="' . esc_attr( $desc ) . "\" />\n";
+}, 2 );
+
 // 1) canonical "כללי" (ללא תלות בתוסף SEO) – מוסיף <link rel="canonical">
 add_action('wp_head', function () {
   $canon = ed_get_cat_canonical_url();
@@ -1905,7 +2010,7 @@ add_filter('wpseo_breadcrumb_single_link', function ($link_output, $link) {
     return $link_output;
 }, 10, 2);
 
-
+ 
 // Last price popup html
 add_action('wp_footer', 'oc_last_price_popup');
 function oc_last_price_popup() {
