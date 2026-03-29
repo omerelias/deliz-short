@@ -31,8 +31,12 @@ jQuery(function($) {
             // Shipping details form (after registration)
             $(document).on('submit', '.checkout-sms-shipping-form', this.handleShippingDetails);
             
-            // Close popup
-            $(document).on('click', '.checkout-sms-popup__close, .checkout-sms-popup__overlay', this.closePopup);
+            // Close popup (X or dimmed backdrop — does not navigate to checkout)
+            $(document).on('click', '.checkout-sms-popup__close, .checkout-sms-popup__overlay', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                CheckoutSMSFlow.closePopup();
+            });
         },
 
         handleCheckoutClick: function(e) {
@@ -81,6 +85,13 @@ jQuery(function($) {
         },
 
         closePopup: function() {
+            if (CheckoutSMSFlow.codeTimer) {
+                clearInterval(CheckoutSMSFlow.codeTimer);
+                CheckoutSMSFlow.codeTimer = null;
+            }
+            if (typeof window.edCheckoutUrl !== 'undefined') {
+                window.edCheckoutUrl = null;
+            }
             const $popup = $('#checkout-sms-popup');
             $popup.fadeOut(300);
             $('body').removeClass('checkout-sms-popup-open');
