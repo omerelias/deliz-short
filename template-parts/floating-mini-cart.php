@@ -27,12 +27,12 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
 
             <h3 class="ed-float-cart__title">
-                <?php echo esc_html__('סל קניות', 'deliz-short'); ?>
-                <?php if ($count) : ?>
-                    <span class="ed-float-cart__count" aria-label="<?php esc_attr_e('כמות בסל', 'deliz-short'); ?>">
-                  (<?php echo esc_html($count); ?>)
-              </span>
-                <?php endif; ?>
+                <?php echo esc_html__('My Order', 'deliz-short'); ?>
+                <?php //f ($count) : ?>
+                    <!--<span class="ed-float-cart__count" aria-label="<?php esc_attr_e('כמות בסל', 'deliz-short'); ?>">
+                        (<?php //echo esc_html($count); ?>)
+                    </span>-->
+                <?php //endif; ?>
             </h3>
 
 
@@ -788,6 +788,3 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
 
 </aside>
-
-
-

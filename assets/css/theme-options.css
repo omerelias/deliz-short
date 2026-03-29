@@ -2,9 +2,9 @@
 :root{
   --color-primary: #084035;
   --color-primary-hover: #ff957d;
-  --main-text-color: #084035;
+  --main-text-color: #ffffff;
   --main-text-color-hover: #ffffff;
-  --color-secondary: #000000;
+  --color-secondary: #084035;
   --floating-cart-bg: #1e73be;
   --floating-cart-text-color: #ffffff;
   --radius: 10px;
