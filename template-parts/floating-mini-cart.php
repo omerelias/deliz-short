@@ -142,10 +142,25 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
 
                     $name = $product->get_name();
+ 
+                    // WooCommerce cart quantity is float for weighable (kg); (int)0.5 === 0 breaks display + subtotal.
+                    $qty_raw = floatval($cart_item['quantity']);
+                    $weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
+                    $qty_is_whole = ( abs($qty_raw - round($qty_raw)) < 1e-9 );
+                    if (!$weighable || $qty_is_whole) {
+                        $qty_display = (string) (int) round($qty_raw);
+                        $qty_input_val = $qty_display;
+                    } else {
+                        $qty_display = wc_format_decimal($qty_raw, true);
+                        $qty_input_val = $qty_display;
+                    }
 
-
-                    $qty = (int)$cart_item['quantity'];
-
+                    $weight_step_meta = get_post_meta($product_id, '_ocwsu_weight_step', true);
+                    $weight_step = ($weight_step_meta !== '' && is_numeric($weight_step_meta) && floatval($weight_step_meta) > 0)
+                        ? wc_format_decimal((float) $weight_step_meta, true)
+                        : 'any';
+                    $qty_input_min = $weighable ? '0.0001' : '1';
+                    $qty_input_step = $weighable ? $weight_step : '1';
 
                     $permalink = $product->is_visible() ? $product->get_permalink($cart_item) : '';
 
@@ -159,16 +174,13 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                     $line_price = WC()->cart->get_product_price($product); // מחיר ליחידה (עם מטבע)
 
 
-                    $subtotal = WC()->cart->get_product_subtotal($product, $qty); // סה"כ שורה
+                    $subtotal = WC()->cart->get_product_subtotal($product, $qty_raw); // סה"כ שורה
 
 
                     // oc-woo-sale-units: build display string for weighable products
 
 
                     $ocwsu_display = '';
-
-
-                    $weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
 
 
                     if ($weighable) {
@@ -471,13 +483,13 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                                            class="ed-float-cart__qty-input"
 
 
-                                           value="<?php echo esc_attr($qty); ?>"
+                                           value="<?php echo esc_attr($qty_input_val); ?>"
 
 
-                                            min="1"
+                                           min="<?php echo esc_attr($qty_input_min); ?>"
 
 
-                                           step="1"
+                                           step="<?php echo esc_attr($qty_input_step); ?>"
 
 
                                            data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
@@ -547,7 +559,7 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                                 <span class="ed-float-cart__sep">×</span>
 
 
-                                <span class="ed-float-cart__qty"><?php echo esc_html($qty); ?></span>
+                                <span class="ed-float-cart__qty"><?php echo esc_html($qty_display); ?></span>
 
 
                                 <span class="ed-float-cart__subtotal"><?php echo wp_kses_post($subtotal); ?></span>

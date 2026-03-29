@@ -10,6 +10,18 @@
     const core = window.EDProductPopupCore; // Access core functions like openPopup
 
     /**
+     * Numeric step for +/- (Woo weighable lines use decimal qty + step="any" or small step).
+     */
+    function getQtyStep(input) {
+        const raw = input.getAttribute('step');
+        if (!raw || raw === 'any') {
+            return 0.1;
+        }
+        const n = parseFloat(raw);
+        return !isFinite(n) || n <= 0 ? 0.1 : n;
+    }
+
+    /**
      * Handle mini cart quantity button clicks (plus/minus)
      */
     function handleMiniCartQuantityClick(e) {
@@ -26,17 +38,25 @@
         if (!input) return;
 
         const action = btn.classList.contains('ed-float-cart__qty-btn--increase') ? 'increase' : 'decrease';
-        const currentValue = parseFloat(input.value) || 1;
-        const min = parseFloat(input.min) || 1;
-        let newValue = currentValue;
+        const step = getQtyStep(input);
+        const currentValue = parseFloat(String(input.value).replace(',', '.'));
+        const min = parseFloat(input.min);
+        const minNum = isFinite(min) ? min : 1;
+        const base = isFinite(currentValue) ? currentValue : minNum;
+        let newValue = base;
 
         if (action === 'increase') {
-            newValue = currentValue + 1;
-        } else if (action === 'decrease' && currentValue > min) {
-            newValue = Math.max(min, currentValue - 1);
+            newValue = Math.round((base + step) / step) * step;
+            if (!isFinite(newValue)) {
+                newValue = base + step;
+            }
+            newValue = parseFloat(newValue.toFixed(6));
+        } else if (action === 'decrease' && base > minNum) {
+            newValue = Math.max(minNum, Math.round((base - step) / step) * step);
+            newValue = parseFloat(newValue.toFixed(6));
         }
 
-        if (newValue !== currentValue) {
+        if (newValue !== base) {
             updateCartItemQuantity(cartItemKey, newValue);
         }
     }
@@ -51,9 +71,11 @@
         const cartItemKey = input.dataset.cartItemKey;
         if (!cartItemKey) return;
 
-        const newValue = parseFloat(input.value) || 1;
-        const min = parseFloat(input.min) || 1;
-        const finalValue = Math.max(min, newValue);
+        const parsed = parseFloat(String(input.value).replace(',', '.'));
+        const min = parseFloat(input.min);
+        const minNum = isFinite(min) ? min : 1;
+        const newValue = isFinite(parsed) ? parsed : minNum;
+        const finalValue = Math.max(minNum, newValue);
 
         if (finalValue !== newValue) {
             input.value = finalValue;
