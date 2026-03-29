@@ -7,7 +7,7 @@
  * Displays upsell products in a popup/modal before checkout completion
 
  */
-
+ 
 
 
 if (!defined('ABSPATH')) {
@@ -392,6 +392,80 @@ class ED_Checkout_Upsells {
 
   /**
 
+   * Normalize ACF taxonomy field value to a product_cat term ID.
+
+   *
+
+   * @param mixed $raw Raw value from get_field( 'checkout_upsells_category' ).
+
+   * @return int Term ID or 0 if not a valid product category.
+
+   */
+
+  private static function resolve_checkout_upsells_category_term_id( $raw ) {
+
+    if ( null === $raw || false === $raw || '' === $raw ) {
+
+      return 0;
+
+    }
+
+    if ( $raw instanceof WP_Term ) {
+
+      $tid = (int) $raw->term_id;
+
+    } elseif ( is_array( $raw ) ) {
+
+      if ( empty( $raw ) ) {
+
+        return 0;
+
+      }
+
+      return self::resolve_checkout_upsells_category_term_id( reset( $raw ) );
+
+    } elseif ( is_object( $raw ) && isset( $raw->term_id ) ) {
+
+      $tid = (int) $raw->term_id;
+
+    } elseif ( is_numeric( $raw ) ) {
+
+      $tid = (int) $raw;
+
+    } elseif ( is_string( $raw ) ) {
+
+      $term = get_term_by( 'slug', sanitize_title( $raw ), 'product_cat' );
+
+      if ( ! $term || is_wp_error( $term ) ) {
+
+        return 0;
+
+      }
+
+      $tid = (int) $term->term_id;
+
+    } else {
+
+      return 0;
+
+    }
+
+    $term = get_term( $tid, 'product_cat' );
+
+    if ( ! $term || is_wp_error( $term ) ) {
+
+      return 0;
+
+    }
+
+    return $tid;
+
+  }
+
+
+
+  /**
+
    * Get upsell products based on settings
 
    */
@@ -408,117 +482,125 @@ class ED_Checkout_Upsells {
 
     $max_products = (int) get_field('checkout_upsells_max_products', 'option') ?: 4;
 
-    $category_id = get_field('checkout_upsells_category', 'option');
+    $category_term_id = self::resolve_checkout_upsells_category_term_id(
 
+      get_field( 'checkout_upsells_category', 'option' )
 
-
-    $product_ids = [];
-
-
-
-    // Get products from cart
+    );
 
     $cart_product_ids = [];
 
     foreach (WC()->cart->get_cart() as $cart_item) {
 
-      $cart_product_ids[] = $cart_item['product_id'];
+      $cart_product_ids[] = (int) $cart_item['product_id'];
 
     }
 
-    // Related products
+    $category_product_ids = [];
 
-    if ($type === 'related' || $type === 'combined') {
+    if ( ( 'category' === $type || 'combined' === $type ) && $category_term_id ) {
+
+      $cat_args = [
+
+        'limit'    => $max_products,
+
+        'status'   => 'publish',
+
+        'exclude'  => array_unique( $cart_product_ids ),
+
+        'return'   => 'ids',
+
+        'tax_query' => [
+
+          [
+
+            'taxonomy'         => 'product_cat',
+
+            'field'            => 'term_id',
+
+            'terms'            => [ $category_term_id ],
+
+            'include_children' => true,
+
+          ],
+
+        ],
+
+      ];
+
+      $found = wc_get_products( $cat_args );
+
+      $category_product_ids = is_array( $found ) ? $found : [];
+
+    }
+
+    $related_product_ids = [];
+
+    if ( 'related' === $type || 'combined' === $type ) {
+
+      $exclude_for_related = array_unique(
+
+        array_merge( $cart_product_ids, $category_product_ids )
+
+      );
 
       $related_ids = [];
 
-      foreach ($cart_product_ids as $product_id) {
+      foreach ( $cart_product_ids as $product_id ) {
 
-        $product = wc_get_product($product_id);
+        $product = wc_get_product( $product_id );
 
-        if (!$product) continue;
+        if ( ! $product ) {
 
-        
+          continue;
 
-        // Get related products (WooCommerce default)
+        }
 
-        $related = wc_get_related_products($product_id, $max_products);
+        $related = wc_get_related_products( $product_id, $max_products );
 
-        $related_ids = array_merge($related_ids, $related);
+        $related_ids = array_merge( $related_ids, $related );
 
       }
 
-      
+      $related_ids = array_unique( $related_ids );
 
-      // Remove duplicates and products already in cart
+      $related_ids = array_diff( $related_ids, $exclude_for_related );
 
-      $related_ids = array_unique($related_ids);
-
-      $related_ids = array_diff($related_ids, $cart_product_ids);
-
-      
-
-      $product_ids = array_merge($product_ids, $related_ids);
+      $related_product_ids = array_values( $related_ids );
 
     }
 
+    if ( 'category' === $type ) {
 
+      $product_ids = $category_product_ids;
 
-    // Category products
+    } elseif ( 'related' === $type ) {
 
-      if ( ($type === 'category' || $type === 'combined') && $category_id ) {
+      $product_ids = $related_product_ids;
 
+    } else {
 
+      $product_ids = array_merge( $category_product_ids, $related_product_ids );
 
-          $args = [
+    }
 
-              'limit'        => $max_products,
+    $product_ids = array_unique( array_map( 'intval', $product_ids ) );
 
-              'status'       => 'publish',
-
-              'exclude'      => array_unique(array_merge($cart_product_ids, $product_ids)),
-
-              'category_ids' => [ (int) $category_id ], // 👈 זה העיקר
-
-              'return'       => 'ids',
-
-          ];
-
-
-
-          $category_ids = wc_get_products($args); // כבר מחזיר IDs
-
-
-
-          $product_ids = array_merge($product_ids, $category_ids);
-
-      }
-
-    // Remove duplicates and limit
-
-    $product_ids = array_unique($product_ids);
-
-    $product_ids = array_slice($product_ids, 0, $max_products);
-
-
-
-    // Filter only purchasable products
+    $product_ids = array_slice( $product_ids, 0, $max_products );
 
     $valid_products = [];
 
-    foreach ($product_ids as $product_id) {
+    foreach ( $product_ids as $product_id ) {
 
-      $product = wc_get_product($product_id);
+      $product = wc_get_product( $product_id );
 
-      if ($product && $product->is_purchasable() && $product->is_in_stock()) {
+      if ( $product && $product->is_purchasable() && $product->is_in_stock() ) {
 
         $valid_products[] = $product_id;
 
       }
 
     }
-
-
 
     return $valid_products;
 
