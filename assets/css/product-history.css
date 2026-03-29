@@ -1,0 +1,252 @@
+/**
+ * "קנייה חוזרת" — היסטוריית רכישה: לוח סטטיסטיקה, אורורה, אנימציות.
+ */
+
+.ed-product-history {
+  --ed-ph-accent: #c45c26;
+  --ed-ph-accent2: #8b3d5c;
+  --ed-ph-glow: rgba(196, 92, 38, 0.35);
+  --ed-ph-surface: rgba(255, 255, 255, 0.08);
+  --ed-ph-border: rgba(255, 255, 255, 0.18);
+  position: relative;
+  isolation: isolate;
+}
+
+/* --- Hero: aurora + spotlight (spotlight vars set via JS) --- */
+.ed-ph-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  margin: 0 0 1.75rem;
+  padding: clamp(1.25rem, 4vw, 2rem) clamp(1rem, 3vw, 1.75rem);
+  min-height: clamp(168px, 22vw, 220px);
+  border: 1px solid var(--ed-ph-border);
+  background: radial-gradient(
+      ellipse 85% 120% at var(--ed-ph-spot-x, 72%) var(--ed-ph-spot-y, 18%),
+      rgba(255, 248, 240, 0.22) 0%,
+      transparent 55%
+    ),
+    linear-gradient(135deg, #1a1512 0%, #2d1810 40%, #1e1420 100%);
+  box-shadow: 0 18px 50px -20px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.ed-ph-hero::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(
+    from 210deg at 50% 50%,
+    transparent 0deg,
+    var(--ed-ph-glow) 55deg,
+    transparent 110deg,
+    rgba(139, 61, 92, 0.18) 200deg,
+    transparent 300deg
+  );
+  opacity: 0.55;
+  animation: ed-ph-aurora-rotate 14s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes ed-ph-aurora-rotate {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.ed-ph-hero__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .ed-ph-hero__inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ed-ph-hero__copy .sub {
+  margin: 0 0 0.35rem;
+  font-size: clamp(0.95rem, 2.8vw, 1.05rem);
+  line-height: 1.55;
+  color: rgba(255, 250, 245, 0.88);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.35);
+}
+
+.ed-ph-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.ed-ph-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 14px;
+  background: var(--ed-ph-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--ed-ph-border);
+  min-width: 5.5rem;
+}
+
+.ed-ph-stat__val {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #fff5eb;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.ed-ph-stat__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 245, 235, 0.55);
+}
+
+/* Orbital decoration */
+.ed-ph-orbit {
+  width: clamp(120px, 28vw, 168px);
+  height: clamp(120px, 28vw, 168px);
+  justify-self: end;
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  .ed-ph-orbit {
+    justify-self: center;
+  }
+}
+
+.ed-ph-orbit-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ed-ph-orbit__ring {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1;
+}
+
+.ed-ph-orbit__dot {
+  fill: var(--ed-ph-accent);
+  filter: drop-shadow(0 0 6px rgba(196, 92, 38, 0.9));
+}
+
+.ed-ph-orbit__dot--b {
+  fill: #e8b4a0;
+  filter: drop-shadow(0 0 5px rgba(232, 180, 160, 0.85));
+}
+
+.ed-ph-orbit__g {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: ed-ph-orbit-spin 10s linear infinite;
+}
+
+.ed-ph-orbit__g--rev {
+  animation-direction: reverse;
+  animation-duration: 16s;
+}
+
+@keyframes ed-ph-orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Section blocks */
+.ed-ph-section {
+  margin-bottom: 2rem;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ed-ph-section.is-ed-ph-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ed-ph-section h3 {
+  position: relative;
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding-bottom: 0.35rem;
+  font-size: clamp(1.05rem, 2.5vw, 1.2rem);
+  letter-spacing: -0.02em;
+}
+
+.ed-ph-section h3::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--ed-ph-accent),
+    var(--ed-ph-accent2),
+    transparent 85%
+  );
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+}
+
+.ed-ph-section.is-ed-ph-visible h3::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Stagger product cards */
+.ed-product-history .products > li {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease;
+}
+
+.ed-product-history .products > li:hover {
+  transform: perspective(900px) rotateX(2deg) translateY(-4px) scale(1.015);
+  box-shadow: 0 22px 40px -28px rgba(0, 0, 0, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ed-ph-hero::before,
+  .ed-ph-orbit__g {
+    animation: none;
+  }
+
+  .ed-ph-section {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .ed-ph-section h3::after {
+    transform: scaleX(1);
+    transition: none;
+  }
+
+  .ed-product-history .products > li {
+    transition: none;
+  }
+
+  .ed-product-history .products > li:hover {
+    transform: none;
+  }
+}

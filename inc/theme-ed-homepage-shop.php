@@ -448,7 +448,7 @@ async function loadRebuyFromPhp({push=false} = {}) {
     let data;
     try {
       data = JSON.parse(raw);
-    } catch (e) {
+    } catch (e) { 
       console.error('rebuy-view non-json response', raw);
       throw e;
     }
