@@ -80,7 +80,8 @@ function ed_get_published_product_id_by_mp_slug( $slug ) {
   return 0;
 }
 
-// ‎/cat/{קטגוריה}/product/{מוצר}/‎ → 301 לעמוד המוצר המלא
+// ‎/cat/{קטגוריה}/product/{מוצר}/‎ — נשארים על דף הבית עם mp_cat/mp_product;
+// פופאפ המוצר נפתח ב-JS (product-popup-core.js › checkUrlForProduct).
 add_action(
   'template_redirect',
   function () {
@@ -89,10 +90,9 @@ add_action(
       return;
     }
 
-    $product_id = ed_get_published_product_id_by_mp_slug( (string) $product_slug );
+    $product_id = ed_get_published_product_id_by_mp_slug( (string) $product_slug ); 
     if ( $product_id ) {
-      wp_safe_redirect( get_permalink( $product_id ), 301 );
-      exit;
+      return;
     }
 
     global $wp_query;

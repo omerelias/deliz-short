@@ -106,13 +106,17 @@ jQuery(function ($) {
 
     function getFloatCartAjaxParams() {
         return window.wc_cart_params || window.wc_checkout_params || window.ED_COUPON_PARAMS;
-    }
+    } 
 
     function parseWooCouponResponse(text) {
         let noticesHtml = '';
         let jsonSuccess = null;
+        let fragments = null;
+        let cartHash = null;
         try {
             const json = JSON.parse(text);
+            fragments = json?.data?.fragments ?? json?.fragments ?? null;
+            cartHash = json?.data?.cart_hash ?? json?.cart_hash ?? null;
             noticesHtml =
                 json?.data?.messages ||
                 json?.messages ||
@@ -128,15 +132,104 @@ jQuery(function ($) {
         if (!noticesHtml) {
             noticesHtml = extractWooNotices(text);
         }
-        return { noticesHtml, jsonSuccess };
+        return { noticesHtml, jsonSuccess, fragments, cartHash };
+    }
+
+    /**
+     * Same idea as WooCommerce cart-fragments.js: replace each selector with server HTML.
+     * Response already includes #ed-float-cart (see woocommerce_add_to_cart_fragments in theme).
+     */
+    function applyWooCartFragments(fragments) {
+        if (!fragments || typeof fragments !== 'object' || typeof jQuery === 'undefined') {
+            return false;
+        }
+        var appliedAny = false;
+        jQuery.each(fragments, function (selector, html) {
+            if (!selector || typeof html !== 'string' || !html.length) {
+                return;
+            }
+            var $targets = jQuery(selector);
+            if ($targets.length) {
+                $targets.replaceWith(html);
+                appliedAny = true;
+            }
+        });
+        return appliedAny;
+    }
+
+    function syncWcCartHashFromResponse(cartHash) {
+        if (!cartHash || typeof cartHash !== 'string') {
+            return;
+        }
+        const p = window.wc_cart_params || window.wc_checkout_params;
+        if (p) {
+            p.cart_hash = cartHash;
+        }
+    }
+
+    /**
+     * Some stores/plugins make apply_coupon / remove_coupon return HTML notices only (not JSON fragments).
+     * WooCommerce always exposes JSON fragments via get_refreshed_fragments.
+     */
+    async function fetchWcRefreshedFragments() {
+        var cartParams = getFloatCartAjaxParams();
+        if (!cartParams || !cartParams.wc_ajax_url) {
+            return null;
+        }
+        var url = cartParams.wc_ajax_url.toString().replace('%%endpoint%%', 'get_refreshed_fragments');
+        var body = new URLSearchParams();
+        body.set('time', String(Date.now()));
+        try {
+            var res = await fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: body.toString(),
+            });
+            var text = await res.text();
+            var json = JSON.parse(text);
+            var fragments = json?.data?.fragments ?? json?.fragments ?? null;
+            var cartHash = json?.data?.cart_hash ?? json?.cart_hash ?? null;
+            var keys = fragments && typeof fragments === 'object' ? Object.keys(fragments) : [];
+            if (!fragments || !keys.length) {
+                return null;
+            }
+            return { fragments: fragments, cartHash: cartHash };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function refreshFloatCartAfterCouponChange(result) {
+        if (!result || !result.ok || typeof jQuery === 'undefined') {
+            return;
+        }
+
+        var applied = false;
+        if (result.fragments && Object.keys(result.fragments).length) {
+            applied = applyWooCartFragments(result.fragments);
+        }
+        syncWcCartHashFromResponse(result.cartHash);
+
+        if (!applied) {
+            var refreshed = await fetchWcRefreshedFragments();
+            if (refreshed && refreshed.fragments && Object.keys(refreshed.fragments).length) {
+                applied = applyWooCartFragments(refreshed.fragments);
+                syncWcCartHashFromResponse(refreshed.cartHash);
+            }
+        }
+
+        jQuery('body').trigger('updated_wc_div');
+
+        if (!applied) {
+            jQuery('body').trigger('wc_fragment_refresh');
+        }
     }
 
     async function applyCouponAjax(code) {
         const cartParams = getFloatCartAjaxParams();
-        console.log('[coupon] applyCouponAjax:start', { code, hasCartParams: !!cartParams });
         if (!cartParams || !cartParams.wc_ajax_url) {
-            console.warn('[coupon] missing wc_cart_params/wc_checkout_params or wc_ajax_url', { cartParams });
-            return { ok: false, noticesHtml: '' };
+            return { ok: false, noticesHtml: '', fragments: null, cartHash: null };
         }
 
         const url = cartParams.wc_ajax_url.toString().replace('%%endpoint%%', 'apply_coupon');
@@ -165,23 +258,21 @@ jQuery(function ($) {
                 applyOk = false;
             }
 
-            console.log('[coupon] wc_ajax apply_coupon response', {
-                applyOk: applyOk,
-                status: res.status,
-                bodyPreview: text?.slice?.(0, 500),
-            });
-
-            return { ok: applyOk, noticesHtml: parsed.noticesHtml };
+            return {
+                ok: applyOk,
+                noticesHtml: parsed.noticesHtml,
+                fragments: parsed.fragments,
+                cartHash: parsed.cartHash,
+            };
         } catch (err) {
-            console.error('[coupon] wc_ajax apply_coupon failed', err);
-            return { ok: false, noticesHtml: '' };
+            return { ok: false, noticesHtml: '', fragments: null, cartHash: null };
         }
     }
 
     async function removeCouponAjax(couponCode) {
         const cartParams = getFloatCartAjaxParams();
         if (!cartParams || !cartParams.wc_ajax_url) {
-            return { ok: false, noticesHtml: '' };
+            return { ok: false, noticesHtml: '', fragments: null, cartHash: null };
         }
         const url = cartParams.wc_ajax_url.toString().replace('%%endpoint%%', 'remove_coupon');
         const body = new URLSearchParams();
@@ -207,10 +298,14 @@ jQuery(function ($) {
             if (noticesLookLikeError(parsed.noticesHtml)) {
                 ok = false;
             }
-            return { ok: ok, noticesHtml: parsed.noticesHtml };
+            return {
+                ok: ok,
+                noticesHtml: parsed.noticesHtml,
+                fragments: parsed.fragments,
+                cartHash: parsed.cartHash,
+            };
         } catch (err) {
-            console.error('[coupon] remove_coupon failed', err);
-            return { ok: false, noticesHtml: '' };
+            return { ok: false, noticesHtml: '', fragments: null, cartHash: null };
         }
     }
 
@@ -224,16 +319,13 @@ jQuery(function ($) {
             e.stopImmediatePropagation();
             var code = (el.getAttribute('data-coupon') || '').trim();
             if (!code) return;
-            removeCouponAjax(code).then(function (result) {
+            removeCouponAjax(code).then(async function (result) {
                 if (result.ok) {
                     setFloatCartCouponNotices('', {});
                 } else if (result.noticesHtml) {
                     setFloatCartCouponNotices(result.noticesHtml, { isError: true });
                 }
-                if (result.ok && typeof jQuery !== 'undefined') {
-                    jQuery('body').trigger('wc_fragment_refresh');
-                    jQuery('body').trigger('updated_wc_div');
-                }
+                await refreshFloatCartAfterCouponChange(result);
             });
         },
         true
@@ -244,29 +336,21 @@ jQuery(function ($) {
 
         const $wrap = $(this).closest('.coupon-form.copy-form');
         const code = $wrap.find('input.input-text').val() || '';
-        console.log('[coupon] click apply-coupon-copy', {
-            code,
-            inFloatCart: $wrap.closest('#ed-float-cart').length > 0,
-        });
 
         // If we're on checkout, keep using the real checkout form behavior
         const $checkoutBtn = $('form.checkout_coupon .button');
         if ($checkoutBtn.length) {
-            console.log('[coupon] using checkout_coupon form submit');
             $('form.checkout_coupon input.input-text').val(code);
             $checkoutBtn.trigger('click');
         } else {
             const result = await applyCouponAjax(code);
-            console.log('[coupon] applyCouponAjax result', result);
             if (result?.noticesHtml) {
                 setFloatCartCouponNotices(result.noticesHtml, { isError: !result?.ok });
             } else if (result?.ok) {
                 setFloatCartCouponNotices('', {});
             }
-            if (result?.ok && typeof jQuery !== 'undefined') {
-                console.log('[coupon] triggering wc_fragment_refresh + updated_wc_div');
-                jQuery('body').trigger('wc_fragment_refresh');
-                jQuery('body').trigger('updated_wc_div');
+            if (result?.ok) {
+                await refreshFloatCartAfterCouponChange(result);
             }
         }
     });
