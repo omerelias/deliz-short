@@ -87,15 +87,29 @@ class ED_Product_Popup {
           // Use the same variables as the template
           $product_id = $cart_item['product_id'];
           $name = $product->get_name();
-          $qty = (int) $cart_item['quantity'];
+          $qty_raw = floatval($cart_item['quantity']);
+          $weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
+          $qty_is_whole = ( abs($qty_raw - round($qty_raw)) < 1e-9 );
+          if (!$weighable || $qty_is_whole) {
+              $qty_display = (string) (int) round($qty_raw);
+              $qty_input_val = $qty_display;
+          } else {
+              $qty_display = wc_format_decimal($qty_raw, true);
+              $qty_input_val = $qty_display;
+          }
+          $weight_step_meta = get_post_meta($product_id, '_ocwsu_weight_step', true);
+          $weight_step = ($weight_step_meta !== '' && is_numeric($weight_step_meta) && floatval($weight_step_meta) > 0)
+              ? wc_format_decimal((float) $weight_step_meta, true)
+              : 'any';
+          $qty_input_min = $weighable ? '0.0001' : '1';
+          $qty_input_step = $weighable ? $weight_step : '1';
           $thumbnail = $product->get_image('woocommerce_thumbnail');
           $remove_url = wc_get_cart_remove_url($cart_item_key);
           $line_price = WC()->cart->get_product_price($product);
-          $subtotal = WC()->cart->get_product_subtotal($product, $qty);
+          $subtotal = WC()->cart->get_product_subtotal($product, $qty_raw);
           
           // ocwsu display
           $ocwsu_display = '';
-          $weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
           if ($weighable) {
             $quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
             $quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
@@ -198,7 +212,7 @@ class ED_Product_Popup {
               <div class="ed-float-cart__actions-row">
                 <div class="ed-float-cart__quantity-controls">
                   <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--decrease" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הפחת כמות', 'deliz-short'); ?>">-</button>
-                  <input type="text" class="ed-float-cart__qty-input" value="<?php echo esc_attr($qty); ?>" min="1" step="1" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>">
+                  <input type="text" class="ed-float-cart__qty-input" value="<?php echo esc_attr($qty_input_val); ?>" min="<?php echo esc_attr($qty_input_min); ?>" step="<?php echo esc_attr($qty_input_step); ?>" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>">
                   <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--increase" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+</button>
                 </div>
                 <button type="button" class="ed-float-cart__edit-btn" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" data-product-id="<?php echo esc_attr($product_id); ?>" data-variation-id="<?php echo esc_attr($variation_id); ?>" data-quantity="<?php echo esc_attr($quantity); ?>" data-variation="<?php echo $variation_attrs_json; ?>" data-product-note="<?php echo esc_attr($product_note); ?>" data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>" data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>" aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>"><?php esc_html_e('עריכה', 'deliz-short'); ?></button>
@@ -206,7 +220,7 @@ class ED_Product_Popup {
               <div class="ed-float-cart__price">
                 <span class="ed-float-cart__unit"><?php echo wp_kses_post($line_price); ?></span>
                 <span class="ed-float-cart__sep">×</span>
-                <span class="ed-float-cart__qty"><?php echo esc_html($qty); ?></span>
+                <span class="ed-float-cart__qty"><?php echo esc_html($qty_display); ?></span>
                 <span class="ed-float-cart__subtotal"><?php echo wp_kses_post($subtotal); ?></span>
               </div>
             </div>
@@ -224,24 +238,31 @@ class ED_Product_Popup {
       ob_start();
       ?>
       <div class="ed-float-cart__totals">
+        <?php $cart->calculate_totals(); ?>
         <div class="ed-float-cart__row">
           <span><?php echo esc_html__('סה"כ ביניים', 'deliz-short'); ?></span>
           <strong><?php echo wp_kses_post(wc_price($cart->get_subtotal())); ?></strong>
         </div>
         
         <?php
-        // וידוא שהעגלה מחושבת לפני קבלת fees
-        $cart->calculate_totals();
+        $subtotal_base          = (float) $cart->get_subtotal();
+        $coupon_discount_total  = (float) $cart->get_discount_total();
+        $running_total          = $subtotal_base - $coupon_discount_total;
+        $fees                   = $cart->get_fees();
         
-        // הצגת שורות מבצעים (fees) וחישוב סה"כ אחרי מבצעים
-        $fees = $cart->get_fees();
-        $subtotal_after_promotions = $cart->get_subtotal();
+        foreach ( $cart->get_coupons() as $code => $coupon ) :
+        ?>
+          <div class="ed-float-cart__row ed-float-cart__row--coupon cart-discount coupon-<?php echo esc_attr( sanitize_title( $code ) ); ?>">
+            <span><?php wc_cart_totals_coupon_label( $coupon ); ?></span>
+            <strong><?php wc_cart_totals_coupon_html( $coupon ); ?></strong>
+          </div>
+        <?php
+        endforeach;
         
-        if ( !empty($fees) ) :
+        if ( ! empty( $fees ) ) :
           foreach ( $fees as $fee ) :
-            // רק fees שליליים (הנחות)
-            if ( $fee->amount < 0 ) :
-              $subtotal_after_promotions += $fee->amount; // fees שליליים מוסיפים (כי הם הנחות)
+            if ( (float) $fee->amount < 0 ) :
+              $running_total += (float) $fee->amount;
         ?>
           <div class="ed-float-cart__row ed-float-cart__row--promotion">
             <span><?php echo esc_html( $fee->name ); ?></span>
@@ -250,18 +271,15 @@ class ED_Product_Popup {
         <?php
             endif;
           endforeach;
-          
-          // הצגת סה"כ אחרי הנחה (רק אם יש הנחות)
-          if ( $subtotal_after_promotions != $cart->get_subtotal() ) :
+        endif;
+        
+        if ( abs( $running_total - $subtotal_base ) > 0.0001 ) :
         ?>
           <div class="ed-float-cart__row ed-float-cart__row--total-after-discount">
-            <span><?php echo esc_html__('סה"כ אחרי הנחה', 'deliz-short'); ?></span>
-            <strong><?php echo wp_kses_post( wc_price( $subtotal_after_promotions ) ); ?></strong>
+            <span><?php echo esc_html__( 'סה"כ אחרי הנחה', 'deliz-short' ); ?></span>
+            <strong><?php echo wp_kses_post( wc_price( $running_total ) ); ?></strong>
           </div>
-        <?php
-          endif;
-        endif;
-        ?>
+        <?php endif; ?>
         
         <?php
         // טקסט משלוח חינם/עלות משלוח
@@ -272,7 +290,7 @@ class ED_Product_Popup {
         }
         
         if ($free_min > 0):
-          $remaining = max(0, $free_min - (float) $subtotal_after_promotions);
+          $remaining = max(0, $free_min - $running_total);
         ?>
           <div class="ed-float-cart__shippinghint">
             <?php if ($remaining > 0): ?>

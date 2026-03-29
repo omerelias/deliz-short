@@ -2349,9 +2349,34 @@ body p.other-recipient-field label{
     border: 1px solid #f5c2c7;
 }
 
+.ed-float-cart__coupon-notices .woocommerce-error li{
+    color: #842029;
+}
+
 .ed-float-cart__coupon-notices ul{
     margin: 0;
     padding-right: 18px;
+}
+
+/* Coupon row: remove link (WooCommerce .woocommerce-remove-coupon) */
+.ed-float-cart__totals .ed-float-cart__row--coupon strong{
+    font-weight: inherit;
+}
+
+.ed-float-cart__totals .ed-float-cart__row--coupon .woocommerce-remove-coupon{
+    display: inline-block;
+    margin-inline-start: 6px;
+    color: #000;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.ed-float-cart__totals .ed-float-cart__row--coupon .woocommerce-remove-coupon:hover,
+.ed-float-cart__totals .ed-float-cart__row--coupon .woocommerce-remove-coupon:focus{
+    color: #000;
+    opacity: 0.75;
 }
 
 @media (max-width: 767px) {

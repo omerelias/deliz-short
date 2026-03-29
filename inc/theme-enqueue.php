@@ -57,14 +57,19 @@ add_action('wp_enqueue_scripts', function () {
     }
 
     $params = [
-      'wc_ajax_url'         => $wc_ajax_url,
-      'apply_coupon_nonce'  => wp_create_nonce('apply-coupon'),
+       'wc_ajax_url'           => $wc_ajax_url,
+      'apply_coupon_nonce'    => wp_create_nonce('apply-coupon'),
+      'remove_coupon_nonce'   => wp_create_nonce('remove-coupon'),
     ];
 
     $inline = '(function(){'
       . 'window.ED_COUPON_PARAMS=window.ED_COUPON_PARAMS||' . wp_json_encode($params) . ';'
       . 'window.wc_cart_params=window.wc_cart_params||window.ED_COUPON_PARAMS;'
+      . 'if(window.wc_cart_params&&!window.wc_cart_params.remove_coupon_nonce&&window.ED_COUPON_PARAMS){'
+      . 'window.wc_cart_params.remove_coupon_nonce=window.ED_COUPON_PARAMS.remove_coupon_nonce;}'
       . 'window.wc_checkout_params=window.wc_checkout_params||window.wc_cart_params;'
+      . 'if(window.wc_checkout_params&&!window.wc_checkout_params.remove_coupon_nonce&&window.ED_COUPON_PARAMS){'
+      . 'window.wc_checkout_params.remove_coupon_nonce=window.ED_COUPON_PARAMS.remove_coupon_nonce;}'
       . '})();';
 
     wp_add_inline_script('deliz-short-main', $inline, 'before');
