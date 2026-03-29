@@ -63,7 +63,6 @@ $pick_top_category_id = function(int $product_id) use ($top_ids_in_order) {
 
 // 2) מביאים הזמנות (כולל סטטוסים נפוצים) מהחדשה לישנה
 $statuses = ['processing', 'completed', 'on-hold'];
-
 $orders = wc_get_orders([
   'customer_id' => $current_user_id,
   'status'      => $statuses,
@@ -72,7 +71,6 @@ $orders = wc_get_orders([
   'limit'       => 100,
   'return'      => 'objects',
 ]);
-
 // fallback לפי billing_email (אם הזמנות נעשו כאורח)
 if (empty($orders)) {
   $u = wp_get_current_user();
@@ -96,14 +94,29 @@ $displayed_products = [];       // set: [product_id => true]
 
 if (!empty($orders)) {
   foreach ($orders as $order) {
+    if (!$order instanceof \WC_Order) {
+      continue;
+    }
     foreach ($order->get_items('line_item') as $item) {
+      if (!$item instanceof \WC_Order_Item_Product) {
+        continue;
+      }
       $product_id = (int) ($item->get_variation_id() ?: $item->get_product_id());
-      if (!$product_id) continue;
+      if (!$product_id) {
+        continue;
+      }
 
       // בלי כפילויות
-      if (isset($displayed_products[$product_id])) continue;
+      if (isset($displayed_products[$product_id])) {
+        continue; 
+      }
 
-      $top_id = $pick_top_category_id($product_id);
+      // וריאציות בדרך כלל בלי product_cat — הקטגוריות על המוצר ההורה
+      $id_for_category = $product_id;
+      if ($item->get_variation_id()) {
+        $id_for_category = (int) $item->get_product_id();
+      }
+      $top_id = $pick_top_category_id($id_for_category);
       if (!$top_id) continue;
 
       $displayed_products[$product_id] = true;
@@ -113,7 +126,6 @@ if (!empty($orders)) {
     }
   }
 }
-
 // ---------- OUTPUT ----------
 ?>
     <header class="woocommerce-products-header">

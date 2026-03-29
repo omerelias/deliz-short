@@ -459,5 +459,5 @@ function deliz_short_float_cart_render_ocws_delivery_chip() {
 	}
 }
 
-add_action( 'deliz_short_float_cart_header_shipping', 'deliz_short_float_cart_render_free_shipping_bar', 10 );
+//add_action( 'deliz_short_float_cart_header_shipping', 'deliz_short_float_cart_render_free_shipping_bar', 10 );
 add_action( 'deliz_short_float_cart_footer_shipping', 'deliz_short_float_cart_render_ocws_delivery_chip', 10 );

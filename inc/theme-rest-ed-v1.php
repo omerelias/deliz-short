@@ -20,8 +20,8 @@ add_action('rest_api_init', function () {
 });
 
 function ed_rest_get_products_html(\WP_REST_Request $req) {
-  $slug     = sanitize_title($req->get_param('term'));
-  $per_page = max(1, min(48, (int) $req->get_param('per_page')));
+  $slug     = sanitize_title($req->get_param('term')); 
+  $per_page = max(1, min(100, (int) $req->get_param('per_page')));
   $paged    = max(1, (int) $req->get_param('paged'));
 
   $term = get_term_by('slug', $slug, 'product_cat');
@@ -208,7 +208,7 @@ add_action('rest_api_init', function () {
         'post_type'      => 'product',
         'post_status'    => 'publish',
         's'              => $q,
-        'posts_per_page' => $per_page,
+        'posts_per_page' => -1,
         'no_found_rows'  => true,
         'tax_query'      => [
           [
