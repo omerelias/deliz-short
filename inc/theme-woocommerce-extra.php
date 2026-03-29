@@ -181,6 +181,15 @@ add_action('woocommerce_before_shop_loop_item_title', function () {
   echo '</div>';
 }, 11);
 
+add_action('woocommerce_shop_loop_item_title', function () {
+  echo '<div class="loop-bottom-wrap">';
+}, 9);
+
+// סוגר wrapper אחרי התמונה (ה-thumbnail מודפס ב-10)
+add_action('woocommerce_after_shop_loop_item', function () {
+  echo '</div>';
+}, 15);
+
 // additional fields to register form
 add_action( 'woocommerce_register_form_start', 'oc_woo_additional_register_fields_start' );
 function oc_woo_additional_register_fields_start(){

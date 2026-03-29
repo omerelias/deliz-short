@@ -346,7 +346,7 @@ header .search input{
 flex-basis: 15%;
     padding-left: 50px;
     position: sticky;
-    top: 50px;
+    top: 30px;
     align-self: flex-start;
     width: 15%;
 }
@@ -355,9 +355,9 @@ flex-basis: 15%;
     flex-basis: 26%;
     padding-right: 50px;
     position: sticky;
-    top: 50px;
+    top: 30px;
     align-self: flex-start;
-    margin-top: -140px;
+    margin-top: -120px;
     width: 26%;
 }
 
@@ -370,6 +370,7 @@ flex-basis: 15%;
 .main-content .menu-block ul.ed-mp__menu{
     padding: 0;
     list-style: none;
+    margin: 0;
 }
 
 .main-content .menu-block ul.ed-mp__menu a.ed-mp__link{
@@ -411,8 +412,22 @@ flex-basis: 15%;
 
 .center-column .ed-mp-products-wrap .ed-mp__products ul.products{
     display: flex;
-    gap: 16px;
+    gap: 13px;
     flex-wrap: wrap;
+}
+
+.woocommerce ul.products li.product .woocommerce-loop-product__title{
+   color: var(--main-text-color)
+}
+
+.center-column .ed-mp-products-wrap .ed-mp__products ul.products li{
+    background: #fff;
+    box-shadow: 0px 4px 47.8px 0px #00000017;
+}
+
+.center-column .ed-mp-products-wrap .ed-mp__products ul.products li .loop-bottom-wrap{
+    padding-inline: 15px;
+    text-align: center;
 }
 
 .center-column .ed-mp-products-wrap .ed-mp__products ul.products:before,
@@ -421,22 +436,22 @@ flex-basis: 15%;
 }
 
 .center-column .ed-mp-products-wrap .ed-mp__products ul.products li{
-    flex: 0 0 calc((100% - 2 * 16px) / 3);
+    flex: 0 0 calc((100% - 2 * 13px) / 3);
     width: auto;
     margin: 0;
     margin-block-end: 30px;
 }
 
 body.desktop-per-row-3 .center-column .ed-mp-products-wrap .ed-mp__products ul.products li{
-    flex: 0 0 calc((100% - 2 * 16px) / 3);
+    flex: 0 0 calc((100% - 2 * 13px) / 3);
 }
 
 body.desktop-per-row-4 .center-column .ed-mp-products-wrap .ed-mp__products ul.products li{
-    flex: 0 0 calc((100% - 3 * 16px) / 4);
+    flex: 0 0 calc((100% - 3 * 13px) / 4);
 }
 
 body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.products li{
-    flex: 0 0 calc((100% - 4 * 16px) / 5);
+    flex: 0 0 calc((100% - 4 * 13px) / 5);
 }
 
 /*/סל צף*/
@@ -696,7 +711,7 @@ header .ed-ajax-search button.ed-search-clear{
 
 @media (min-width: 992px){
     body.home .main-content{
-        margin-block-start: 50px;
+        margin-block-start: 25px;
     }
 }
 
