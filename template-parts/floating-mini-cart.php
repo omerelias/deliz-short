@@ -162,8 +162,21 @@ if ( function_exists( 'deliz_short_get_free_shipping_bar_data' ) && function_exi
                     // WooCommerce cart quantity is float for weighable (kg); (int)0.5 === 0 breaks display + subtotal.
                     $qty_raw = floatval($cart_item['quantity']);
                     $weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
+                    $sold_by_units = (get_post_meta($product_id, '_ocwsu_sold_by_units', true) === 'yes');
+                    $quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
+                    $ocwsu_units_qty_ui = ($weighable && $sold_by_units && $quantity_in_units > 0);
+                    $ocwsu_kg_per_unit = 0.0;
+                    if ($ocwsu_units_qty_ui) {
+                        $ocwsu_kg_per_unit = $qty_raw / max($quantity_in_units, 1e-9);
+                    }
+
                     $qty_is_whole = ( abs($qty_raw - round($qty_raw)) < 1e-9 );
-                    if (!$weighable || $qty_is_whole) {
+                    if ($ocwsu_units_qty_ui) {
+                        $qty_display = wc_format_decimal($quantity_in_units, 0);
+                        $qty_input_val = $qty_display;
+                        $qty_input_min = '1';
+                        $qty_input_step = '1';
+                    } elseif (!$weighable || $qty_is_whole) {
                         $qty_display = (string) (int) round($qty_raw);
                         $qty_input_val = $qty_display;
                     } else {
@@ -175,8 +188,10 @@ if ( function_exists( 'deliz_short_get_free_shipping_bar_data' ) && function_exi
                     $weight_step = ($weight_step_meta !== '' && is_numeric($weight_step_meta) && floatval($weight_step_meta) > 0)
                         ? wc_format_decimal((float) $weight_step_meta, true)
                         : 'any';
-                    $qty_input_min = $weighable ? '0.0001' : '1';
-                    $qty_input_step = $weighable ? $weight_step : '1';
+                    if (!$ocwsu_units_qty_ui) {
+                        $qty_input_min = $weighable ? '0.0001' : '1';
+                        $qty_input_step = $weighable ? $weight_step : '1';
+                    }
 
                     $permalink = $product->is_visible() ? $product->get_permalink($cart_item) : '';
 
@@ -200,9 +215,6 @@ if ( function_exists( 'deliz_short_get_free_shipping_bar_data' ) && function_exi
 
 
                     if ($weighable) {
-
-
-                        $quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
 
 
                         $quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
@@ -299,7 +311,7 @@ if ( function_exists( 'deliz_short_get_free_shipping_bar_data' ) && function_exi
 
                     $product_note = isset($cart_item['product_note']) ? $cart_item['product_note'] : '';
 
-                    $ocwsu_quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
+                    $ocwsu_quantity_in_units = $quantity_in_units;
 
                     $ocwsu_quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
 
@@ -493,6 +505,7 @@ if ( function_exists( 'deliz_short_get_free_shipping_bar_data' ) && function_exi
                                     </button>
 
 
+                                    <div class="ed-float-cart__qty-field<?php echo $ocwsu_units_qty_ui ? ' ed-float-cart__qty-field--ocwsu-units' : ''; ?>">
                                     <input type="text"
 
 
@@ -509,9 +522,20 @@ if ( function_exists( 'deliz_short_get_free_shipping_bar_data' ) && function_exi
 
 
                                            data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                                           <?php if ($ocwsu_units_qty_ui) : ?>
+                                           data-ed-ocwsu-units-display="1"
+                                           data-ed-ocwsu-kg-per-unit="<?php echo esc_attr(wc_format_decimal($ocwsu_kg_per_unit, 6)); ?>"
+                                           aria-label="<?php esc_attr_e('מספר יחידות', 'deliz-short'); ?>"
+                                           <?php else : ?>
+                                           aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>"
+                                           <?php endif; ?>
+                                    >
 
 
-                                           aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>">
+                                    <?php if ($ocwsu_units_qty_ui) : ?>
+                                    <span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
+                                    <?php endif; ?>
+                                    </div>
 
 
                                     <button type="button"

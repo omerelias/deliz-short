@@ -85,12 +85,24 @@ class ED_Product_Popup {
           if (!$product || !$product->exists() || $cart_item['quantity'] <= 0) continue;
           
           // Use the same variables as the template
-          $product_id = $cart_item['product_id'];
+          $product_id = $cart_item['product_id']; 
           $name = $product->get_name();
           $qty_raw = floatval($cart_item['quantity']);
           $weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
+          $sold_by_units = (get_post_meta($product_id, '_ocwsu_sold_by_units', true) === 'yes');
+          $quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
+          $ocwsu_units_qty_ui = ($weighable && $sold_by_units && $quantity_in_units > 0);
+          $ocwsu_kg_per_unit = 0.0;
+          if ($ocwsu_units_qty_ui) {
+            $ocwsu_kg_per_unit = $qty_raw / max($quantity_in_units, 1e-9);
+          }
           $qty_is_whole = ( abs($qty_raw - round($qty_raw)) < 1e-9 );
-          if (!$weighable || $qty_is_whole) {
+          if ($ocwsu_units_qty_ui) {
+            $qty_display = wc_format_decimal($quantity_in_units, 0);
+            $qty_input_val = $qty_display;
+            $qty_input_min = '1';
+            $qty_input_step = '1';
+          } elseif (!$weighable || $qty_is_whole) {
               $qty_display = (string) (int) round($qty_raw);
               $qty_input_val = $qty_display;
           } else {
@@ -101,8 +113,10 @@ class ED_Product_Popup {
           $weight_step = ($weight_step_meta !== '' && is_numeric($weight_step_meta) && floatval($weight_step_meta) > 0)
               ? wc_format_decimal((float) $weight_step_meta, true)
               : 'any';
-          $qty_input_min = $weighable ? '0.0001' : '1';
-          $qty_input_step = $weighable ? $weight_step : '1';
+          if (!$ocwsu_units_qty_ui) {
+            $qty_input_min = $weighable ? '0.0001' : '1';
+            $qty_input_step = $weighable ? $weight_step : '1';
+          }
           $thumbnail = $product->get_image('woocommerce_thumbnail');
           $remove_url = wc_get_cart_remove_url($cart_item_key);
           $line_price = WC()->cart->get_product_price($product);
@@ -111,7 +125,6 @@ class ED_Product_Popup {
           // ocwsu display
           $ocwsu_display = '';
           if ($weighable) {
-            $quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
             $quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
             $weight_qty = floatval($cart_item['quantity']);
             $use_grams = ($weight_qty > 0 && $weight_qty < 1);
@@ -134,7 +147,7 @@ class ED_Product_Popup {
           $variation_id = isset($cart_item['variation_id']) ? $cart_item['variation_id'] : 0;
           $variation_attrs = isset($cart_item['variation']) ? $cart_item['variation'] : [];
           $product_note = isset($cart_item['product_note']) ? $cart_item['product_note'] : '';
-          $ocwsu_quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
+          $ocwsu_quantity_in_units = $quantity_in_units;
           $ocwsu_quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
           $quantity = floatval($cart_item['quantity']);
           $variation_attrs_json = !empty($variation_attrs) ? htmlspecialchars(json_encode($variation_attrs), ENT_QUOTES, 'UTF-8') : '';
@@ -212,7 +225,20 @@ class ED_Product_Popup {
               <div class="ed-float-cart__actions-row">
                 <div class="ed-float-cart__quantity-controls">
                   <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--decrease" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הפחת כמות', 'deliz-short'); ?>">-</button>
-                  <input type="text" class="ed-float-cart__qty-input" value="<?php echo esc_attr($qty_input_val); ?>" min="<?php echo esc_attr($qty_input_min); ?>" step="<?php echo esc_attr($qty_input_step); ?>" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>">
+                  <div class="ed-float-cart__qty-field<?php echo $ocwsu_units_qty_ui ? ' ed-float-cart__qty-field--ocwsu-units' : ''; ?>">
+                  <input type="text" class="ed-float-cart__qty-input" value="<?php echo esc_attr($qty_input_val); ?>" min="<?php echo esc_attr($qty_input_min); ?>" step="<?php echo esc_attr($qty_input_step); ?>" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                    <?php if ($ocwsu_units_qty_ui) : ?>
+                    data-ed-ocwsu-units-display="1"
+                    data-ed-ocwsu-kg-per-unit="<?php echo esc_attr(wc_format_decimal($ocwsu_kg_per_unit, 6)); ?>"
+                    aria-label="<?php esc_attr_e('מספר יחידות', 'deliz-short'); ?>"
+                    <?php else : ?>
+                    aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>"
+                    <?php endif; ?>
+                  >
+                  <?php if ($ocwsu_units_qty_ui) : ?>
+                  <span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
+                  <?php endif; ?>
+                  </div>
                   <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--increase" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+</button>
                 </div>
                 <button type="button" class="ed-float-cart__edit-btn" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" data-product-id="<?php echo esc_attr($product_id); ?>" data-variation-id="<?php echo esc_attr($variation_id); ?>" data-quantity="<?php echo esc_attr($quantity); ?>" data-variation="<?php echo $variation_attrs_json; ?>" data-product-note="<?php echo esc_attr($product_note); ?>" data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>" data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>" aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>"><?php esc_html_e('עריכה', 'deliz-short'); ?></button>
@@ -445,15 +471,13 @@ class ED_Product_Popup {
           // From the plugin: PRODUCT_UNIT_WEIHGT_LABEL_KG = 'kg', PRODUCT_UNIT_WEIHGT_LABEL_GRAM = 'grams'
           $is_kg = ($product_weight_units === 'kg' || $product_weight_units === 'Kg' || strpos(strtolower($product_weight_units), 'kg') !== false);
           
-          // Convert to product weight units if needed
-          if (!$is_kg || ($is_kg && $weight_in_kg < 1)) {
-            // If product uses grams or weight is less than 1kg, convert to grams
+          // In kg mode keep WooCommerce kg (e.g. 0.2). In grams mode use grams. Do not map <1 kg → grams when product unit is kg — popup JS uses unitWeight × 1 as kg.
+          if (!$is_kg) {
             $weight_value = $weight_in_kg * 1000;
-            error_log("Variation {$variation_id}: converted to grams = {$weight_value}");
+            error_log("Variation {$variation_id}: weight in grams (product unit) = {$weight_value}");
           } else {
-            // Keep in kg
             $weight_value = $weight_in_kg;
-            error_log("Variation {$variation_id}: kept in kg = {$weight_value}");
+            error_log("Variation {$variation_id}: weight in kg = {$weight_value}");
           }
           
           // Only add unique weights (use tolerance for float comparison)
@@ -580,18 +604,8 @@ class ED_Product_Popup {
             // WooCommerce stores weight in kg
             $weight_in_kg = (float) $variation_weight;
             
-            // Convert to product weight units if needed
             $is_kg = ($product_weight_units === 'kg' || $product_weight_units === 'Kg' || strpos(strtolower($product_weight_units), 'kg') !== false);
-            
-            if (!$is_kg || ($is_kg && $weight_in_kg < 1)) {
-              // Convert to grams
-              $weight_value = $weight_in_kg * 1000;
-            } else {
-              // Keep in kg
-              $weight_value = $weight_in_kg;
-            }
-            
-            $variation_data['weight'] = $weight_value;
+            $variation_data['weight'] = $is_kg ? $weight_in_kg : ($weight_in_kg * 1000);
           }
         }
         

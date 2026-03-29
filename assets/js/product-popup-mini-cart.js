@@ -9,10 +9,39 @@
     const state = window.EDProductPopupState; // Access shared state
     const core = window.EDProductPopupCore; // Access core functions like openPopup
 
+    function isOcwsuUnitsQtyInput(input) {
+        return input && input.getAttribute('data-ed-ocwsu-units-display') === '1';
+    }
+
+    function kgFromOcwsuUnitsInput(input, units) {
+        const kgPer = parseFloat(input.getAttribute('data-ed-ocwsu-kg-per-unit'));
+        const u = parseFloat(String(units).replace(',', '.'));
+        if (!isFinite(kgPer) || kgPer <= 0 || !isFinite(u)) {
+            return null;
+        }
+        return parseFloat((u * kgPer).toFixed(6));
+    }
+
+    function setQtyInputDisplayValue(input, quantityKg) {
+        if (!input) return;
+        if (isOcwsuUnitsQtyInput(input)) {
+            const kgPer = parseFloat(input.getAttribute('data-ed-ocwsu-kg-per-unit'));
+            if (isFinite(kgPer) && kgPer > 0 && isFinite(quantityKg)) {
+                const units = quantityKg / kgPer;
+                input.value = Math.max(1, Math.round(units));
+                return;
+            }
+        }
+        input.value = quantityKg;
+    }
+
     /**
      * Numeric step for +/- (Woo weighable lines use decimal qty + step="any" or small step).
      */
     function getQtyStep(input) {
+        if (isOcwsuUnitsQtyInput(input)) {
+            return 1;
+        }
         const raw = input.getAttribute('step');
         if (!raw || raw === 'any') {
             return 0.1;
@@ -57,7 +86,14 @@
         }
 
         if (newValue !== base) {
-            updateCartItemQuantity(cartItemKey, newValue);
+            if (isOcwsuUnitsQtyInput(input)) {
+                const kg = kgFromOcwsuUnitsInput(input, newValue);
+                if (kg != null) {
+                    updateCartItemQuantity(cartItemKey, kg);
+                }
+            } else {
+                updateCartItemQuantity(cartItemKey, newValue);
+            }
         }
     }
 
@@ -74,7 +110,10 @@
         const parsed = parseFloat(String(input.value).replace(',', '.'));
         const min = parseFloat(input.min);
         const minNum = isFinite(min) ? min : 1;
-        const newValue = isFinite(parsed) ? parsed : minNum;
+        let newValue = isFinite(parsed) ? parsed : minNum;
+        if (isOcwsuUnitsQtyInput(input)) {
+            newValue = Math.max(minNum, Math.round(newValue));
+        }
         const finalValue = Math.max(minNum, newValue);
 
         if (finalValue !== newValue) {
@@ -84,7 +123,14 @@
         // Debounce the update
         clearTimeout(input._updateTimeout);
         input._updateTimeout = setTimeout(() => {
-            updateCartItemQuantity(cartItemKey, finalValue);
+            if (isOcwsuUnitsQtyInput(input)) {
+                const kg = kgFromOcwsuUnitsInput(input, finalValue);
+                if (kg != null) {
+                    updateCartItemQuantity(cartItemKey, kg);
+                }
+            } else {
+                updateCartItemQuantity(cartItemKey, finalValue);
+            }
         }, 500);
     }
 
@@ -100,7 +146,7 @@
 
             if (qtyInput) {
                 oldValue = qtyInput.value;
-                qtyInput.value = quantity;
+                setQtyInputDisplayValue(qtyInput, quantity);
                 qtyInput.disabled = true; // Disable during update
             }
 
