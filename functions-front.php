@@ -10,6 +10,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 // פופאפ מוצר (REST, AJAX, נכסים) — מחלקה ראשית של תוספת המוצר בחלון
 require_once get_template_directory() . '/includes/product-popup/class-product-popup.php';
 
+require_once get_template_directory() . '/inc/class-meat-category-age-verification.php';
+Meat_Category_Age_Verification::instance();
+
 // עזרי slug לנתיב ‎/cat/…‎ — משותף ל-routes ול-SEO
 require_once get_template_directory() . '/inc/mp-cat-helpers.php';
 // rewrite ‎/cat/{slug}/‎ ו־‎/cat/…/product/…‎, template_redirect (301 מוצר, 404 קטגוריה/מוצר), redirect_canonical
