@@ -85,20 +85,54 @@ jQuery(function ($) {
         return blocks.join('');
     }
 
-    function setFloatCartCouponNotices(html) {
+    function noticesLookLikeError(html) {
+        if (!html || typeof html !== 'string') return false;
+        return /woocommerce-error/i.test(html);
+    }
+
+    function setFloatCartCouponNotices(html, opts) {
         const el = document.querySelector('#ed-float-cart .ed-float-cart__coupon-notices');
         if (!el) return;
+        const isError = !!(opts && opts.isError);
         el.innerHTML = html || '';
-        if (html) {
-            clearTimeout(el._hideTimeout);
-            el._hideTimeout = setTimeout(() => {
+        clearTimeout(el._hideTimeout);
+        // Keep success/info short-lived; leave errors until the next action or manual clear
+        if (html && !isError) {
+            el._hideTimeout = setTimeout(function () {
                 el.innerHTML = '';
             }, 8000);
         }
     }
 
+    function getFloatCartAjaxParams() {
+        return window.wc_cart_params || window.wc_checkout_params || window.ED_COUPON_PARAMS;
+    }
+
+    function parseWooCouponResponse(text) {
+        let noticesHtml = '';
+        let jsonSuccess = null;
+        try {
+            const json = JSON.parse(text);
+            noticesHtml =
+                json?.data?.messages ||
+                json?.messages ||
+                json?.notices ||
+                json?.data?.notices ||
+                '';
+            if (typeof json?.success === 'boolean') {
+                jsonSuccess = json.success;
+            }
+        } catch (_) {
+            noticesHtml = extractWooNotices(text);
+        }
+        if (!noticesHtml) {
+            noticesHtml = extractWooNotices(text);
+        }
+        return { noticesHtml, jsonSuccess };
+    }
+
     async function applyCouponAjax(code) {
-        const cartParams = window.wc_cart_params || window.wc_checkout_params || window.ED_COUPON_PARAMS;
+        const cartParams = getFloatCartAjaxParams();
         console.log('[coupon] applyCouponAjax:start', { code, hasCartParams: !!cartParams });
         if (!cartParams || !cartParams.wc_ajax_url) {
             console.warn('[coupon] missing wc_cart_params/wc_checkout_params or wc_ajax_url', { cartParams });
@@ -111,11 +145,6 @@ jQuery(function ($) {
         if (cartParams.apply_coupon_nonce) {
             body.set('security', cartParams.apply_coupon_nonce);
         }
-        console.log('[coupon] wc_ajax apply_coupon request', {
-            url,
-            coupon_code: code || '',
-            has_security: !!cartParams.apply_coupon_nonce,
-        });
 
         try {
             const res = await fetch(url, {
@@ -125,35 +154,90 @@ jQuery(function ($) {
                 body: body.toString(),
             });
             const text = await res.text();
-            let noticesHtml = '';
-            try {
-                const json = JSON.parse(text);
-                noticesHtml =
-                    json?.messages ||
-                    json?.data?.messages ||
-                    json?.notices ||
-                    json?.data?.notices ||
-                    '';
-                if (!noticesHtml && typeof json === 'string') {
-                    noticesHtml = json;
-                }
-            } catch (_) {
-                noticesHtml = extractWooNotices(text);
+            const parsed = parseWooCouponResponse(text);
+            let applyOk = res.ok;
+            if (parsed.jsonSuccess === false) {
+                applyOk = false;
+            } else if (parsed.jsonSuccess === true) {
+                applyOk = true;
+            }
+            if (noticesLookLikeError(parsed.noticesHtml)) {
+                applyOk = false;
             }
 
             console.log('[coupon] wc_ajax apply_coupon response', {
-                ok: res.ok,
+                applyOk: applyOk,
                 status: res.status,
-                statusText: res.statusText,
                 bodyPreview: text?.slice?.(0, 500),
             });
 
-            return { ok: !!res.ok, noticesHtml: noticesHtml || extractWooNotices(text) };
+            return { ok: applyOk, noticesHtml: parsed.noticesHtml };
         } catch (err) {
             console.error('[coupon] wc_ajax apply_coupon failed', err);
             return { ok: false, noticesHtml: '' };
         }
     }
+
+    async function removeCouponAjax(couponCode) {
+        const cartParams = getFloatCartAjaxParams();
+        if (!cartParams || !cartParams.wc_ajax_url) {
+            return { ok: false, noticesHtml: '' };
+        }
+        const url = cartParams.wc_ajax_url.toString().replace('%%endpoint%%', 'remove_coupon');
+        const body = new URLSearchParams();
+        body.set('coupon', couponCode || '');
+        if (cartParams.remove_coupon_nonce) {
+            body.set('security', cartParams.remove_coupon_nonce);
+        }
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: body.toString(),
+            });
+            const text = await res.text();
+            const parsed = parseWooCouponResponse(text);
+            let ok = res.ok;
+            if (parsed.jsonSuccess === false) {
+                ok = false;
+            } else if (parsed.jsonSuccess === true) {
+                ok = true;
+            }
+            if (noticesLookLikeError(parsed.noticesHtml)) {
+                ok = false;
+            }
+            return { ok: ok, noticesHtml: parsed.noticesHtml };
+        } catch (err) {
+            console.error('[coupon] remove_coupon failed', err);
+            return { ok: false, noticesHtml: '' };
+        }
+    }
+
+    document.addEventListener(
+        'click',
+        function (e) {
+            var t = e.target;
+            var el = t && t.closest ? t.closest('#ed-float-cart a.woocommerce-remove-coupon') : null;
+            if (!el) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            var code = (el.getAttribute('data-coupon') || '').trim();
+            if (!code) return;
+            removeCouponAjax(code).then(function (result) {
+                if (result.ok) {
+                    setFloatCartCouponNotices('', {});
+                } else if (result.noticesHtml) {
+                    setFloatCartCouponNotices(result.noticesHtml, { isError: true });
+                }
+                if (result.ok && typeof jQuery !== 'undefined') {
+                    jQuery('body').trigger('wc_fragment_refresh');
+                    jQuery('body').trigger('updated_wc_div');
+                }
+            });
+        },
+        true
+    );
 
     $(document).on('click', '.coupon-form.copy-form .apply-coupon-copy', async function (e) {
         e.preventDefault();
@@ -175,7 +259,9 @@ jQuery(function ($) {
             const result = await applyCouponAjax(code);
             console.log('[coupon] applyCouponAjax result', result);
             if (result?.noticesHtml) {
-                setFloatCartCouponNotices(result.noticesHtml);
+                setFloatCartCouponNotices(result.noticesHtml, { isError: !result?.ok });
+            } else if (result?.ok) {
+                setFloatCartCouponNotices('', {});
             }
             if (result?.ok && typeof jQuery !== 'undefined') {
                 console.log('[coupon] triggering wc_fragment_refresh + updated_wc_div');

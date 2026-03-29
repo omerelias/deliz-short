@@ -238,24 +238,31 @@ class ED_Product_Popup {
       ob_start();
       ?>
       <div class="ed-float-cart__totals">
+        <?php $cart->calculate_totals(); ?>
         <div class="ed-float-cart__row">
           <span><?php echo esc_html__('סה"כ ביניים', 'deliz-short'); ?></span>
           <strong><?php echo wp_kses_post(wc_price($cart->get_subtotal())); ?></strong>
         </div>
         
         <?php
-        // וידוא שהעגלה מחושבת לפני קבלת fees
-        $cart->calculate_totals();
+        $subtotal_base          = (float) $cart->get_subtotal();
+        $coupon_discount_total  = (float) $cart->get_discount_total();
+        $running_total          = $subtotal_base - $coupon_discount_total;
+        $fees                   = $cart->get_fees();
         
-        // הצגת שורות מבצעים (fees) וחישוב סה"כ אחרי מבצעים
-        $fees = $cart->get_fees();
-        $subtotal_after_promotions = $cart->get_subtotal();
+        foreach ( $cart->get_coupons() as $code => $coupon ) :
+        ?>
+          <div class="ed-float-cart__row ed-float-cart__row--coupon cart-discount coupon-<?php echo esc_attr( sanitize_title( $code ) ); ?>">
+            <span><?php wc_cart_totals_coupon_label( $coupon ); ?></span>
+            <strong><?php wc_cart_totals_coupon_html( $coupon ); ?></strong>
+          </div>
+        <?php
+        endforeach;
         
-        if ( !empty($fees) ) :
+        if ( ! empty( $fees ) ) :
           foreach ( $fees as $fee ) :
-            // רק fees שליליים (הנחות)
-            if ( $fee->amount < 0 ) :
-              $subtotal_after_promotions += $fee->amount; // fees שליליים מוסיפים (כי הם הנחות)
+            if ( (float) $fee->amount < 0 ) :
+              $running_total += (float) $fee->amount;
         ?>
           <div class="ed-float-cart__row ed-float-cart__row--promotion">
             <span><?php echo esc_html( $fee->name ); ?></span>
@@ -264,18 +271,15 @@ class ED_Product_Popup {
         <?php
             endif;
           endforeach;
-          
-          // הצגת סה"כ אחרי הנחה (רק אם יש הנחות)
-          if ( $subtotal_after_promotions != $cart->get_subtotal() ) :
+        endif;
+        
+        if ( abs( $running_total - $subtotal_base ) > 0.0001 ) :
         ?>
           <div class="ed-float-cart__row ed-float-cart__row--total-after-discount">
-            <span><?php echo esc_html__('סה"כ אחרי הנחה', 'deliz-short'); ?></span>
-            <strong><?php echo wp_kses_post( wc_price( $subtotal_after_promotions ) ); ?></strong>
+            <span><?php echo esc_html__( 'סה"כ אחרי הנחה', 'deliz-short' ); ?></span>
+            <strong><?php echo wp_kses_post( wc_price( $running_total ) ); ?></strong>
           </div>
-        <?php
-          endif;
-        endif;
-        ?>
+        <?php endif; ?>
         
         <?php
         // טקסט משלוח חינם/עלות משלוח
@@ -286,7 +290,7 @@ class ED_Product_Popup {
         }
         
         if ($free_min > 0):
-          $remaining = max(0, $free_min - (float) $subtotal_after_promotions);
+          $remaining = max(0, $free_min - $running_total);
         ?>
           <div class="ed-float-cart__shippinghint">
             <?php if ($remaining > 0): ?>

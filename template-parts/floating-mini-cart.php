@@ -142,7 +142,7 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
 
                     $name = $product->get_name();
- 
+
                     // WooCommerce cart quantity is float for weighable (kg); (int)0.5 === 0 breaks display + subtotal.
                     $qty_raw = floatval($cart_item['quantity']);
                     $weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
@@ -591,6 +591,7 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
                 <div class="ed-float-cart__totals">
 
+                    <?php $cart->calculate_totals(); ?>
 
                     <div class="ed-float-cart__row">
 
@@ -607,40 +608,41 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                     <?php
 
 
-                    // וידוא שהעגלה מחושבת לפני קבלת fees
-
-                    // זה חשוב כי fees מחושבים רק ב-calculate_totals()
-
-                    $cart->calculate_totals();
-
-
-                    // הצגת שורות מבצעים (fees) וחישוב סה"כ אחרי מבצעים
-
-                    $fees = $cart->get_fees();
-
-                    $subtotal_after_promotions = $cart->get_subtotal();
+                    $subtotal_base         = (float) $cart->get_subtotal();
+                    $coupon_discount_total = (float) $cart->get_discount_total();
+                    $running_total         = $subtotal_base - $coupon_discount_total;
+                    $fees                  = $cart->get_fees();
 
 
-                    // DEBUG: var_dump לבדיקה
+                    foreach ( $cart->get_coupons() as $code => $coupon ) :
 
-                    echo '<!-- DEBUG: Fees count: ' . count($fees) . ' -->';
-
-                    echo '<!-- DEBUG: Fees: ';
-
-                    var_dump($fees);
-
-                    echo ' -->';
+                        ?>
 
 
-                    if (!empty($fees)) :
+                        <div class="ed-float-cart__row ed-float-cart__row--coupon cart-discount coupon-<?php echo esc_attr( sanitize_title( $code ) ); ?>">
 
-                        foreach ($fees as $fee) :
 
-                            // רק fees שליליים (הנחות)
+                            <span><?php wc_cart_totals_coupon_label( $coupon ); ?></span>
 
-                            if ($fee->amount < 0) :
 
-                                $subtotal_after_promotions += $fee->amount; // fees שליליים מוסיפים (כי הם הנחות)
+                            <strong><?php wc_cart_totals_coupon_html( $coupon ); ?></strong>
+
+
+                        </div>
+
+
+                        <?php
+
+                    endforeach;
+
+
+                    if ( ! empty( $fees ) ) :
+
+                        foreach ( $fees as $fee ) :
+
+                            if ( (float) $fee->amount < 0 ) :
+
+                                $running_total += (float) $fee->amount;
 
                                 ?>
 
@@ -648,10 +650,10 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                                 <div class="ed-float-cart__row ed-float-cart__row--promotion">
 
 
-                                    <span><?php echo esc_html($fee->name); ?></span>
+                                    <span><?php echo esc_html( $fee->name ); ?></span>
 
 
-                                    <strong><?php echo wp_kses_post(wc_cart_totals_fee_html($fee)); ?></strong>
+                                    <strong><?php echo wp_kses_post( wc_cart_totals_fee_html( $fee ) ); ?></strong>
 
 
                                 </div>
@@ -663,29 +665,27 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
                         endforeach;
 
-
-                        // הצגת סה"כ אחרי הנחה (רק אם יש הנחות)
-
-                        if ($subtotal_after_promotions != $cart->get_subtotal()) :
-
-                            ?>
+                    endif;
 
 
-                            <div class="ed-float-cart__row ed-float-cart__row--total-after-discount">
+                    if ( abs( $running_total - $subtotal_base ) > 0.0001 ) :
+
+                        ?>
 
 
-                                <span><?php echo esc_html__('סה"כ אחרי הנחה', 'deliz-short'); ?></span>
+                        <div class="ed-float-cart__row ed-float-cart__row--total-after-discount">
 
 
-                                <strong><?php echo wp_kses_post(wc_price($subtotal_after_promotions)); ?></strong>
+                            <span><?php echo esc_html__( 'סה"כ אחרי הנחה', 'deliz-short' ); ?></span>
 
 
-                            </div>
+                            <strong><?php echo wp_kses_post( wc_price( $running_total ) ); ?></strong>
+
+
+                        </div>
 
 
                         <?php
-
-                        endif;
 
                     endif;
 
@@ -721,7 +721,7 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
                     if ($free_min > 0) :
 
 
-                        $remaining = max(0, $free_min - (float)$subtotal_after_promotions);
+                        $remaining = max( 0, $free_min - $running_total );
 
 
                         ?>
