@@ -12,38 +12,56 @@
 <?php
 if ( have_rows('top_header_msg', 'option') ) : ?>
   <div class="top-header">
+    <div class="header-top-right">
+      <?php if ( have_rows('top_header_right', 'option') ) : ?>
+        <ul class="top-header-right-list">
+          <?php while ( have_rows('top_header_right', 'option') ) : the_row(); 
+            $link = get_sub_field('link');
+            if ( ! $link ) {
+              continue;
+            }
+          ?>
+            <li class="top-header-right-item">
+              <a href="<?php echo esc_url( $link['url'] ); ?>" target="<?php echo esc_attr( $link['target'] ?: '_self' ); ?>">
+                <?php echo esc_html( $link['title'] ); ?>
+              </a>
+            </li>
+          <?php endwhile; ?>
+        </ul>
+      <?php endif; ?>       
+    </div>
     <div class="top-header-inner slick-slider">
-    <?php while ( have_rows('top_header_msg', 'option') ) : the_row();
+      <?php while ( have_rows('top_header_msg', 'option') ) : the_row();
 
-      $text = trim((string) get_sub_field('text'));
-      $link = get_sub_field('link');
+        $text = trim((string) get_sub_field('text'));
+        $link = get_sub_field('link');
 
-      if ( $text === '' ) continue;
+        if ( $text === '' ) continue;
 
-      $url    = '';
-      $target = '';
+        $url    = '';
+        $target = '';
 
-      if ( is_array($link) ) {
-        $url    = !empty($link['url']) ? $link['url'] : '';
-        $target = !empty($link['target']) ? $link['target'] : '';
-      } else {
-        $url = is_string($link) ? trim($link) : '';
-      }
+        if ( is_array($link) ) {
+          $url    = !empty($link['url']) ? $link['url'] : '';
+          $target = !empty($link['target']) ? $link['target'] : '';
+        } else {
+          $url = is_string($link) ? trim($link) : '';
+        }
 
-      $text_esc = esc_html($text);      
-        echo '<div class="item">';
-          if ( $url ) {
-            printf(
-              '<a class="top-header-msg__item" href="%s"%s>%s</a>',
-              esc_url($url),
-              $target ? ' target="' . esc_attr($target) . '" rel="noopener noreferrer"' : '',
-              $text_esc
-            );
-          } else {
-            printf('<span class="top-header-msg__item">%s</span>', $text_esc);
-          }
-        echo '</div>';
-    endwhile; ?>
+        $text_esc = esc_html($text);      
+          echo '<div class="item">';
+            if ( $url ) {
+              printf(
+                '<a class="top-header-msg__item" href="%s"%s>%s</a>',
+                esc_url($url),
+                $target ? ' target="' . esc_attr($target) . '" rel="noopener noreferrer"' : '',
+                $text_esc
+              );
+            } else {
+              printf('<span class="top-header-msg__item">%s</span>', $text_esc);
+            }
+          echo '</div>';
+      endwhile; ?>
   </div>
   </div>
 <?php endif; ?>

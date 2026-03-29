@@ -78,9 +78,24 @@ body.basket-open .site-overlay,
     opacity: 0;
 }
 
+.top-header .header-top-right{
+    width: 33%;
+}
+
+.top-header .header-top-right ul{
+   margin: 0;
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.top-header .header-top-right ul a{
+    text-decoration: none;
+}
+
 .top-header .top-header-inner{
-    max-width: 450px;
-    margin: auto;
+    max-width: 33%;
+    margin: 0;
 }
 
 .top-header .top-header-inner .item{
@@ -88,8 +103,10 @@ body.basket-open .site-overlay,
 }
 
 .top-header{
-    height: 31px;
-    line-height: 27px;
+height: 31px;
+    line-height: 30px;
+    display: flex;
+    font-size: 12px;
 }
 
 .top-header .slick-slider:not(.slick-initialized){
