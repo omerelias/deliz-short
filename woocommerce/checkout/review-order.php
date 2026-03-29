@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 
 $chosen_methods 	= WC()->session->get( 'chosen_shipping_methods' );
 $chosen_shipping 	= $chosen_methods[0];
-// 
+//
 $chosen_method 		= '';	
 $packages 			= WC()->shipping()->get_packages();
 $shipping_label 	= __( 'Shipping', 'woocommerce' );

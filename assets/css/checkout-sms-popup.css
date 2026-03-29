@@ -44,29 +44,41 @@
     pointer-events: auto;
 }
 
-.checkout-sms-popup__close {
+/* Override theme `button.default-close-btn` (15×15px + transparent) so the X is visible */
+.checkout-sms-popup button.checkout-sms-popup__close {
     position: absolute;
     top: 15px;
     left: 15px;
+    right: auto;
     width: 40px;
     height: 40px;
+    min-width: 40px;
+    min-height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     border: none;
-    background: rgba(0, 0, 0, 0.06);
+    background: rgba(0, 0, 0, 0.08);
+    background-color: rgba(0, 0, 0, 0.08);
     border-radius: 50%;
     padding: 0;
-    z-index: 2;
+    z-index: 20;
     pointer-events: auto;
     color: #333;
     transition: background 0.2s, color 0.2s;
 }
 
-.checkout-sms-popup__close:hover {
-    background: rgba(0, 0, 0, 0.12);
+.checkout-sms-popup button.checkout-sms-popup__close:hover {
+    background: rgba(0, 0, 0, 0.15);
+    background-color: rgba(0, 0, 0, 0.15);
     color: #000;
+}
+
+.checkout-sms-popup button.checkout-sms-popup__close svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
 }
 
 .checkout-sms-popup__title {
@@ -197,7 +209,7 @@ body.checkout-sms-popup-open {
 }
 
 /* RTL Support */
-body.rtl .checkout-sms-popup__close {
+body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
     left: auto;
     right: 15px;
 }

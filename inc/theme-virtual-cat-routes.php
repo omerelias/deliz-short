@@ -90,7 +90,7 @@ add_action(
       return;
     }
 
-    $product_id = ed_get_published_product_id_by_mp_slug( (string) $product_slug ); 
+    $product_id = ed_get_published_product_id_by_mp_slug( (string) $product_slug );
     if ( $product_id ) {
       return;
     }

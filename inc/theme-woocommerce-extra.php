@@ -24,7 +24,7 @@ function oc_theme_woo_add_checkout_fields( $fields ){
 
 	// additional fields for billing
 	$ar_billing_fields = array(
-		'billing_floor' 		=> __( 'Floor', 	 'woocommerce' ),
+		'billing_floor' 		=> __( 'Floor', 	 'woocommerce' ),  
 		'billing_apartment'		=> __( 'Appartment', 'woocommerce' ),	
 	);
 
@@ -363,7 +363,7 @@ function oc_woo_coupon_form_copy_for_checkout(){
 	}else{
 		$place = __( 'קוד קופון', 'deliz-short' );
 		$btn = __( 'החלת קופון', 'deliz-short' );
-	}
+	} 
 ?>
 	<div class="coupon-form copy-form" role="presentation">		
         <div class="checkout-coupon-form-inner">		
@@ -374,7 +374,7 @@ function oc_woo_coupon_form_copy_for_checkout(){
 	<?php //points mark ?>
 	<?php if(in_array('yith-woocommerce-points-and-rewards-premium/init.php', apply_filters('active_plugins', get_option('active_plugins')))): ?>
 		<div class="open-points" style="display:none;"><a href="javascript:void(0);"><?php echo __( "Click to use points", "deliz-short" ); ?></a></div>
-	<?php endif; ?>	
+	<?php endif; ?>	 
 <?php
 }
 
@@ -385,3 +385,356 @@ add_filter( 'woocommerce_billing_fields', function( $fields ) {
     }
     return $fields;
 }, 20 );
+
+/**
+ * לאחר הזמנה: WooCommerce ו-oc-woo-shipping מנקים סשן/עגלה. מאמתים מיד אחרי הניקוי את נתוני המשלוח מההזמנה,
+ * ושומרים גיבוי ב-cookie לטעינות הבאות (סל ריק עלול לאפס שוב את שיטת המשלוח).
+ */
+function deliz_short_oc_ship_cookie_params() {
+	$path   = ( defined( 'COOKIEPATH' ) && COOKIEPATH ) ? COOKIEPATH : '/';
+	$domain = ( defined( 'COOKIE_DOMAIN' ) && COOKIE_DOMAIN ) ? COOKIE_DOMAIN : '';
+
+	return array( $path, $domain, time() + ( 60 * 60 * 24 * 90 ) );
+}
+
+/**
+ * @return array<string, mixed>|null
+ */
+function deliz_short_build_ship_patch_from_order( WC_Order $order ) {
+	$shipping_items = $order->get_items( 'shipping' );
+	if ( empty( $shipping_items ) ) {
+		return null;
+	}
+
+	$chosen = array();
+	foreach ( $shipping_items as $item ) {
+		if ( ! $item instanceof WC_Order_Item_Shipping ) {
+			continue;
+		}
+		$method_id = $item->get_method_id();
+		if ( ! $method_id ) {
+			continue;
+		}
+		$instance_id = $item->get_instance_id();
+		$chosen[]      = ( null !== $instance_id && '' !== $instance_id )
+			? $method_id . ':' . absint( $instance_id )
+			: $method_id;
+	}
+	$chosen = array_values( array_filter( $chosen ) );
+	if ( empty( $chosen ) ) {
+		return null;
+	}
+
+	$first           = reset( $shipping_items );
+	$base_method_id  = $first instanceof WC_Order_Item_Shipping ? $first->get_method_id() : '';
+	$patch           = array(
+		'chosen_shipping_methods'        => $chosen,
+		'sync_chosen_shipping_methods'   => $chosen,
+		'checkout_data'                  => array(),
+	);
+	$cookie_method = '';
+
+	if ( $base_method_id && 0 === strpos( $base_method_id, 'oc_woo_advanced_shipping_method' ) ) {
+		$cookie_method = 'oc_woo_advanced_shipping_method';
+
+		$city_code = $order->get_meta( '_billing_city_code' );
+		if ( ! $city_code ) {
+			$city_code = $order->get_billing_city();
+		}
+		$city_name = $order->get_meta( '_billing_city_name' );
+		$street    = $order->get_meta( '_billing_street' );
+		if ( ! $street ) {
+			$street = $order->get_meta( 'billing_street' );
+		}
+		$house = $order->get_meta( '_billing_house_num' );
+		if ( ! $house ) {
+			$house = $order->get_meta( 'billing_house_num' );
+		}
+		$coords = $order->get_meta( '_billing_address_coords' );
+
+		if ( $city_code ) {
+			$patch['chosen_city_code']     = $city_code;
+			$patch['chosen_shipping_city'] = $city_code;
+			$patch['checkout_data']['billing_city']       = $city_code;
+			$patch['checkout_data']['billing_city_code']  = $order->get_meta( '_billing_city_code' ) ?: $city_code;
+			$patch['checkout_data']['shipping_city']      = $city_code;
+			$patch['checkout_data']['shipping_city_code'] = $patch['checkout_data']['billing_city_code'];
+		}
+		if ( $city_name ) {
+			$patch['chosen_city_name'] = $city_name;
+			$patch['checkout_data']['billing_city_name']  = $city_name;
+			$patch['checkout_data']['shipping_city_name'] = $city_name;
+		}
+		if ( $street ) {
+			$patch['chosen_street'] = $street;
+			$patch['checkout_data']['billing_street']  = $street;
+			$patch['checkout_data']['shipping_street'] = $street;
+		}
+		if ( $house ) {
+			$patch['chosen_house_num'] = $house;
+			$patch['checkout_data']['billing_house_num']  = $house;
+			$patch['checkout_data']['shipping_house_num'] = $house;
+		}
+		if ( $coords ) {
+			$patch['chosen_address_coords'] = $coords;
+			$patch['checkout_data']['billing_address_coords']  = $coords;
+			$patch['checkout_data']['shipping_address_coords'] = $coords;
+		}
+		$ship_date  = $order->get_meta( 'ocws_shipping_info_date' );
+		$slot_start = $order->get_meta( 'ocws_shipping_info_slot_start' );
+		$slot_end   = $order->get_meta( 'ocws_shipping_info_slot_end' );
+		if ( $ship_date ) {
+			$patch['checkout_data']['order_expedition_date'] = $ship_date;
+		}
+		if ( $slot_start ) {
+			$patch['checkout_data']['order_expedition_slot_start'] = $slot_start;
+		}
+		if ( $slot_end ) {
+			$patch['checkout_data']['order_expedition_slot_end'] = $slot_end;
+		}
+	} elseif ( $base_method_id && ( 0 === strpos( $base_method_id, 'oc_woo_local_pickup_method' ) || 0 === strpos( $base_method_id, 'local_pickup' ) ) ) {
+		$cookie_method = 'oc_woo_local_pickup_method';
+
+		$aff = $order->get_meta( 'ocws_lp_pickup_aff_id' );
+		if ( $aff ) {
+			$patch['chosen_pickup_aff'] = absint( $aff );
+			$patch['checkout_data']['ocws_lp_pickup_aff_id'] = $aff;
+		}
+		$p_date  = $order->get_meta( 'ocws_shipping_info_date' );
+		$p_start = $order->get_meta( 'ocws_shipping_info_slot_start' );
+		$p_end   = $order->get_meta( 'ocws_shipping_info_slot_end' );
+		if ( $p_date ) {
+			$patch['checkout_data']['ocws_lp_pickup_date'] = $p_date;
+		}
+		if ( $p_start ) {
+			$patch['checkout_data']['ocws_lp_pickup_slot_start'] = $p_start;
+		}
+		if ( $p_end ) {
+			$patch['checkout_data']['ocws_lp_pickup_slot_end'] = $p_end;
+		}
+	}
+
+	$ocws_payload = array(
+		'method'  => '',
+		'city'    => '',
+		'branch'  => '',
+		'polygon' => array(
+			'coords'    => '',
+			'street'    => '',
+			'house_num' => '',
+			'city_name' => '',
+			'city_code' => '',
+		),
+	);
+	if ( ! empty( $_COOKIE['ocws'] ) ) {
+		$prev = json_decode( wp_unslash( $_COOKIE['ocws'] ), true );
+		if ( is_array( $prev ) ) {
+			$ocws_payload = array_replace_recursive( $ocws_payload, $prev );
+		}
+	}
+	if ( $cookie_method ) {
+		$ocws_payload['method'] = $cookie_method;
+	}
+	if ( 'oc_woo_local_pickup_method' === $cookie_method ) {
+		$aff = $order->get_meta( 'ocws_lp_pickup_aff_id' );
+		if ( $aff ) {
+			$ocws_payload['branch'] = (string) $aff;
+		}
+	} elseif ( 'oc_woo_advanced_shipping_method' === $cookie_method ) {
+		$city_code = $order->get_meta( '_billing_city_code' );
+		if ( ! $city_code ) {
+			$city_code = $order->get_billing_city();
+		}
+		if ( $city_code ) {
+			$ocws_payload['city'] = (string) $city_code;
+		}
+		$coords = $order->get_meta( '_billing_address_coords' );
+		if ( $coords ) {
+			$ocws_payload['polygon']['coords']    = (string) $coords;
+			$ocws_payload['polygon']['street']    = (string) ( $order->get_meta( '_billing_street' ) ?: $order->get_meta( 'billing_street' ) );
+			$ocws_payload['polygon']['house_num'] = (string) ( $order->get_meta( '_billing_house_num' ) ?: $order->get_meta( 'billing_house_num' ) );
+			$ocws_payload['polygon']['city_name'] = (string) $order->get_meta( '_billing_city_name' );
+			$ocws_payload['polygon']['city_code'] = (string) ( $order->get_meta( '_billing_city_code' ) ?: $city_code );
+		}
+	}
+	$patch['ocws_cookie'] = $ocws_payload;
+
+	return $patch;
+}
+
+/**
+ * @param array<string, mixed> $patch
+ */
+function deliz_short_apply_ship_patch( array $patch ) {
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return;
+	}
+
+	if ( ! empty( $patch['chosen_shipping_methods'] ) && is_array( $patch['chosen_shipping_methods'] ) ) {
+		WC()->session->set( 'chosen_shipping_methods', $patch['chosen_shipping_methods'] );
+	}
+	if ( ! empty( $patch['sync_chosen_shipping_methods'] ) && is_array( $patch['sync_chosen_shipping_methods'] ) ) {
+		WC()->session->set( 'sync_chosen_shipping_methods', $patch['sync_chosen_shipping_methods'] );
+	}
+
+	$scalars = array(
+		'chosen_city_code',
+		'chosen_city_name',
+		'chosen_street',
+		'chosen_house_num',
+		'chosen_address_coords',
+		'chosen_shipping_city',
+		'chosen_pickup_aff',
+	);
+	foreach ( $scalars as $key ) {
+		if ( array_key_exists( $key, $patch ) && null !== $patch[ $key ] && '' !== $patch[ $key ] ) {
+			WC()->session->set( $key, $patch[ $key ] );
+		}
+	}
+
+	if ( ! empty( $patch['checkout_data'] ) && is_array( $patch['checkout_data'] ) ) {
+		$cur = WC()->session->get( 'checkout_data', array() );
+		if ( ! is_array( $cur ) ) {
+			$cur = array();
+		}
+		foreach ( $patch['checkout_data'] as $k => $v ) {
+			if ( null !== $v && '' !== $v ) {
+				$cur[ $k ] = $v;
+			}
+		}
+		WC()->session->set( 'checkout_data', $cur );
+	}
+
+	if ( ! empty( $patch['chosen_city_code'] ) && WC()->customer ) {
+		WC()->customer->set_billing_city( $patch['chosen_city_code'] );
+		WC()->customer->set_shipping_city( $patch['chosen_city_code'] );
+	}
+
+	if ( ! empty( $patch['ocws_cookie'] ) && is_array( $patch['ocws_cookie'] ) && ! headers_sent() ) {
+		list( $path, $domain, $expire ) = deliz_short_oc_ship_cookie_params();
+		$encoded = wp_json_encode( $patch['ocws_cookie'] );
+		if ( false !== $encoded ) {
+			setcookie( 'ocws', $encoded, $expire, $path, $domain, is_ssl(), false );
+			$_COOKIE['ocws'] = $encoded;
+		}
+	}
+}
+
+/**
+ * @param array<string, mixed> $patch
+ */
+function deliz_short_write_ship_backup_cookie( array $patch ) {
+	if ( headers_sent() ) {
+		return;
+	}
+	list( $path, $domain, $expire ) = deliz_short_oc_ship_cookie_params();
+	$wrapper = array(
+		'v'     => 1,
+		't'     => time(),
+		'patch' => $patch,
+	);
+	$json = wp_json_encode( $wrapper );
+	if ( false === $json ) {
+		return;
+	}
+	setcookie( 'deliz_oc_ship_last', $json, $expire, $path, $domain, is_ssl(), false );
+	$_COOKIE['deliz_oc_ship_last'] = $json;
+}
+
+/**
+ * @return array<string, mixed>|null
+ */
+function deliz_short_read_ship_backup_cookie() {
+	if ( empty( $_COOKIE['deliz_oc_ship_last'] ) ) {
+		return null;
+	}
+	$data = json_decode( wp_unslash( $_COOKIE['deliz_oc_ship_last'] ), true );
+
+	return ( is_array( $data ) && ! empty( $data['patch'] ) && is_array( $data['patch'] ) ) ? $data : null;
+}
+
+/**
+ * @param WC_Order $order
+ */
+function deliz_short_reapply_shipping_after_order( $order ) {
+	if ( ! apply_filters( 'deliz_short_reapply_shipping_after_order', true, $order ) ) {
+		return;
+	}
+	if ( ! $order instanceof WC_Order || ! function_exists( 'WC' ) || ! WC()->session ) {
+		return;
+	}
+
+	if ( function_exists( 'ocws_order_shipping_data_to_session' ) ) {
+		ocws_order_shipping_data_to_session( $order->get_id() );
+	}
+
+	$patch = deliz_short_build_ship_patch_from_order( $order );
+	if ( ! $patch ) {
+		WC()->session->save_data();
+		return;
+	}
+
+	deliz_short_apply_ship_patch( $patch );
+	deliz_short_write_ship_backup_cookie( $patch );
+	WC()->session->save_data();
+}
+
+/**
+ * @param WC_Cart $cart
+ */
+function deliz_short_maybe_restore_ship_from_backup_cookie( $cart ) {
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return;
+	}
+	if ( ! apply_filters( 'deliz_short_restore_shipping_from_backup_cookie', true ) ) {
+		return;
+	}
+
+	static $did = false;
+	if ( $did ) {
+		return;
+	}
+
+	$methods = WC()->session->get( 'chosen_shipping_methods', array() );
+	if ( is_array( $methods ) && array_filter( $methods ) ) {
+		return;
+	}
+
+	$backup = deliz_short_read_ship_backup_cookie();
+	if ( empty( $backup['patch'] ) ) {
+		return;
+	}
+
+	deliz_short_apply_ship_patch( $backup['patch'] );
+	WC()->session->save_data();
+	$did = true;
+}
+
+add_action(
+	'woocommerce_checkout_order_processed',
+	static function ( $order_id ) {
+		$order = wc_get_order( $order_id );
+		if ( $order ) {
+			deliz_short_reapply_shipping_after_order( $order );
+		}
+	},
+	2500,
+	1
+);
+
+add_action(
+	'woocommerce_thankyou',
+	static function ( $order_id ) {
+		if ( ! $order_id ) {
+			return;
+		}
+		$order = wc_get_order( $order_id );
+		if ( $order ) {
+			deliz_short_reapply_shipping_after_order( $order );
+		}
+	},
+	5,
+	1
+);
+
+add_action( 'woocommerce_cart_loaded_from_session', 'deliz_short_maybe_restore_ship_from_backup_cookie', 99999 );
