@@ -30,5 +30,7 @@ require_once get_template_directory() . '/inc/theme-rest-ed-v1.php';
 require_once get_template_directory() . '/inc/theme-ed-homepage-shop.php';
 // ממשק חנות: body_class, סל צף, משלוחים, התחברות/overlay, תבנית SMS, ‎[oc_menu]‎
 require_once get_template_directory() . '/inc/theme-shop-frontend.php';
+// בר התקדמות משלוח חינם לסל צף (לפי שיטת משלוח + תוסף OC)
+require_once get_template_directory() . '/inc/theme-free-shipping-bar.php';
 // WooCommerce נוסף: שדות צ’קאאוט, הרשמה, קופון, פופאפ משקל, כפתורי תשלום וכו’
 require_once get_template_directory() . '/inc/theme-woocommerce-extra.php';

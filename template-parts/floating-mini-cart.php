@@ -14,10 +14,33 @@ $cart = WC()->cart;
 
 $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
+// דיבוג: רץ תמיד כש-DELIZ_FREE_SHIP_BAR_DEBUG (גם סל ריק — קודם היה רק בתוך if !is_empty).
+if ( function_exists( 'deliz_short_free_ship_bar_debug' ) ) {
+	deliz_short_free_ship_bar_debug(
+		'floating-mini-cart TEMPLATE START',
+		array(
+			'has_cart'  => (bool) $cart,
+			'is_empty'  => ( $cart && method_exists( $cart, 'is_empty' ) ) ? $cart->is_empty() : null,
+			'const_on'  => defined( 'DELIZ_FREE_SHIP_BAR_DEBUG' ) ? DELIZ_FREE_SHIP_BAR_DEBUG : 'NOT_DEFINED',
+			'filter_on' => function_exists( 'deliz_short_free_ship_bar_debug_is_enabled' ) ? deliz_short_free_ship_bar_debug_is_enabled() : null,
+		)
+	);
+}
+// סל ריק: עדיין להריץ את פונקציית הבר כדי שיופיעו DUMPS (RETURN empty).
+if ( function_exists( 'deliz_short_get_free_shipping_bar_data' ) && function_exists( 'deliz_short_free_ship_bar_debug_is_enabled' ) && deliz_short_free_ship_bar_debug_is_enabled() && $cart && $cart->is_empty() ) {
+	deliz_short_get_free_shipping_bar_data( $cart );
+}
+
 ?>
 
 
-<aside class="ed-float-cart" id="ed-float-cart" aria-label="<?php esc_attr_e('Mini cart', 'deliz-short'); ?>">
+<aside class="ed-float-cart" id="ed-float-cart" aria-label="<?php esc_attr_e('Mini cart', 'deliz-short'); ?>"
+	<?php
+	if ( function_exists( 'deliz_short_free_ship_bar_debug_is_enabled' ) && deliz_short_free_ship_bar_debug_is_enabled() ) {
+		echo ' data-deliz-fs-bar-debug="1"';
+	}
+	?>
+>
 
 
     <div class="ed-float-cart__inner">
@@ -83,18 +106,11 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
 
             <?php
-
-
-            if (class_exists('Oc_Woo_Shipping_Public') && is_callable(['Oc_Woo_Shipping_Public', 'show_chip_in_cart'])) {
-
-
-                Oc_Woo_Shipping_Public::show_chip_in_cart();
-
-
-            }
-
-
+            // בר משלוח חינם בהדר (במקום ה-chip); ה-chip בפוטר — theme-free-shipping-bar.php
             ?>
+            <div class="ed-float-cart__header-shipping">
+                <?php do_action( 'deliz_short_float_cart_header_shipping' ); ?>
+            </div>
 
 
         </header>
@@ -697,50 +713,12 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
 
 
-                    <?php
 
 
-                    // טקסט משלוח חינם/עלות משלוח (פשוט, בלי חישובים כבדים)
+                </div>
 
-
-                    $free_min = 0;
-
-
-                    $settings = get_option('woocommerce_free_shipping_1_settings');
-
-
-                    if (is_array($settings) && isset($settings['min_amount'])) {
-
-
-                        $free_min = (float)$settings['min_amount'];
-
-
-                    }
-
-
-                    if ($free_min > 0) :
-
-
-                        $remaining = max( 0, $free_min - $running_total );
-
-
-                        ?>
-
-
-                        <div class="ed-float-cart__shippinghint">
-
-
-                            <?php if ($remaining > 0) : ?>
-
-
-                                <?php echo wp_kses_post( sprintf( __( 'חסר לך רק %s למשלוח חינם!', 'deliz-short' ), wc_price( $remaining ) ) ); ?>
-
-
-                            <?php else : ?>
-                                <?php echo esc_html__('מגיע לך משלוח חינם!', 'deliz-short'); ?>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
+                <div class="ed-float-cart__footer-shipping-chip">
+                    <?php do_action( 'deliz_short_float_cart_footer_shipping' ); ?>
                 </div>
 
                 <?php
@@ -777,6 +755,12 @@ $count = $cart ? (int)$cart->get_cart_contents_count() : '';
 
                 </div>
 
+
+            <?php else : ?>
+
+                <div class="ed-float-cart__footer-shipping-chip ed-float-cart__footer-shipping-chip--empty-cart">
+                    <?php do_action( 'deliz_short_float_cart_footer_shipping' ); ?>
+                </div>
 
             <?php endif; ?>
 

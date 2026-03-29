@@ -44,6 +44,12 @@ add_action('wp_enqueue_scripts', function () {
   $js  = get_template_directory_uri() . '/assets/js/main.js';
 
   wp_enqueue_style('deliz-short-main', $css, [], time());
+  wp_enqueue_style(
+    'deliz-short-free-ship-bar',
+    get_template_directory_uri() . '/assets/css/free-shipping-bar.css',
+    array('deliz-short-main'),
+    DELIZ_SHORT_VERSION
+  );
   wp_enqueue_script('deliz-short-main', $js, [], DELIZ_SHORT_VERSION, true);
 
   // Ensure wc_ajax_url + coupon nonce exist for float cart coupon apply (even on pages that don't enqueue WC cart scripts)

@@ -24,7 +24,7 @@ function oc_theme_woo_add_checkout_fields( $fields ){
 
 	// additional fields for billing
 	$ar_billing_fields = array(
-		'billing_floor' 		=> __( 'Floor', 	 'woocommerce' ),  
+		'billing_floor' 		=> __( 'Floor', 	 'woocommerce' ),
 		'billing_apartment'		=> __( 'Appartment', 'woocommerce' ),	
 	);
 
