@@ -624,7 +624,16 @@ if ( function_exists( 'deliz_short_get_free_shipping_bar_data' ) && function_exi
 
 
         <footer class="ed-float-cart__footer">
-
+                <?php
+                // Coupon field (same UI as checkout "copy" form)
+                if (function_exists('oc_woo_coupon_form_copy_for_checkout') && wc_coupons_enabled()) :
+                    ?>
+                    <div class="ed-float-cart__coupon" aria-label="<?php esc_attr_e('קופון', 'deliz-short'); ?>">
+                        <label><?php echo esc_html__( 'הוספת קוד קופון', 'deliz-short' ); ?></label>
+                        <?php oc_woo_coupon_form_copy_for_checkout(); ?>
+                        <div class="ed-float-cart__coupon-notices" aria-live="polite"></div>
+                    </div>
+                <?php endif; ?>
 
             <?php if ($cart && !$cart->is_empty()) : ?>
 
@@ -707,37 +716,7 @@ if ( function_exists( 'deliz_short_get_free_shipping_bar_data' ) && function_exi
 
                     endif;
 
-
-                    if ( abs( $running_total - $subtotal_base ) > 0.0001 ) :
-
-                        ?>
-
-
-                        <div class="ed-float-cart__row ed-float-cart__row--total-after-discount">
-
-
-                            <span><?php echo esc_html__( 'סה"כ אחרי הנחה', 'deliz-short' ); ?></span>
-
-
-                            <strong><?php echo wp_kses_post( wc_price( $running_total ) ); ?></strong>
-
-
-                        </div>
-
-
-                        <?php
-
-                    endif;
-
                     ?>
-
-
-
-
-
-
-
-
 
                 </div>
 
@@ -745,29 +724,16 @@ if ( function_exists( 'deliz_short_get_free_shipping_bar_data' ) && function_exi
                     <?php do_action( 'deliz_short_float_cart_footer_shipping' ); ?>
                 </div>
 
-                <?php
-                // Coupon field (same UI as checkout "copy" form)
-                if (function_exists('oc_woo_coupon_form_copy_for_checkout') && wc_coupons_enabled()) :
-                    ?>
-                    <div class="ed-float-cart__coupon" aria-label="<?php esc_attr_e('קופון', 'deliz-short'); ?>">
-                        <?php oc_woo_coupon_form_copy_for_checkout(); ?>
-                        <div class="ed-float-cart__coupon-notices" aria-live="polite"></div>
-                    </div>
-                <?php endif; ?>
-
                 <div class="ed-float-cart__actions">
-
 
                     <a class="ed-float-cart__btn ed-float-cart__btn--checkout checkout-btn-trigger"
                        href="<?php echo esc_url(wc_get_checkout_url()); ?>"
                        data-checkout-url="<?php echo esc_url(wc_get_checkout_url()); ?>">
-
-
-                        <?php echo esc_html__('לתשלום', 'deliz-short'); ?>
-
-
+                       <span><?php echo esc_html__('מעבר לתשלום', 'deliz-short'); ?></span>
+                       <?php if ( abs( $running_total - $subtotal_base ) > 0.0001 ): ?>
+                           <span class="ed-float-cart__total-with-discounts">~ <?php echo wp_kses_post(wc_price($running_total)); ?></span>
+                        <?php endif; ?>
                     </a>
-
 
                 </div>
 

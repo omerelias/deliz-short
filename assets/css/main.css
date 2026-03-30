@@ -514,6 +514,10 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     margin-block-end: 15px;
 }
 
+.ed-float-cart__items .ed-float-cart__item:last-child{
+    border-bottom: none;
+}
+
 .ed-float-cart__items .ed-float-cart__item .remove_from_cart_button{
     position: absolute;
     left: 0;
@@ -632,26 +636,31 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
 }
 
 .ed-float-cart__footer{
-    padding: 15px;
-    text-align: center;
+    padding:10px 0 10px;
+    text-align: right;
     flex: 0 0 auto;
+    border-top: 1px solid #F0F0F0;
 }
 
 .ed-float-cart__footer .bottom-cart{
-    padding: 0 20px;
-    text-align: center;
-    margin-block-start: 25px;
-    padding-block-end: 30px;
+padding: 0;
+    text-align: right;
+    margin-block-start: 7px;
+    padding-block-end: 0;
 }
 
 .ed-float-cart__footer .bottom-cart .cart-custom-notice{
-    font-size: 15px;
-    color: #000;
-    line-height: 1.3;
+font-size: 14px;
+    color: #989898;
+    line-height: normal;
+}
+
+.delivery-data-chip{
+    padding: 0;
 }
 
 .ed-float-cart__footer .bottom-cart .cart-custom-notice a{
-
+        color: #989898;
 }
 
 .ed-float-cart__footer .ed-float-cart__actions{
@@ -669,6 +678,13 @@ a.button,
     line-height: 50px;
     text-decoration: none;
     border-radius:var(--radius);    
+}
+
+.ed-float-cart__footer .ed-float-cart__actions .ed-float-cart__btn{
+        display: flex;
+    justify-content: space-between;
+    padding-inline: 10px;
+    font-size: 16px;
 }
 
 .ed-float-cart__footer .ed-float-cart__actions .ed-float-cart__btn:hover,
@@ -1635,8 +1651,8 @@ form.woocommerce-checkout .ocws-days-with-slots-list-label{
 .delivery-data-chip input.cds-button-change{
     background: transparent;
     color: #000;
-    font-weight: bold;
-    font-size: 17px;
+    font-weight: 500;
+    font-size: 14px;
     padding: 0;
     text-decoration: underline;
     border: none;
@@ -2295,6 +2311,57 @@ body p.other-recipient-field label{
 /* Float cart coupon field (match checkout look) */
 .ed-float-cart__coupon .coupon-form{
     padding-block: 15px;
+        display: none;
+}
+
+.ed-float-cart__coupon.active .coupon-form{
+    display: block;
+}
+
+.ed-float-cart__coupon{
+    border-bottom: 1px solid #F0F0F0;
+    padding-block-end: 0;
+    margin-block-end: 5px;
+}
+
+.ed-float-cart__totals{
+    margin-block-start: 10px;
+}
+
+.ed-float-cart__coupon>label{
+    font-size: 14px;
+    font-weight: 500;
+    position: relative;
+    display: block;
+        cursor: pointer;
+}
+
+.ed-float-cart__coupon>label:after{
+    content:"+";
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.ed-float-cart__coupon.active>label:after{
+    content:"-";
+}
+
+.ed-float-cart__totals .ed-float-cart__row{
+    display: flex;
+    justify-content: space-between;
+        margin-block-end: 4px;
+}
+
+.ed-float-cart__totals .ed-float-cart__row span{
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.ed-float-cart__totals .ed-float-cart__row strong,
+.ed-float-cart__totals .ed-float-cart__row span.woocommerce-Price-amount{
+    font-weight: 400;
+    font-size: 14px;
 }
 
 .ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner{
@@ -2306,20 +2373,30 @@ body p.other-recipient-field label{
 
 .ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner input{
     padding-right: 10px;
-    color: #34366D;
-    font-size: 14px;
+    color: #989898;
+    font-size: 16px;
     width: 70%;
     outline: none;
     border-radius: var(--radius);
     border: 1px solid #E4E6EA;
-    height: 45px;
+    height: 40px;
 }
 
 .ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner button{
     width: 27%;
-    height: 45px;
-    line-height: 45px;
+    height: 40px;
+    line-height: 36px;
     font-size: 16px;
+    background-color: var(--color-primary);
+    color: var(--main-text-color);
+    border-radius: var(--radius);
+        border: none;
+    cursor: pointer;
+}
+
+.ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner button:hover{
+    background-color: var(--color-primary-hover);
+    color: var(--main-text-color-hover);
 }
 
 .ed-float-cart__coupon-notices{
