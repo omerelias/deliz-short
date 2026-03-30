@@ -546,4 +546,12 @@ jQuery('.site-footer .fmain .fcol-menu .title').click(function ($) {
     childList: true,
     subtree: true,
   });
+
+  //קופון
+(function ($) {
+    $(document).on('click', '.ed-float-cart__coupon > label', function () {
+        $(this).closest('.ed-float-cart__coupon').toggleClass('active');
+    });
+})(jQuery);
+
 })();
