@@ -95,11 +95,12 @@ if (
 
 					$product_id = $cart_item['product_id'];
 					$name = $product->get_name();
-
+ 
 					// WooCommerce cart quantity is float for weighable (kg); (int)0.5 === 0 breaks display + subtotal.
 					$qty_raw = floatval($cart_item['quantity']);
 					$weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
 					$sold_by_units = (get_post_meta($product_id, '_ocwsu_sold_by_units', true) === 'yes');
+					$sold_by_weight = (get_post_meta($product_id, '_ocwsu_sold_by_weight', true) === 'yes');
 					$quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
 					$ocwsu_units_qty_ui = ($weighable && $sold_by_units && $quantity_in_units > 0);
 					$ocwsu_kg_per_unit = 0.0;
@@ -139,38 +140,29 @@ if (
 					$line_price = WC()->cart->get_product_price($product); // מחיר ליחידה (עם מטבע)
 					$subtotal = WC()->cart->get_product_subtotal($product, $qty_raw); // סה"כ שורה
 
-					// oc-woo-sale-units: build display string for weighable products
+					// oc-woo-sale-units: weighable line under title — משקל בלבד (לא "יחידה"), ולמכירה לפי משקל המשקל מופיע ליד שדה הכמות
 					$ocwsu_display = '';
+					$ocwsu_weight_qty_label = '';
 
 					if ($weighable) {
-						$quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
-
 						// Base weight from cart (always in kg, possibly fractional)
 						$weight_qty = floatval($cart_item['quantity']);
 						$use_grams = ($weight_qty > 0 && $weight_qty < 1);
 						$weight_value = $use_grams ? $weight_qty * 1000 : $weight_qty;
 						$weight_unit = $use_grams ? __('גרם', 'deliz-short') : __('ק"ג', 'deliz-short');
-
-						// Format numbers nicely
-						if ($use_grams) {
+						if (function_exists('deliz_short_format_ocwsu_cart_weight_display_value')) {
+							$weight_value = deliz_short_format_ocwsu_cart_weight_display_value($weight_value, $use_grams);
+						} elseif ($use_grams) {
 							$weight_value = wc_format_decimal($weight_value, 0);
 						} else {
 							$weight_value = wc_format_decimal($weight_value, 2);
 						}
 
-						if ($quantity_in_units > 0) {
-							// Example: "2 יחידות, 500 גרם"
-							$units_label = ($quantity_in_units == 1) ? __('יחידה', 'deliz-short') : __('יחידות', 'deliz-short');
-							$ocwsu_display = sprintf(
-								'%s %s, %s %s',
-								wc_format_decimal($quantity_in_units, 0),
-								$units_label,
-								$weight_value,
-								$weight_unit
-							);
-						} else {
-							// Only weight, e.g. "500 גרם" / "1.20 ק\"ג"
-							$ocwsu_display = sprintf('%s %s', $weight_value, $weight_unit);
+						$ocwsu_weight_qty_label = sprintf('%s %s', $weight_value, $weight_unit);
+
+						$show_ocwsu_line_under_name = !($sold_by_weight && !$ocwsu_units_qty_ui);
+						if ($show_ocwsu_line_under_name) {
+							$ocwsu_display = $ocwsu_weight_qty_label;
 						}
 					}
 					?>
@@ -257,6 +249,8 @@ if (
 
 										<?php if ($ocwsu_units_qty_ui) : ?>
 											<span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
+										<?php elseif ($weighable && $sold_by_weight && $ocwsu_weight_qty_label !== '') : ?>
+											<span class="ed-float-cart__qty-units-label"><?php echo esc_html('~' . $ocwsu_weight_qty_label); ?></span>
 										<?php endif; ?>
 									</div>
 

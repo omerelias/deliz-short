@@ -8,6 +8,24 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
+if (!function_exists('deliz_short_format_ocwsu_cart_weight_display_value')) {
+  /**
+   * Cart line weight for float mini-cart: grams as integer; kg without trailing zeros (1, 1.5 not 1.50).
+   *
+   * @param float $numeric_weight Grams when $use_grams is true, else kilograms.
+   */
+  function deliz_short_format_ocwsu_cart_weight_display_value($numeric_weight, $use_grams) {
+    if ($use_grams) {
+      return wc_format_decimal((float) $numeric_weight, 0);
+    }
+    $s = wc_format_decimal((float) $numeric_weight, 2);
+    if (strpos($s, '.') !== false) {
+      $s = rtrim(rtrim($s, '0'), '.');
+    }
+    return $s;
+  }
+}
+
 class ED_Product_Popup {
 
   /**
@@ -87,9 +105,10 @@ class ED_Product_Popup {
           // Use the same variables as the template
           $product_id = $cart_item['product_id']; 
           $name = $product->get_name();
-          $qty_raw = floatval($cart_item['quantity']);
+          $qty_raw = floatval($cart_item['quantity']); 
           $weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
           $sold_by_units = (get_post_meta($product_id, '_ocwsu_sold_by_units', true) === 'yes');
+          $sold_by_weight = (get_post_meta($product_id, '_ocwsu_sold_by_weight', true) === 'yes');
           $quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
           $ocwsu_units_qty_ui = ($weighable && $sold_by_units && $quantity_in_units > 0);
           $ocwsu_kg_per_unit = 0.0;
@@ -121,24 +140,19 @@ class ED_Product_Popup {
           $remove_url = wc_get_cart_remove_url($cart_item_key);
           $subtotal = WC()->cart->get_product_subtotal($product, $qty_raw);
           
-          // ocwsu display
+          // ocwsu display (keep in sync with template-parts/floating-mini-cart.php)
           $ocwsu_display = '';
+          $ocwsu_weight_qty_label = '';
           if ($weighable) {
-            $quantity_in_weight_units = isset($cart_item['ocwsu_quantity_in_weight_units']) ? floatval($cart_item['ocwsu_quantity_in_weight_units']) : 0;
             $weight_qty = floatval($cart_item['quantity']);
             $use_grams = ($weight_qty > 0 && $weight_qty < 1);
             $weight_value = $use_grams ? $weight_qty * 1000 : $weight_qty;
             $weight_unit = $use_grams ? __( 'גרם', 'deliz-short' ) : __( 'ק"ג', 'deliz-short' );
-            if ($use_grams) {
-              $weight_value = wc_format_decimal($weight_value, 0);
-            } else {
-              $weight_value = wc_format_decimal($weight_value, 2);
-            }
-            if ($quantity_in_units > 0) {
-              $units_label = ($quantity_in_units == 1) ? __( 'יחידה', 'deliz-short' ) : __( 'יחידות', 'deliz-short' );
-              $ocwsu_display = sprintf('%s %s, %s %s', wc_format_decimal($quantity_in_units, 0), $units_label, $weight_value, $weight_unit);
-            } else {
-              $ocwsu_display = sprintf('%s %s', $weight_value, $weight_unit);
+            $weight_value = deliz_short_format_ocwsu_cart_weight_display_value($weight_value, $use_grams);
+            $ocwsu_weight_qty_label = sprintf('%s %s', $weight_value, $weight_unit);
+            $show_ocwsu_line_under_name = !($sold_by_weight && !$ocwsu_units_qty_ui);
+            if ($show_ocwsu_line_under_name) {
+              $ocwsu_display = $ocwsu_weight_qty_label;
             }
           }
           
@@ -197,6 +211,8 @@ class ED_Product_Popup {
                     >
                     <?php if ($ocwsu_units_qty_ui) : ?>
                       <span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
+                    <?php elseif ($weighable && $sold_by_weight && $ocwsu_weight_qty_label !== '') : ?>
+                      <span class="ed-float-cart__qty-units-label"><?php echo esc_html('~' . $ocwsu_weight_qty_label); ?></span>
                     <?php endif; ?>
                   </div>
                   <button type="button"

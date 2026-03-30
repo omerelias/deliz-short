@@ -232,6 +232,14 @@
                     }
                 }
 
+                const checkoutActionsSel = '#ed-float-cart .ed-float-cart__actions';
+                if (fragments[checkoutActionsSel] && typeof jQuery !== 'undefined') {
+                    const actionsEl = document.querySelector(checkoutActionsSel);
+                    if (actionsEl && String(fragments[checkoutActionsSel]).length) {
+                        jQuery(actionsEl).replaceWith(fragments[checkoutActionsSel]);
+                    }
+                }
+
                 // Also update the row directly if exists
                 if (fragments['div.ed-float-cart__row']) {
                     const rowEl = document.querySelector('.ed-float-cart__row');

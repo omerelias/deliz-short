@@ -54,6 +54,11 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
     $fragments['#ed-float-cart header.ed-float-cart__header'] = $m[0];
   }
 
+  // Checkout CTA + ~ running total (non-empty cart only in template).
+  if ( preg_match( '/<div\s+class="ed-float-cart__actions"[^>]*>[\s\S]*?<\/div>/u', $full, $m ) ) {
+    $fragments['#ed-float-cart .ed-float-cart__actions'] = $m[0];
+  }
+
   // Totals + coupon form + CTA live in the footer; mini-cart JS can update after coupon apply/remove
   // without relying only on wc_fragment_refresh (cart-fragments script may be absent).
   if ( preg_match( '/<footer\s+class="ed-float-cart__footer"[^>]*>[\s\S]*?<\/footer>/u', $full, $m ) ) {
