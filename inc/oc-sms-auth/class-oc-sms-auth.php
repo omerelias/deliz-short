@@ -125,19 +125,25 @@ class OC_SMS_Auth {
      * Enqueue required scripts and styles
      */
     public function enqueue_scripts() {
-        $plugin_url = plugin_dir_url(__FILE__);
+        $theme_uri = get_template_directory_uri();
+        $theme_dir = get_template_directory();
+        $js_path   = $theme_dir . '/inc/oc-sms-auth/assets/js/sms-auth.js';
+        $css_path  = $theme_dir . '/inc/oc-sms-auth/assets/css/sms-auth.css';
+        $ver_js    = file_exists($js_path) ? (string) filemtime($js_path) : (string) time();
+        $ver_css   = file_exists($css_path) ? (string) filemtime($css_path) : (string) time();
+
         wp_enqueue_script(
             'oc-sms-auth',
-            get_template_directory_uri().'/inc/lib/oc-sms-auth/assets/js/sms-auth.js',
+            $theme_uri . '/inc/oc-sms-auth/assets/js/sms-auth.js',
             array('jquery'),
-            time(),
+            $ver_js,
             true
         );
         wp_enqueue_style(
             'oc-sms-auth',
-            get_template_directory_uri().'/inc/lib/oc-sms-auth/assets/css/sms-auth.css',
-            time(),
-            time()
+            $theme_uri . '/inc/oc-sms-auth/assets/css/sms-auth.css',
+            array(),
+            $ver_css
         );
 
         wp_localize_script('oc-sms-auth', 'oc_sms_auth', array(
@@ -176,7 +182,7 @@ class OC_SMS_Auth {
                     <div class="verification-code-input">
                         <input type="text" name="verification_code" maxlength="6" class="code-input"  />
                     </div>
-                    <button type="submit" class="button verify-button">
+                    <button type="button" class="button verify-button">
                         <?php echo esc_html($this->settings['verify_button_text']); ?>
                     </button>
                     <button type="button" class="button resend-code" data-resend-count="0">

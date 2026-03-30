@@ -27,7 +27,7 @@ class OC_SMS_Auth_Admin {
         
         // Add AJAX handlers
         add_action('wp_ajax_oc_sms_auth_unblock_ip', array($this, 'ajax_unblock_ip'));
-        add_action('wp_ajax_oc_sms_auth_clear_logs', array($this, 'ajax_clear_logs'));
+        add_action('wp_ajax_oc_sms_auth_clear_logs', array($this, 'ajax_clear_logs')); 
     }
 
     /**
@@ -35,19 +35,22 @@ class OC_SMS_Auth_Admin {
      */
     public function enqueue_admin_scripts($hook) {
 
-        // Custom admin styles
+        $theme_uri = get_template_directory_uri();
+        $theme_dir = get_template_directory();
+        $css_path  = $theme_dir . '/inc/oc-sms-auth/admin/css/admin.css';
+        $js_path   = $theme_dir . '/inc/oc-sms-auth/admin/js/admin.js';
+
         wp_enqueue_style(
             'oc-sms-auth-admin',
-            get_template_directory_uri().'/inc/lib/oc-sms-auth/admin/css/admin.css',
+            $theme_uri . '/inc/oc-sms-auth/admin/css/admin.css',
             array(),
-            filemtime(plugin_dir_path(__FILE__) . 'css/admin.css')
+            file_exists($css_path) ? (string) filemtime($css_path) : false
         );
-        // Custom admin scripts
         wp_enqueue_script(
             'oc-sms-auth-admin',
-            get_template_directory_uri().'/inc/lib/oc-sms-auth/admin/js/admin.js',
+            $theme_uri . '/inc/oc-sms-auth/admin/js/admin.js',
             array('jquery'),
-            filemtime(plugin_dir_path(__FILE__) . 'js/admin.js'),
+            file_exists($js_path) ? (string) filemtime($js_path) : false,
             true
         );
 
