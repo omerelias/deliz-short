@@ -582,6 +582,12 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     left: 0;
     right: 0;
     max-width: 75px;
+        border: none;
+}
+
+.ed-float-cart__items .ed-float-cart__item .ed-float-cart__actions-row .ed-float-cart__edit-btn:hover{
+    background-color: var(--color-primary-hover);
+    color: var(--main-text-color-hover);
 }
 
 .ed-promotion-cart-message.ed-promotion-fulfilled{
