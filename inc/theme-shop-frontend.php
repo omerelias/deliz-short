@@ -49,7 +49,12 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
   $full = ob_get_clean();
   $fragments['#ed-float-cart'] = $full;
 
-  // Totals + coupon form + CTA live in the footer; lets mini-cart JS update after coupon apply/remove
+  // Header: title + free-shipping bar (deliz_short_float_cart_header_shipping) — keep in sync after partial cart AJAX.
+  if ( preg_match( '/<header\s+class="ed-float-cart__header"[^>]*>[\s\S]*?<\/header>/u', $full, $m ) ) {
+    $fragments['#ed-float-cart header.ed-float-cart__header'] = $m[0];
+  }
+
+  // Totals + coupon form + CTA live in the footer; mini-cart JS can update after coupon apply/remove
   // without relying only on wc_fragment_refresh (cart-fragments script may be absent).
   if ( preg_match( '/<footer\s+class="ed-float-cart__footer"[^>]*>[\s\S]*?<\/footer>/u', $full, $m ) ) {
     $fragments['#ed-float-cart footer.ed-float-cart__footer'] = $m[0];

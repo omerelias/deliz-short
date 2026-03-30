@@ -209,19 +209,26 @@
                     }
                 }
 
-                // Update mini cart HTML
-                if (fragments['div.ed-float-cart__items']) {
-                    const miniCartItems = document.querySelector('.ed-float-cart__items');
-                    if (miniCartItems) {
-                        miniCartItems.innerHTML = fragments['div.ed-float-cart__items'];
+                const headerFragKey = '#ed-float-cart header.ed-float-cart__header';
+                if (fragments[headerFragKey] && typeof jQuery !== 'undefined') {
+                    const headerEl = document.querySelector(headerFragKey);
+                    if (headerEl && String(fragments[headerFragKey]).length) {
+                        jQuery(headerEl).replaceWith(fragments[headerFragKey]);
                     }
                 }
 
-                // Update totals
-                if (fragments['div.ed-float-cart__totals']) {
-                    const totalsEl = document.querySelector('.ed-float-cart__totals');
-                    if (totalsEl) {
-                        totalsEl.innerHTML = fragments['div.ed-float-cart__totals'];
+                // Fragment values are full outer HTML (e.g. entire .ed-float-cart__items wrapper) — replace nodes, do not nest via innerHTML.
+                if (fragments['div.ed-float-cart__items'] && typeof jQuery !== 'undefined') {
+                    const miniCartItems = document.querySelector('#ed-float-cart .ed-float-cart__items');
+                    if (miniCartItems) {
+                        jQuery(miniCartItems).replaceWith(fragments['div.ed-float-cart__items']);
+                    }
+                }
+
+                if (fragments['div.ed-float-cart__totals'] && typeof jQuery !== 'undefined') {
+                    const totalsEl = document.querySelector('#ed-float-cart .ed-float-cart__totals');
+                    if (totalsEl && fragments['div.ed-float-cart__totals'].length) {
+                        jQuery(totalsEl).replaceWith(fragments['div.ed-float-cart__totals']);
                     }
                 }
 

@@ -119,7 +119,6 @@ class ED_Product_Popup {
           }
           $thumbnail = $product->get_image('woocommerce_thumbnail');
           $remove_url = wc_get_cart_remove_url($cart_item_key);
-          $line_price = WC()->cart->get_product_price($product);
           $subtotal = WC()->cart->get_product_subtotal($product, $qty_raw);
           
           // ocwsu display
@@ -155,101 +154,114 @@ class ED_Product_Popup {
           // Item data
           $item_data = wc_get_formatted_cart_item_data($cart_item, true);
           
-          // Output the cart item HTML (same structure as template)
+          // Output the cart item HTML (keep in sync with template-parts/floating-mini-cart.php)
           ?>
           <div class="ed-float-cart__item" role="listitem" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">
-            <a href="<?php echo esc_url($remove_url); ?>" class="ed-float-cart__remove remove remove_from_cart_button" aria-label="<?php echo esc_attr(sprintf(__('הסר %s מהסל', 'deliz-short'), $name)); ?>" data-product_id="<?php echo esc_attr($product_id); ?>" data-cart_item_key="<?php echo esc_attr($cart_item_key); ?>" data-product_sku="<?php echo esc_attr($product->get_sku()); ?>">×</a>
-            <div class="ed-float-cart__thumb"><?php echo $thumbnail; // phpcs:ignore ?></div>
-            <div class="ed-float-cart__details">
-              <div class="ed-float-cart__name"><?php echo esc_html($name); ?></div>
-              <?php if ($item_data): ?>
-                <div class="ed-float-cart__meta2"><?php echo $item_data; // phpcs:ignore ?></div>
-              <?php endif; ?>
-              <?php if ($ocwsu_display): ?>
-                <div class="ed-float-cart__ocwsu-qty"><?php echo esc_html($ocwsu_display); ?></div>
-              <?php endif; ?>
-              
-              <?php
-              // הודעות קידום מבצעים
-              if (class_exists('ED_Promotions')) {
-                $promotions = ED_Promotions::get_product_promotions($product_id);
-                
-                if (!empty($promotions)) {
-                  $promotion = $promotions[0];
-                  $type = get_post_meta($promotion->ID, ED_Promotions::META_PREFIX . 'type', true);
-                  $badge_text = get_post_meta($promotion->ID, ED_Promotions::META_PREFIX . 'badge_text', true);
-                  
-                  if ($type === 'discount') {
-                    // למבצע הנחה - תמיד מציגים "משתתף במבצע"
-                    echo '<div class="ed-promotion-cart-message ed-promotion-cart-message--float">';
-                    echo '<span class="ed-promotion-label">' . sprintf(__('משתתף במבצע: %s', 'deliz-short'), esc_html($badge_text)) . '</span>';
-                    echo '</div>';
-                  } elseif ($type === 'buy_x_pay_y') {
-                    // למבצע קונים X תמורת Y - בודקים אם מימש או לא
-                    $buy_kg = floatval(get_post_meta($promotion->ID, ED_Promotions::META_PREFIX . 'buy_kg', true));
-                    $quantity = floatval($cart_item['quantity']);
-                    
-                    // בדיקה אם המוצר שקיל
-                    $weighable = get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes';
-                    if (!$weighable) {
-                      // למוצרים לא שקילים - ממירים לפי משקל יחידה
-                      $unit_weight = floatval(get_post_meta($product_id, '_ocwsu_unit_weight', true));
-                      if ($unit_weight > 0) {
-                        $quantity = $quantity / $unit_weight; // המרה לק"ג
-                      }
-                    }
-                    
-                    if ($quantity >= $buy_kg) {
-                      // מימש את המבצע
-                      echo '<div class="ed-promotion-cart-message ed-promotion-cart-message--float ed-promotion-fulfilled">';
-                      echo '<span class="ed-promotion-label">' . sprintf(__('קיבלת את המבצע: %s', 'deliz-short'), esc_html($badge_text)) . '</span>';
-                      echo '</div>';
-                    } else {
-                      // לא מימש - מציגים כמה חסר
-                      $remaining = $buy_kg - $quantity;
-                      // פורמט יפה של המספר
-                      if ($remaining < 1) {
-                        $remaining_display = sprintf( __( '%s גרם', 'deliz-short' ), wc_format_decimal( $remaining * 1000, 0 ) );
-                      } else {
-                        $remaining_display = sprintf( __( '%s ק"ג', 'deliz-short' ), wc_format_decimal( $remaining, 2 ) );
-                      }
-                      echo '<div class="ed-promotion-cart-message ed-promotion-cart-message--float ed-promotion-pending">';
-                      echo '<span class="ed-promotion-label">' . sprintf(__('חסר לך רק עוד %s כדי לקבל את המבצע: %s', 'deliz-short'), $remaining_display, esc_html($badge_text)) . '</span>';
-                      echo '</div>';
-                    }
-                  }
-                }
-              }
-              ?>
-
+            <div class="cart_item_inner">
+              <a href="<?php echo esc_url($remove_url); ?>"
+                 class="ed-float-cart__remove remove remove_from_cart_button"
+                 aria-label="<?php echo esc_attr(sprintf(__('הסר %s מהסל', 'deliz-short'), $name)); ?>"
+                 data-product_id="<?php echo esc_attr($product_id); ?>"
+                 data-cart_item_key="<?php echo esc_attr($cart_item_key); ?>"
+                 data-product_sku="<?php echo esc_attr($product->get_sku()); ?>">×</a>
+              <div class="ed-float-cart__thumb"><?php echo $thumbnail; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+              <div class="ed-float-cart__details">
+                <div class="ed-float-cart__name"><?php echo esc_html($name); ?></div>
+                <?php if ($item_data) : ?>
+                  <div class="ed-float-cart__meta2"><?php echo $item_data; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+                <?php endif; ?>
+                <?php if ($ocwsu_display) : ?>
+                  <div class="ed-float-cart__ocwsu-qty">~<?php echo esc_html($ocwsu_display); ?></div>
+                <?php endif; ?>
+              </div>
               <div class="ed-float-cart__actions-row">
                 <div class="ed-float-cart__quantity-controls">
-                  <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--decrease" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הפחת כמות', 'deliz-short'); ?>">-</button>
+                  <button type="button"
+                          class="ed-float-cart__qty-btn ed-float-cart__qty-btn--decrease"
+                          data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                          aria-label="<?php esc_attr_e('הפחת כמות', 'deliz-short'); ?>">-</button>
                   <div class="ed-float-cart__qty-field<?php echo $ocwsu_units_qty_ui ? ' ed-float-cart__qty-field--ocwsu-units' : ''; ?>">
-                  <input type="text" class="ed-float-cart__qty-input" value="<?php echo esc_attr($qty_input_val); ?>" min="<?php echo esc_attr($qty_input_min); ?>" step="<?php echo esc_attr($qty_input_step); ?>" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                    <input type="text"
+                           class="ed-float-cart__qty-input"
+                           value="<?php echo esc_attr($qty_input_val); ?>"
+                           min="<?php echo esc_attr($qty_input_min); ?>"
+                           step="<?php echo esc_attr($qty_input_step); ?>"
+                           data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                      <?php if ($ocwsu_units_qty_ui) : ?>
+                           data-ed-ocwsu-units-display="1"
+                           data-ed-ocwsu-kg-per-unit="<?php echo esc_attr(wc_format_decimal($ocwsu_kg_per_unit, 6)); ?>"
+                           aria-label="<?php esc_attr_e('מספר יחידות', 'deliz-short'); ?>"
+                      <?php else : ?>
+                           aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>"
+                      <?php endif; ?>
+                    >
                     <?php if ($ocwsu_units_qty_ui) : ?>
-                    data-ed-ocwsu-units-display="1"
-                    data-ed-ocwsu-kg-per-unit="<?php echo esc_attr(wc_format_decimal($ocwsu_kg_per_unit, 6)); ?>"
-                    aria-label="<?php esc_attr_e('מספר יחידות', 'deliz-short'); ?>"
-                    <?php else : ?>
-                    aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>"
+                      <span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
                     <?php endif; ?>
-                  >
-                  <?php if ($ocwsu_units_qty_ui) : ?>
-                  <span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
-                  <?php endif; ?>
                   </div>
-                  <button type="button" class="ed-float-cart__qty-btn ed-float-cart__qty-btn--increase" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+</button>
+                  <button type="button"
+                          class="ed-float-cart__qty-btn ed-float-cart__qty-btn--increase"
+                          data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                          aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+</button>
                 </div>
-                <button type="button" class="ed-float-cart__edit-btn" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>" data-product-id="<?php echo esc_attr($product_id); ?>" data-variation-id="<?php echo esc_attr($variation_id); ?>" data-quantity="<?php echo esc_attr($quantity); ?>" data-variation="<?php echo $variation_attrs_json; ?>" data-product-note="<?php echo esc_attr($product_note); ?>" data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>" data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>" aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>"><?php esc_html_e('עריכה', 'deliz-short'); ?></button>
+                <button type="button"
+                        class="ed-float-cart__edit-btn"
+                        data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                        data-product-id="<?php echo esc_attr($product_id); ?>"
+                        data-variation-id="<?php echo esc_attr($variation_id); ?>"
+                        data-quantity="<?php echo esc_attr($quantity); ?>"
+                        data-variation="<?php echo $variation_attrs_json; ?>"
+                        data-product-note="<?php echo esc_attr($product_note); ?>"
+                        data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>"
+                        data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>"
+                        aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>"><?php esc_html_e('עריכה', 'deliz-short'); ?></button>
               </div>
               <div class="ed-float-cart__price">
-                <span class="ed-float-cart__unit"><?php echo wp_kses_post($line_price); ?></span>
-                <span class="ed-float-cart__sep">×</span>
-                <span class="ed-float-cart__qty"><?php echo esc_html($qty_display); ?></span>
                 <span class="ed-float-cart__subtotal"><?php echo wp_kses_post($subtotal); ?></span>
               </div>
             </div>
+            <?php
+            if (class_exists('ED_Promotions')) {
+              $promotions = ED_Promotions::get_product_promotions($product_id);
+
+              if (!empty($promotions)) {
+                $promotion = $promotions[0];
+                $type = get_post_meta($promotion->ID, ED_Promotions::META_PREFIX . 'type', true);
+                $badge_text = get_post_meta($promotion->ID, ED_Promotions::META_PREFIX . 'badge_text', true);
+
+                if ($type === 'discount') {
+                  echo '<div class="ed-promotion-cart-message ed-promotion-cart-message--float">';
+                  echo '<span class="ed-promotion-label">' . sprintf(__('משתתף במבצע: %s', 'deliz-short'), esc_html($badge_text)) . '</span>';
+                  echo '</div>';
+                } elseif ($type === 'buy_x_pay_y') {
+                  $buy_kg = floatval(get_post_meta($promotion->ID, ED_Promotions::META_PREFIX . 'buy_kg', true));
+                  $promo_qty = floatval($cart_item['quantity']);
+                  $weighable_promo = get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes';
+                  if (!$weighable_promo) {
+                    $unit_weight = floatval(get_post_meta($product_id, '_ocwsu_unit_weight', true));
+                    if ($unit_weight > 0) {
+                      $promo_qty = $promo_qty / $unit_weight;
+                    }
+                  }
+                  if ($promo_qty >= $buy_kg) {
+                    echo '<div class="ed-promotion-cart-message ed-promotion-cart-message--float ed-promotion-fulfilled">';
+                    echo '<span class="ed-promotion-label">' . sprintf(__('קיבלת את המבצע: %s', 'deliz-short'), esc_html($badge_text)) . '</span>';
+                    echo '</div>';
+                  } else {
+                    $remaining = $buy_kg - $promo_qty;
+                    if ($remaining < 1) {
+                      $remaining_display = sprintf(__('%s גרם', 'deliz-short'), wc_format_decimal($remaining * 1000, 0));
+                    } else {
+                      $remaining_display = sprintf(__('%s ק"ג', 'deliz-short'), wc_format_decimal($remaining, 2));
+                    }
+                    echo '<div class="ed-promotion-cart-message ed-promotion-cart-message--float ed-promotion-pending">';
+                    echo '<span class="ed-promotion-label">' . sprintf(__('חסר לך רק עוד %s כדי לקבל את המבצע: %s', 'deliz-short'), $remaining_display, esc_html($badge_text)) . '</span>';
+                    echo '</div>';
+                  }
+                }
+              }
+            }
+            ?>
           </div>
           <?php
         }
@@ -271,11 +283,8 @@ class ED_Product_Popup {
         </div>
         
         <?php
-        $subtotal_base          = (float) $cart->get_subtotal();
-        $coupon_discount_total  = (float) $cart->get_discount_total();
-        $running_total          = $subtotal_base - $coupon_discount_total;
-        $fees                   = $cart->get_fees();
-        
+        $fees = $cart->get_fees();
+
         foreach ( $cart->get_coupons() as $code => $coupon ) :
         ?>
           <div class="ed-float-cart__row ed-float-cart__row--coupon cart-discount coupon-<?php echo esc_attr( sanitize_title( $code ) ); ?>">
@@ -288,7 +297,6 @@ class ED_Product_Popup {
         if ( ! empty( $fees ) ) :
           foreach ( $fees as $fee ) :
             if ( (float) $fee->amount < 0 ) :
-              $running_total += (float) $fee->amount;
         ?>
           <div class="ed-float-cart__row ed-float-cart__row--promotion">
             <span><?php echo esc_html( $fee->name ); ?></span>
@@ -298,34 +306,7 @@ class ED_Product_Popup {
             endif;
           endforeach;
         endif;
-        
-        if ( abs( $running_total - $subtotal_base ) > 0.0001 ) :
         ?>
-          <div class="ed-float-cart__row ed-float-cart__row--total-after-discount">
-            <span><?php echo esc_html__( 'סה"כ אחרי הנחה', 'deliz-short' ); ?></span>
-            <strong><?php echo wp_kses_post( wc_price( $running_total ) ); ?></strong>
-          </div>
-        <?php endif; ?>
-        
-        <?php
-        // טקסט משלוח חינם/עלות משלוח
-        $free_min = 0;
-        $settings = get_option('woocommerce_free_shipping_1_settings');
-        if (is_array($settings) && isset($settings['min_amount'])) {
-          $free_min = (float) $settings['min_amount'];
-        }
-        
-        if ($free_min > 0):
-          $remaining = max(0, $free_min - $running_total);
-        ?>
-          <div class="ed-float-cart__shippinghint">
-            <?php if ($remaining > 0): ?>
-              <?php echo wp_kses_post( sprintf( __( 'חסר לך רק %s למשלוח חינם!', 'deliz-short' ), wc_price( $remaining ) ) ); ?>
-            <?php else: ?>
-              <?php echo esc_html__('מגיע לך משלוח חינם!', 'deliz-short'); ?>
-            <?php endif; ?>
-          </div>
-        <?php endif; ?>
       </div>
       <?php
       $totals_html = ob_get_clean();

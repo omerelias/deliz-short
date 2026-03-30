@@ -364,6 +364,13 @@
 
             // Update cart fragments
             if (result.fragments && typeof result.fragments === 'object') {
+                const floatHeaderSel = '#ed-float-cart header.ed-float-cart__header'; 
+                if (result.fragments[floatHeaderSel] && typeof jQuery !== 'undefined') {
+                    const headerEl = document.querySelector(floatHeaderSel);
+                    if (headerEl && String(result.fragments[floatHeaderSel]).length) {
+                        jQuery(headerEl).replaceWith(result.fragments[floatHeaderSel]);
+                    }
+                }
                 // Update cart count element directly
                 if (result.fragments['span.ed-float-cart__count']) {
                     const countEl = document.querySelector('.ed-float-cart__count');

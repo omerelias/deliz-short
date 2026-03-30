@@ -27,7 +27,7 @@ class OC_SMS_Auth_Admin {
         
         // Add AJAX handlers
         add_action('wp_ajax_oc_sms_auth_unblock_ip', array($this, 'ajax_unblock_ip'));
-        add_action('wp_ajax_oc_sms_auth_clear_logs', array($this, 'ajax_clear_logs')); 
+        add_action('wp_ajax_oc_sms_auth_clear_logs', array($this, 'ajax_clear_logs'));
     }
 
     /**
