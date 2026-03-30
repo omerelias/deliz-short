@@ -362,7 +362,7 @@ function oc_woo_coupon_form_copy_for_checkout(){
 		$btn = __( 'החל', 'deliz-short' );
 	}else{
 		$place = __( 'קוד קופון', 'deliz-short' );
-		$btn = __( 'החלת קופון', 'deliz-short' );
+		$btn = __( 'החלה', 'deliz-short' );
 	} 
 ?>
 	<div class="coupon-form copy-form" role="presentation">		
