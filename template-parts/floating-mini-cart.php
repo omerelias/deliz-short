@@ -95,7 +95,7 @@ if (
 
 					$product_id = $cart_item['product_id'];
 					$name = $product->get_name();
- 
+
 					// WooCommerce cart quantity is float for weighable (kg); (int)0.5 === 0 breaks display + subtotal.
 					$qty_raw = floatval($cart_item['quantity']);
 					$weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
