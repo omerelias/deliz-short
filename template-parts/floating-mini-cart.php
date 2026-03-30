@@ -190,6 +190,7 @@ if (
 
 					<div class="ed-float-cart__item" role="listitem"
 						 data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">
+                        <div class="cart_item_inner">
 						<a href="<?php echo esc_url($remove_url); ?>"
 						   class="ed-float-cart__remove remove remove_from_cart_button"
 						   aria-label="<?php echo esc_attr(sprintf(__('הסר %s מהסל', 'deliz-short'), $name)); ?>"
@@ -226,9 +227,65 @@ if (
 
 							// כמות ומשקל למוצרים שקילים (oc-woo-sale-units)
 							if ($ocwsu_display) {
-								echo '<div class="ed-float-cart__ocwsu-qty">' . esc_html($ocwsu_display) . '</div>';
+								echo '<div class="ed-float-cart__ocwsu-qty">~' . esc_html($ocwsu_display) . '</div>';
 							}
+							?>
+						</div>
+ 							<div class="ed-float-cart__actions-row">
+								<div class="ed-float-cart__quantity-controls">
+									<button type="button"
+											class="ed-float-cart__qty-btn ed-float-cart__qty-btn--decrease"
+											data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+											aria-label="<?php esc_attr_e('הפחת כמות', 'deliz-short'); ?>">-
+									</button>
 
+									<div class="ed-float-cart__qty-field<?php echo $ocwsu_units_qty_ui ? ' ed-float-cart__qty-field--ocwsu-units' : ''; ?>">
+										<input type="text"
+											   class="ed-float-cart__qty-input"
+											   value="<?php echo esc_attr($qty_input_val); ?>"
+											   min="<?php echo esc_attr($qty_input_min); ?>"
+											   step="<?php echo esc_attr($qty_input_step); ?>"
+											   data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+											   <?php if ($ocwsu_units_qty_ui) : ?>
+											   data-ed-ocwsu-units-display="1"
+											   data-ed-ocwsu-kg-per-unit="<?php echo esc_attr(wc_format_decimal($ocwsu_kg_per_unit, 6)); ?>"
+											   aria-label="<?php esc_attr_e('מספר יחידות', 'deliz-short'); ?>"
+											   <?php else : ?>
+											   aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>"
+											   <?php endif; ?>
+										>
+
+										<?php if ($ocwsu_units_qty_ui) : ?>
+											<span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
+										<?php endif; ?>
+									</div>
+
+									<button type="button"
+											class="ed-float-cart__qty-btn ed-float-cart__qty-btn--increase"
+											data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+											aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+
+									</button>
+								</div>
+
+								<button type="button"
+										class="ed-float-cart__edit-btn"
+										data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+										data-product-id="<?php echo esc_attr($product_id); ?>"
+										data-variation-id="<?php echo esc_attr($variation_id); ?>"
+										data-quantity="<?php echo esc_attr($quantity); ?>"
+										data-variation="<?php echo $variation_attrs_json; ?>"
+										data-product-note="<?php echo esc_attr($product_note); ?>"
+										data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>"
+										data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>"
+										aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>">
+									<?php esc_html_e('עריכה', 'deliz-short'); ?>
+								</button>
+							</div>                       
+						<div class="ed-float-cart__price">
+							<span class="ed-float-cart__subtotal"><?php echo wp_kses_post($subtotal); ?></span>
+						</div>
+                    </div>
+                         <?php
 							// הודעות קידום מבצעים
 							if (class_exists('ED_Promotions')) {
 								$promotions = ED_Promotions::get_product_promotions($product_id);
@@ -283,66 +340,7 @@ if (
 									}
 								}
 							}
-							?>
-
-							<div class="ed-float-cart__actions-row">
-								<div class="ed-float-cart__quantity-controls">
-									<button type="button"
-											class="ed-float-cart__qty-btn ed-float-cart__qty-btn--decrease"
-											data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
-											aria-label="<?php esc_attr_e('הפחת כמות', 'deliz-short'); ?>">-
-									</button>
-
-									<div class="ed-float-cart__qty-field<?php echo $ocwsu_units_qty_ui ? ' ed-float-cart__qty-field--ocwsu-units' : ''; ?>">
-										<input type="text"
-											   class="ed-float-cart__qty-input"
-											   value="<?php echo esc_attr($qty_input_val); ?>"
-											   min="<?php echo esc_attr($qty_input_min); ?>"
-											   step="<?php echo esc_attr($qty_input_step); ?>"
-											   data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
-											   <?php if ($ocwsu_units_qty_ui) : ?>
-											   data-ed-ocwsu-units-display="1"
-											   data-ed-ocwsu-kg-per-unit="<?php echo esc_attr(wc_format_decimal($ocwsu_kg_per_unit, 6)); ?>"
-											   aria-label="<?php esc_attr_e('מספר יחידות', 'deliz-short'); ?>"
-											   <?php else : ?>
-											   aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>"
-											   <?php endif; ?>
-										>
-
-										<?php if ($ocwsu_units_qty_ui) : ?>
-											<span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
-										<?php endif; ?>
-									</div>
-
-									<button type="button"
-											class="ed-float-cart__qty-btn ed-float-cart__qty-btn--increase"
-											data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
-											aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+
-									</button>
-								</div>
-
-								<button type="button"
-										class="ed-float-cart__edit-btn"
-										data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
-										data-product-id="<?php echo esc_attr($product_id); ?>"
-										data-variation-id="<?php echo esc_attr($variation_id); ?>"
-										data-quantity="<?php echo esc_attr($quantity); ?>"
-										data-variation="<?php echo $variation_attrs_json; ?>"
-										data-product-note="<?php echo esc_attr($product_note); ?>"
-										data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>"
-										data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>"
-										aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>">
-									<?php esc_html_e('עריכה', 'deliz-short'); ?>
-								</button>
-							</div>
-
-							<div class="ed-float-cart__price">
-								<span class="ed-float-cart__unit"><?php echo wp_kses_post($line_price); ?></span>
-								<span class="ed-float-cart__sep">×</span>
-								<span class="ed-float-cart__qty"><?php echo esc_html($qty_display); ?></span>
-								<span class="ed-float-cart__subtotal"><?php echo wp_kses_post($subtotal); ?></span>
-							</div>
-						</div>
+                        ?>                   
 					</div>
 				<?php endforeach; ?>
 			<?php endif; ?>
