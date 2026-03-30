@@ -543,7 +543,7 @@ class ED_Promotions {
     if (!empty($promotions)) {
       $badge_text = get_post_meta($promotions[0]->ID, self::META_PREFIX . 'badge_text', true);
       if ($badge_text) {
-        $name .= ' <span class="ed-promotion-badge-inline">' . esc_html($badge_text) . '</span>';
+        $name .= ' <span class="ed-promotion-badge-inline"><span>' . esc_html($badge_text) . '</span></span>';
       }
     }
 
@@ -614,7 +614,7 @@ class ED_Promotions {
     $badge_text = get_post_meta($promotion->ID, self::META_PREFIX . 'badge_text', true);
     
     if ($badge_text) {
-      echo '<span class="ed-promotion-badge">' . esc_html($badge_text) . '</span>';
+      echo '<span class="ed-promotion-badge"><span>' . esc_html($badge_text) . '</span></span>';
     }
   }
 
@@ -640,7 +640,7 @@ class ED_Promotions {
     $badge_text = get_post_meta($promotion->ID, self::META_PREFIX . 'badge_text', true);
     
     if ($badge_text) {
-      $badge_html = '<span class="ed-promotion-badge">' . esc_html($badge_text) . '</span>';
+      $badge_html = '<span class="ed-promotion-badge"><span>' . esc_html($badge_text) . '</span></span>';
       wp_send_json_success(['badge_html' => $badge_html]);
     } else {
       wp_send_json_success(['badge_html' => '']);

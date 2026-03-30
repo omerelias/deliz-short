@@ -422,7 +422,8 @@ flex: 0 0 435px;
 }
 
 .woocommerce ul.products li.product .woocommerce-loop-product__title{
-   color:var(--color-secondary)
+   color:var(--color-secondary);
+   line-height: 18px;
 }
 
 .center-column .ed-mp-products-wrap .ed-mp__products ul.products li{
@@ -457,6 +458,14 @@ body.desktop-per-row-4 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
 
 body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.products li{
     flex: 0 0 calc((100% - 4 * 13px) / 5);
+}
+
+.woocommerce ul.products li.product .onsale{
+    display: none;
+}
+
+.woocommerce ul.products li.product a.woocommerce-loop-product__link{
+    position: relative;
 }
 
 /*/סל צף*/
@@ -740,6 +749,10 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     text-align: right;
     flex: 0 0 auto;
     border-top: 1px solid #F0F0F0;
+}
+
+.ed-float-cart__footer.cds-address{
+    font-size: 14px;
 }
 
 .ed-float-cart__footer .bottom-cart{
