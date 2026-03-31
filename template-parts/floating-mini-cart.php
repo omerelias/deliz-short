@@ -87,8 +87,10 @@ if (
 
 					<?php echo esc_html__('הסל ריק, אבל לא להרבה זמן :)', 'deliz-short'); ?>
 				</div>
-			<?php else : ?>
-				<?php foreach ($cart->get_cart() as $cart_item_key => $cart_item) :
+			<?php else :
+				// הפריט שנוסף אחרון מוצג ראשון; true שומר מפתחות cart_item_key לעדכוני AJAX
+				$deliz_float_cart_ordered = array_reverse($cart->get_cart(), true);
+				foreach ($deliz_float_cart_ordered as $cart_item_key => $cart_item) :
 					$product = $cart_item['data'];
 
 					if (!$product || !$product->exists() || $cart_item['quantity'] <= 0) continue;

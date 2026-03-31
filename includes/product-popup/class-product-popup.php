@@ -114,7 +114,7 @@ class ED_Product_Popup {
     
     // Register custom add to cart endpoint for debugging
     add_action('rest_api_init', [__CLASS__, 'register_add_to_cart_endpoint']); 
-    
+
     // Register update cart item endpoint
     add_action('rest_api_init', [__CLASS__, 'register_update_cart_endpoint']);
     
@@ -175,7 +175,7 @@ class ED_Product_Popup {
         $template_content = file_get_contents($template_file);
         // We'll use a simpler approach - just include the template and extract
         // But for now, let's use get_template_part with a custom output buffer
-        foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+        foreach (array_reverse($cart->get_cart(), true) as $cart_item_key => $cart_item) {
           $product = $cart_item['data'];
           if (!$product || !$product->exists() || $cart_item['quantity'] <= 0) continue;
           
