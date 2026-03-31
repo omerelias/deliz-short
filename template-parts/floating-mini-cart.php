@@ -93,7 +93,7 @@ if (
 
 					if (!$product || !$product->exists() || $cart_item['quantity'] <= 0) continue;
 
-					$product_id = $cart_item['product_id'];
+					$product_id = $cart_item['product_id'];  
 					$name = $product->get_name();
 
 					// WooCommerce cart quantity is float for weighable (kg); (int)0.5 === 0 breaks display + subtotal.
@@ -250,7 +250,7 @@ if (
 										<?php if ($ocwsu_units_qty_ui) : ?>
 											<span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
 										<?php elseif ($weighable && $sold_by_weight && $ocwsu_weight_qty_label !== '') : ?>
-											<span class="ed-float-cart__qty-units-label"><?php echo esc_html('~' . $ocwsu_weight_qty_label); ?></span>
+											<span class="ed-float-cart__qty-units-label"><?php echo esc_html($weight_unit); ?></span>
 										<?php endif; ?>
 									</div>
 

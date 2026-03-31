@@ -127,7 +127,7 @@
         // Explicit 0 (or negative) removes the line — no debounce (avoid showing "0" in the field)
         if (isFinite(parsed) && parsed <= 0) {
             clearTimeout(input._updateTimeout);
-            updateCartItemQuantity(cartItemKey, 0); 
+            updateCartItemQuantity(cartItemKey, 0);
             return;
         }
 

@@ -212,7 +212,7 @@ class ED_Product_Popup {
                     <?php if ($ocwsu_units_qty_ui) : ?>
                       <span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
                     <?php elseif ($weighable && $sold_by_weight && $ocwsu_weight_qty_label !== '') : ?>
-                      <span class="ed-float-cart__qty-units-label"><?php echo esc_html('~' . $ocwsu_weight_qty_label); ?></span>
+                      <span class="ed-float-cart__qty-units-label"><?php echo esc_html($weight_unit); ?></span>
                     <?php endif; ?>
                   </div>
                   <button type="button"
