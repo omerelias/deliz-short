@@ -92,7 +92,7 @@ class ED_Product_Popup {
     
     // Register AJAX endpoint for updating cart (better session handling)
     add_action('wp_ajax_ed_update_cart', [__CLASS__, 'ajax_update_cart']);
-    add_action('wp_ajax_nopriv_ed_update_cart', [__CLASS__, 'ajax_update_cart']);
+    add_action('wp_ajax_nopriv_ed_update_cart', [__CLASS__, 'ajax_update_cart']); 
     
     // Register get cart item endpoint (for editing)
     add_action('rest_api_init', [__CLASS__, 'register_get_cart_item_endpoint']);
@@ -267,18 +267,24 @@ class ED_Product_Popup {
             $weight_unit = $use_grams ? __( 'גרם', 'deliz-short' ) : __( 'ק"ג', 'deliz-short' );
             $weight_value = deliz_short_format_ocwsu_cart_weight_display_value($weight_value, $use_grams);
             $ocwsu_weight_qty_label = sprintf('%s %s', $weight_value, $weight_unit);
-            if ($ocwsu_units_qty_ui && $ocwsu_kg_per_unit > 0) {
+            $ocwsu_one_item_kg = 0.0;
+            if ($sold_by_units && $quantity_in_units > 0) {
+              $ocwsu_one_item_kg = $qty_raw / max($quantity_in_units, 1e-9);
+            }
+            if ($ocwsu_one_item_kg <= 0 && ($sold_by_units || $sold_by_weight)) {
+              $unit_w_meta = get_post_meta($product_id, '_ocwsu_unit_weight', true);
+              $unit_w_raw = ($unit_w_meta !== '' && is_numeric($unit_w_meta)) ? floatval($unit_w_meta) : 0.0;
+              if ($unit_w_raw > 0) {
+                $ocwsu_one_item_kg = deliz_short_ocwsu_meta_weight_to_grams($unit_w_raw, $product_weight_units) / 1000;
+              }
+            }
+            if ($ocwsu_one_item_kg > 0) {
               if (deliz_short_ocwsu_product_weight_is_grams($product_weight_units)) {
-                $uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_kg_per_unit * 1000, true);
+                $uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_one_item_kg * 1000, true);
                 $ocwsu_display = sprintf('%s %s', $uv, __( 'גרם', 'deliz-short' ));
               } else {
-                $uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_kg_per_unit, false);
+                $uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_one_item_kg, false);
                 $ocwsu_display = sprintf('%s %s', $uv, __( 'ק"ג', 'deliz-short' ));
-              }
-            } else {
-              $show_ocwsu_line_under_name = !($sold_by_weight && !$ocwsu_units_qty_ui);
-              if ($show_ocwsu_line_under_name) {
-                $ocwsu_display = $ocwsu_weight_qty_label;
               }
             }
           }

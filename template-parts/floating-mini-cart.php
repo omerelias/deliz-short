@@ -231,18 +231,25 @@ if (
 
 						$ocwsu_weight_qty_label = sprintf('%s %s', $weight_value, $weight_unit);
 
-						if ($ocwsu_units_qty_ui && $ocwsu_kg_per_unit > 0 && function_exists('deliz_short_format_ocwsu_cart_weight_display_value')) {
+						// ed-float-cart__ocwsu-qty: משקל יחידה אחת בלבד (לא סך השורה).
+						$ocwsu_one_item_kg = 0.0;
+						if ($sold_by_units && $quantity_in_units > 0) {
+							$ocwsu_one_item_kg = $qty_raw / max($quantity_in_units, 1e-9);
+						}
+						if ($ocwsu_one_item_kg <= 0 && ($sold_by_units || $sold_by_weight) && function_exists('deliz_short_ocwsu_meta_weight_to_grams')) {
+							$unit_w_meta = get_post_meta($product_id, '_ocwsu_unit_weight', true);
+							$unit_w_raw = ($unit_w_meta !== '' && is_numeric($unit_w_meta)) ? floatval($unit_w_meta) : 0.0;
+							if ($unit_w_raw > 0) {
+								$ocwsu_one_item_kg = deliz_short_ocwsu_meta_weight_to_grams($unit_w_raw, $product_weight_units) / 1000;
+							}
+						}
+						if ($ocwsu_one_item_kg > 0 && function_exists('deliz_short_format_ocwsu_cart_weight_display_value')) {
 							if (function_exists('deliz_short_ocwsu_product_weight_is_grams') && deliz_short_ocwsu_product_weight_is_grams($product_weight_units)) {
-								$uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_kg_per_unit * 1000, true);
+								$uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_one_item_kg * 1000, true);
 								$ocwsu_display = sprintf('%s %s', $uv, __('גרם', 'deliz-short'));
 							} else {
-								$uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_kg_per_unit, false);
+								$uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_one_item_kg, false);
 								$ocwsu_display = sprintf('%s %s', $uv, __('ק"ג', 'deliz-short'));
-							}
-						} else {
-							$show_ocwsu_line_under_name = !($sold_by_weight && !$ocwsu_units_qty_ui);
-							if ($show_ocwsu_line_under_name) {
-								$ocwsu_display = $ocwsu_weight_qty_label;
 							}
 						}
 					}
