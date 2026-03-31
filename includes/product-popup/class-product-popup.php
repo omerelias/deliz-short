@@ -83,7 +83,7 @@ class ED_Product_Popup {
     
     // Enqueue scripts and styles
     add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
-    
+     
     // Add product note to cart item data
     add_filter('woocommerce_add_cart_item_data', [__CLASS__, 'add_product_note_to_cart'], 20, 2);
     
@@ -208,7 +208,11 @@ class ED_Product_Popup {
           $ocwsu_weight_qty_label = '';
           if ($weighable) {
             $weight_qty = floatval($cart_item['quantity']);
-            $use_grams = ($weight_qty > 0 && $weight_qty < 1);
+            if (deliz_short_ocwsu_product_weight_is_grams($product_weight_units)) {
+              $use_grams = ($weight_qty > 0 && $weight_qty < 1);
+            } else {
+              $use_grams = false;
+            }
             $weight_value = $use_grams ? $weight_qty * 1000 : $weight_qty;
             $weight_unit = $use_grams ? __( 'גרם', 'deliz-short' ) : __( 'ק"ג', 'deliz-short' );
             $weight_value = deliz_short_format_ocwsu_cart_weight_display_value($weight_value, $use_grams);

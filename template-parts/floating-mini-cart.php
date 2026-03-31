@@ -95,7 +95,7 @@ if (
 
 					$product_id = $cart_item['product_id'];
 					$name = $product->get_name();
-
+ 
 					// WooCommerce cart quantity is float for weighable (kg); (int)0.5 === 0 breaks display + subtotal.
 					$qty_raw = floatval($cart_item['quantity']);
 					$weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
@@ -177,9 +177,13 @@ if (
 					$ocwsu_weight_qty_label = '';
 
 					if ($weighable) {
-						// Base weight from cart (always in kg, possibly fractional)
+						// Base weight from cart (always in kg in WC). "גרם" רק כשמוצר מוגדר בגרם במטא OCWSU; בק"ג — תמיד תווית ק"ג גם ל-0.5.
 						$weight_qty = floatval($cart_item['quantity']);
-						$use_grams = ($weight_qty > 0 && $weight_qty < 1);
+						if (function_exists('deliz_short_ocwsu_product_weight_is_grams') && deliz_short_ocwsu_product_weight_is_grams($product_weight_units)) {
+							$use_grams = ($weight_qty > 0 && $weight_qty < 1);
+						} else {
+							$use_grams = false;
+						}
 						$weight_value = $use_grams ? $weight_qty * 1000 : $weight_qty;
 						$weight_unit = $use_grams ? __('גרם', 'deliz-short') : __('ק"ג', 'deliz-short');
 						if (function_exists('deliz_short_format_ocwsu_cart_weight_display_value')) {
