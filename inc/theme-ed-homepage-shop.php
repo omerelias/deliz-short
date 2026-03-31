@@ -592,7 +592,9 @@ async function loadRebuyFromPhp({push=false} = {}) {
   function showClear(show) {
     const wrap = getSearchWrap();
     if (!wrap) return;
+    const s = wrap.querySelector('.ed-search-btn');
     const c = wrap.querySelector('.ed-search-clear');
+    if (s) s.style.display = show ? 'none' : 'inline-flex';               
     if (c) c.style.display = show ? 'inline-flex' : 'none';
   }
 

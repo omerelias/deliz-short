@@ -844,7 +844,7 @@ header .ed-ajax-search button.ed-search-btn{
 
 header .ed-ajax-search button.ed-search-clear{
     position: absolute;
-    left: 45px;
+    left: 15px;
     padding: 0;
     background: transparent;
     border: none;
