@@ -13,7 +13,7 @@
     const pendingQtyByCartKey = new Map();
     const qtyWorkerByCartKey = new Map();
  
-    function isOcwsuUnitsQtyInput(input) { 
+    function isOcwsuUnitsQtyInput(input) {  
         return input && input.getAttribute('data-ed-ocwsu-units-display') === '1';
     }
 
@@ -484,6 +484,11 @@
             // Update cart fragments using WooCommerce method
             const fragments = result.data?.fragments || {};
             if (fragments && typeof fragments === 'object') {
+                const floatCartListEl = document.querySelector('#ed-float-cart .ed-float-cart__items');
+                const savedFloatCartItemsScrollTop = (floatCartListEl && Number.isFinite(floatCartListEl.scrollTop))
+                    ? floatCartListEl.scrollTop
+                    : 0;
+
                 // Update cart count in header
                 if (fragments['span.ed-float-cart__count']) {
                     const countEl = document.querySelector('.ed-float-cart__count');
@@ -553,11 +558,23 @@
                     }
                 }
 
-                // Trigger WooCommerce cart updated event
+                const restoreFloatCartListScroll = () => {
+                    const list = document.querySelector('#ed-float-cart .ed-float-cart__items');
+                    if (list) {
+                        list.scrollTop = savedFloatCartItemsScrollTop;
+                    }
+                };
+                restoreFloatCartListScroll();
+                requestAnimationFrame(restoreFloatCartListScroll);
+
                 if (typeof jQuery !== 'undefined' && jQuery.fn.trigger) {
                     jQuery('body').trigger('wc_fragment_refresh');
                     jQuery('body').trigger('updated_wc_div');
                 }
+
+                requestAnimationFrame(restoreFloatCartListScroll);
+                setTimeout(restoreFloatCartListScroll, 0);
+                setTimeout(restoreFloatCartListScroll, 80);
             }
 
         } catch (error) {
