@@ -113,7 +113,7 @@ class ED_Product_Popup {
     add_action('rest_api_init', [__CLASS__, 'register_rest_endpoint']);
     
     // Register custom add to cart endpoint for debugging
-    add_action('rest_api_init', [__CLASS__, 'register_add_to_cart_endpoint']);
+    add_action('rest_api_init', [__CLASS__, 'register_add_to_cart_endpoint']); 
     
     // Register update cart item endpoint
     add_action('rest_api_init', [__CLASS__, 'register_update_cart_endpoint']);
