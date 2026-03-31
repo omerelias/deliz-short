@@ -54,6 +54,34 @@ if (!function_exists('deliz_short_ocwsu_meta_weight_to_grams')) {
   }
 }
 
+if (!function_exists('deliz_short_float_cart_line_title_variation')) {
+  /**
+   * Float mini-cart: parent product title + formatted variation (not appended to title with a dash).
+   *
+   * @return array{0: string, 1: string} [ $title, $variation_html ]
+   */
+  function deliz_short_float_cart_line_title_variation($cart_item, $product) {
+    if (!$product || !is_object($product)) {
+      return array('', '');
+    }
+    $title = $product->get_name();
+    $variation_html = '';
+    if ($product->is_type('variation')) {
+      $parent_id = (int) $product->get_parent_id();
+      if ($parent_id) {
+        $parent = wc_get_product($parent_id);
+        if ($parent) {
+          $title = $parent->get_name();
+        }
+      }
+      if (!empty($cart_item['variation']) && is_array($cart_item['variation']) && function_exists('wc_get_formatted_variation')) {
+        $variation_html = wc_get_formatted_variation($cart_item['variation'], true, false);
+      }
+    }
+    return array($title, $variation_html);
+  }
+}
+
 if (!function_exists('deliz_short_get_float_cart_shipping_label')) {
   /**
    * Mini-cart shipping row label: chosen method from session/packages (checkout review-order logic).
@@ -61,7 +89,7 @@ if (!function_exists('deliz_short_get_float_cart_shipping_label')) {
   function deliz_short_get_float_cart_shipping_label() {
     if (!function_exists('WC') || !WC()->shipping()) {
       return __('משלוח', 'deliz-short');
-    }
+    } 
     $shipping_label = __('משלוח', 'deliz-short');
     $packages = WC()->shipping()->get_packages();
     $session = WC()->session;
@@ -92,7 +120,7 @@ class ED_Product_Popup {
     
     // Register AJAX endpoint for updating cart (better session handling)
     add_action('wp_ajax_ed_update_cart', [__CLASS__, 'ajax_update_cart']);
-    add_action('wp_ajax_nopriv_ed_update_cart', [__CLASS__, 'ajax_update_cart']); 
+    add_action('wp_ajax_nopriv_ed_update_cart', [__CLASS__, 'ajax_update_cart']);
     
     // Register get cart item endpoint (for editing)
     add_action('rest_api_init', [__CLASS__, 'register_get_cart_item_endpoint']);
@@ -154,6 +182,13 @@ class ED_Product_Popup {
           // Use the same variables as the template
           $product_id = $cart_item['product_id']; 
           $name = $product->get_name();
+          $name_full = $name;
+          if (function_exists('deliz_short_float_cart_line_title_variation')) {
+            list($float_cart_product_title, $float_cart_variation_html) = deliz_short_float_cart_line_title_variation($cart_item, $product);
+          } else {
+            $float_cart_product_title = $name;
+            $float_cart_variation_html = '';
+          }
           $qty_raw = floatval($cart_item['quantity']); 
           $weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
           $sold_by_units = (get_post_meta($product_id, '_ocwsu_sold_by_units', true) === 'yes');
@@ -298,8 +333,13 @@ class ED_Product_Popup {
           $quantity = floatval($cart_item['quantity']);
           $variation_attrs_json = !empty($variation_attrs) ? htmlspecialchars(json_encode($variation_attrs), ENT_QUOTES, 'UTF-8') : '';
           
-          // Item data
-          $item_data = wc_get_formatted_cart_item_data($cart_item, true);
+          // Item data (same as template: no duplicate variation list in meta2)
+          $cart_item_for_item_data = $cart_item;
+          if (!empty($cart_item['variation_id']) && !empty($cart_item['variation']) && is_array($cart_item['variation'])) {
+            $cart_item_for_item_data = $cart_item;
+            $cart_item_for_item_data['variation'] = array();
+          }
+          $item_data = wc_get_formatted_cart_item_data($cart_item_for_item_data, true);
           
           // Output the cart item HTML (keep in sync with template-parts/floating-mini-cart.php)
           ?>
@@ -307,18 +347,21 @@ class ED_Product_Popup {
             <div class="cart_item_inner">
               <a href="<?php echo esc_url($remove_url); ?>"
                  class="ed-float-cart__remove remove remove_from_cart_button"
-                 aria-label="<?php echo esc_attr(sprintf(__('הסר %s מהסל', 'deliz-short'), $name)); ?>"
+                 aria-label="<?php echo esc_attr(sprintf(__('הסר %s מהסל', 'deliz-short'), $name_full)); ?>"
                  data-product_id="<?php echo esc_attr($product_id); ?>"
                  data-cart_item_key="<?php echo esc_attr($cart_item_key); ?>"
                  data-product_sku="<?php echo esc_attr($product->get_sku()); ?>">×</a>
               <div class="ed-float-cart__thumb"><?php echo $thumbnail; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
               <div class="ed-float-cart__details">
-                <div class="ed-float-cart__name"><?php echo esc_html($name); ?></div>
+                <div class="ed-float-cart__name"><?php echo esc_html($float_cart_product_title); ?></div>
                 <?php if ($item_data) : ?>
                   <div class="ed-float-cart__meta2"><?php echo $item_data; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
                 <?php endif; ?>
                 <?php if ($ocwsu_display) : ?>
                   <div class="ed-float-cart__ocwsu-qty">~<?php echo esc_html($ocwsu_display); ?></div>
+                <?php endif; ?>
+                <?php if ($float_cart_variation_html !== '') : ?>
+                  <div class="ed-float-cart__ocwsu-qty ed-float-cart__variation"><?php echo wp_kses_post($float_cart_variation_html); ?></div>
                 <?php endif; ?>
               </div>
               <div class="ed-float-cart__actions-row">

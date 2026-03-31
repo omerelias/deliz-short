@@ -95,7 +95,14 @@ if (
 
 					$product_id = $cart_item['product_id'];
 					$name = $product->get_name();
- 
+					$name_full = $name;
+					if (function_exists('deliz_short_float_cart_line_title_variation')) {
+						list($float_cart_product_title, $float_cart_variation_html) = deliz_short_float_cart_line_title_variation($cart_item, $product);
+					} else {
+						$float_cart_product_title = $name;
+						$float_cart_variation_html = '';
+					}
+
 					// WooCommerce cart quantity is float for weighable (kg); (int)0.5 === 0 breaks display + subtotal.
 					$qty_raw = floatval($cart_item['quantity']);
 					$weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
@@ -273,7 +280,7 @@ if (
                         <div class="cart_item_inner">
 						<a href="<?php echo esc_url($remove_url); ?>"
 						   class="ed-float-cart__remove remove remove_from_cart_button"
-						   aria-label="<?php echo esc_attr(sprintf(__('הסר %s מהסל', 'deliz-short'), $name)); ?>"
+						   aria-label="<?php echo esc_attr(sprintf(__('הסר %s מהסל', 'deliz-short'), $name_full)); ?>"
 						   data-product_id="<?php echo esc_attr($product_id); ?>"
 						   data-cart_item_key="<?php echo esc_attr($cart_item_key); ?>"
 						   data-product_sku="<?php echo esc_attr($product->get_sku()); ?>">×</a>
@@ -289,17 +296,16 @@ if (
 						</div>
 
 						<div class="ed-float-cart__details">
-							<div class="ed-float-cart__name">
-								<?php //if ( $permalink ) : ?>
-								<!--<a href="<?php echo esc_url($permalink); ?>"><?php echo esc_html($name); ?></a>-->
-								<?php //else : ?>
-								<?php echo esc_html($name); ?>
-								<?php //endif; ?>
-							</div>
+							<div class="ed-float-cart__name"><?php echo esc_html($float_cart_product_title); ?></div>
 
 							<?php
-							// וריאציות/מטא
-							$item_data = wc_get_formatted_cart_item_data($cart_item, true);
+							// וריאציות/מטא (בלי חזרה על מאפייני וריאציה — מוצגים בשורה ייעודית מתחת ל-ocwsu)
+							$cart_item_for_item_data = $cart_item;
+							if (!empty($cart_item['variation_id']) && !empty($cart_item['variation']) && is_array($cart_item['variation'])) {
+								$cart_item_for_item_data = $cart_item;
+								$cart_item_for_item_data['variation'] = array();
+							}
+							$item_data = wc_get_formatted_cart_item_data($cart_item_for_item_data, true);
 
 							if ($item_data) {
 								echo '<div class="ed-float-cart__meta2">' . $item_data . '</div>'; // phpcs:ignore
@@ -308,6 +314,9 @@ if (
 							// כמות ומשקל למוצרים שקילים (oc-woo-sale-units)
 							if ($ocwsu_display) {
 								echo '<div class="ed-float-cart__ocwsu-qty">~' . esc_html($ocwsu_display) . '</div>';
+							}
+							if ($float_cart_variation_html !== '') {
+								echo '<div class="ed-float-cart__ocwsu-qty ed-float-cart__variation">' . wp_kses_post($float_cart_variation_html) . '</div>';
 							}
 							?>
 						</div>

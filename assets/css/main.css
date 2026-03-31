@@ -586,10 +586,11 @@ body.square_images .ed-float-cart__items .ed-float-cart__item .ed-float-cart__th
     gap: 0;
     padding-inline: 13px;
     flex: 0 0 90px;
-    min-width: 90px;
+    min-width: 32%; 
 }
 
-.ed-float-cart__items .ed-float-cart__item .ed-float-cart__details .ed-float-cart__ocwsu-qty{
+.ed-float-cart__items .ed-float-cart__item .ed-float-cart__details .ed-float-cart__ocwsu-qty,
+.ed-float-cart__items .ed-float-cart__item .ed-float-cart__details .ed-float-cart__variation{
         color: #989898;
     font-size: 14px;
 }
