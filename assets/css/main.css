@@ -151,7 +151,9 @@ body.basket-open .site-overlay,
 
 .site-header .header-logo{
     text-align: right;
-    width: 15%;
+    flex: 0 0 150px;
+    width: 150px;
+    min-width: 150px;
 }
 
 .site-header .header-logo a{
@@ -176,6 +178,7 @@ body.basket-open .site-overlay,
 .site-header .header-left{
     display: flex;
     justify-content: flex-end;
+    flex: 0 0 15%;
 }
 
 .site-header.right-logo .header-user{
@@ -823,8 +826,10 @@ a.button:hover,
 header .ed-ajax-search{
     position: relative;
     width: 70%;
-        display: flex;
+    display: flex;
     justify-content: flex-end;
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 header .ed-ajax-search .ed-ajax-search-inner{
@@ -861,9 +866,13 @@ header .ed-ajax-search button.ed-search-clear{
 
 .woocommerce ul.products li.product a img{
     margin: 0;
-    aspect-ratio: 247 / 163;
+    aspect-ratio: 3 / 2;
     object-fit: cover;
     border-radius: 8px 8px 0 0;
+}
+
+body.square_images .woocommerce ul.products li.product a img{
+    aspect-ratio: 1 / 1;
 }
 
 @media (min-width: 992px){
