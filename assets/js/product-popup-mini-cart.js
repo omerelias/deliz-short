@@ -12,9 +12,39 @@
     /** Serialize qty updates per line; rapid +/- resolves to last target (avoids stale AJAX overwrites). */
     const pendingQtyByCartKey = new Map();
     const qtyWorkerByCartKey = new Map();
-
+ 
     function isOcwsuUnitsQtyInput(input) {
         return input && input.getAttribute('data-ed-ocwsu-units-display') === '1';
+    }
+
+    /** Sold by weight with product unit "grams" — input shows grams; Woo cart qty is kg. */
+    function isOcwsuGramCartQtyInput(input) {
+        return input && input.getAttribute('data-ed-ocwsu-cart-qty-unit') === 'grams';
+    }
+
+    function edMiniCartQtyDebugEnabled() {
+        try {
+            return !!(window.ED_POPUP_CONFIG && window.ED_POPUP_CONFIG.debugCartQty)
+                || window.localStorage.getItem('edDebugCartQty') === '1';
+        } catch (err) {
+            return false;
+        }
+    }
+
+    function dbgMiniCartQty() {
+        if (edMiniCartQtyDebugEnabled()) {
+            const args = ['[ed-mini-cart qty]'].concat([].slice.call(arguments));
+            console.log.apply(console, args);
+        }
+    }
+
+    /** @returns {number|null} kg */
+    function gramsDisplayToKg(gramsDisplay) {
+        const v = parseFloat(String(gramsDisplay).replace(',', '.'));
+        if (!isFinite(v)) {
+            return null;
+        }
+        return parseFloat((v * 0.001).toFixed(6));
     }
 
     function kgFromOcwsuUnitsInput(input, units) {
@@ -39,6 +69,10 @@
                 input.value = Math.max(1, Math.round(units));
                 return;
             }
+        }
+        if (isOcwsuGramCartQtyInput(input) && isFinite(quantityKg)) {
+            input.value = String(parseFloat((quantityKg * 1000).toFixed(6)));
+            return;
         }
         input.value = quantityKg;
     }
@@ -140,10 +174,23 @@
             if (isOcwsuUnitsQtyInput(input)) {
                 const kg = kgFromOcwsuUnitsInput(input, newValue);
                 if (kg != null) {
+                    dbgMiniCartQty('units line +/-', {newValueUnits: newValue, kg});
                     updateCartItemQuantity(cartItemKey, kg);
                 }
             } else {
-                updateCartItemQuantity(cartItemKey, newValue);
+                const qtyKg = isOcwsuGramCartQtyInput(input) ? gramsDisplayToKg(newValue) : newValue;
+                if (isOcwsuGramCartQtyInput(input)) {
+                    dbgMiniCartQty('grams line +/-', {
+                        action,
+                        step,
+                        baseDisplay: base,
+                        newDisplayGrams: newValue,
+                        qtyKgForWoo: qtyKg
+                    });
+                }
+                if (qtyKg != null && isFinite(qtyKg)) {
+                    updateCartItemQuantity(cartItemKey, qtyKg);
+                }
             }
         }
     }
@@ -188,10 +235,17 @@
             if (isOcwsuUnitsQtyInput(input)) {
                 const kg = kgFromOcwsuUnitsInput(input, finalValue);
                 if (kg != null) {
+                    dbgMiniCartQty('units line change', {finalValue, kg});
                     updateCartItemQuantity(cartItemKey, kg);
                 }
             } else {
-                updateCartItemQuantity(cartItemKey, finalValue);
+                const qtyKg = isOcwsuGramCartQtyInput(input) ? gramsDisplayToKg(finalValue) : finalValue;
+                if (isOcwsuGramCartQtyInput(input)) {
+                    dbgMiniCartQty('grams line change', {finalDisplayGrams: finalValue, qtyKgForWoo: qtyKg});
+                }
+                if (qtyKg != null && isFinite(qtyKg)) {
+                    updateCartItemQuantity(cartItemKey, qtyKg);
+                }
             }
         }, 500);
     }
@@ -531,6 +585,34 @@
     }
 
     /**
+     * OCWSU product stores min/step in grams when meta product_weight_units is grams.
+     */
+    function ocwsuPopupWeightIsGrams(ocwsu) {
+        const u = String((ocwsu && ocwsu.product_weight_units) || '').toLowerCase();
+        return u === 'grams' || u.indexOf('gram') !== -1;
+    }
+
+    /**
+     * Value to show in #popup-quantity-weight when editing from cart (same convention as mini cart input).
+     */
+    function popupEditWeightDisplayValue(ocwsu, cartItemData) {
+        const wcKgRaw = parseFloat(cartItemData.quantity);
+        const wcKg = isFinite(wcKgRaw) ? wcKgRaw : 0;
+        const wLineRaw = parseFloat(cartItemData.ocwsu_quantity_in_weight_units);
+        const wLine = isFinite(wLineRaw) && wLineRaw > 0 ? wLineRaw : 0;
+        if (ocwsuPopupWeightIsGrams(ocwsu)) {
+            if (wLine > 0) {
+                return wLine;
+            }
+            return parseFloat((wcKg * 1000).toFixed(6));
+        }
+        if (wLine > 0) {
+            return wLine;
+        }
+        return wcKg;
+    }
+
+    /**
      * Pre-fill popup with cart item data
      */
     function prefillPopupWithCartData(cartItemData) {
@@ -547,10 +629,15 @@
         const weightInput = state.popupElement.querySelector('#popup-quantity-weight');
         const simpleInput = state.popupElement.querySelector('#popup-quantity');
         const hasToggle = ocwsu.weighable && ocwsu.sold_by_units && ocwsu.sold_by_weight;
+        const weightDisplayEdit = popupEditWeightDisplayValue(ocwsu, cartItemData);
 
         if (ocwsu.weighable && (ocwsu.sold_by_units || ocwsu.sold_by_weight)) {
+            let wuForDataset = weightLineQty;
+            if (ocwsuPopupWeightIsGrams(ocwsu) && (!wuForDataset || wuForDataset <= 0) && wcQty > 0) {
+                wuForDataset = parseFloat((wcQty * 1000).toFixed(6));
+            }
             state.popupElement.dataset.ocwsuQuantityInUnits = String(unitsInCart || 0);
-            state.popupElement.dataset.ocwsuQuantityInWeightUnits = String(weightLineQty || 0);
+            state.popupElement.dataset.ocwsuQuantityInWeightUnits = String(wuForDataset || 0);
         }
 
         if (hasToggle) {
@@ -560,14 +647,13 @@
                     unitsInput.value = String(unitsInCart);
                     unitsInput.dispatchEvent(new Event('change', {bubbles: true}));
                 }
-                if (weightInput && wcQty > 0) {
-                    weightInput.value = String(wcQty);
+                if (weightInput && weightDisplayEdit > 0) {
+                    weightInput.value = String(weightDisplayEdit);
                 }
             } else {
                 window.EDProductPopupQuantity?.setQuantityMode('weight');
-                const w = weightLineQty > 0 ? weightLineQty : wcQty;
-                if (weightInput && w > 0) {
-                    weightInput.value = String(w);
+                if (weightInput && weightDisplayEdit > 0) {
+                    weightInput.value = String(weightDisplayEdit);
                     weightInput.dispatchEvent(new Event('change', {bubbles: true}));
                 }
             }
@@ -576,8 +662,8 @@
                 unitsInput.value = String(unitsInCart);
             }
             unitsInput.dispatchEvent(new Event('change', {bubbles: true}));
-        } else if (weightInput && !unitsInput && wcQty > 0) {
-            weightInput.value = String(wcQty);
+        } else if (weightInput && !unitsInput && weightDisplayEdit > 0) {
+            weightInput.value = String(weightDisplayEdit);
             weightInput.dispatchEvent(new Event('change', {bubbles: true}));
         } else if (simpleInput) {
             const v = wcQty > 0 ? wcQty : 1;
@@ -601,7 +687,7 @@
                 });
             }
         }
- 
+
         // Set product note
         const noteInput = state.popupElement.querySelector('#popup-product-note');
         if (noteInput && cartItemData.product_note) {

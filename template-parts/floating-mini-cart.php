@@ -101,8 +101,10 @@ if (
 					$weighable = (get_post_meta($product_id, '_ocwsu_weighable', true) === 'yes');
 					$sold_by_units = (get_post_meta($product_id, '_ocwsu_sold_by_units', true) === 'yes');
 					$sold_by_weight = (get_post_meta($product_id, '_ocwsu_sold_by_weight', true) === 'yes');
+					$product_weight_units = get_post_meta($product_id, '_ocwsu_product_weight_units', true);
 					$quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
 					$ocwsu_units_qty_ui = ($weighable && $sold_by_units && $quantity_in_units > 0);
+					$ocwsu_gram_weight_qty_ui = ($weighable && $sold_by_weight && !$ocwsu_units_qty_ui && function_exists('deliz_short_ocwsu_product_weight_is_grams') && deliz_short_ocwsu_product_weight_is_grams($product_weight_units));
 					$ocwsu_kg_per_unit = 0.0;
 
 					if ($ocwsu_units_qty_ui) {
@@ -116,6 +118,13 @@ if (
 						$qty_input_val = $qty_display;
 						$qty_input_min = '1';
 						$qty_input_step = '1';
+					} elseif ($ocwsu_gram_weight_qty_ui) {
+						// Cart line quantity is always kg; min/step meta are in grams for these products.
+						$qty_input_val = deliz_short_format_ocwsu_cart_weight_display_value($qty_raw * 1000, true);
+						$qty_display = $qty_input_val;
+						$min_w_meta = get_post_meta($product_id, '_ocwsu_min_weight', true);
+						$qty_input_min = ($min_w_meta !== '' && is_numeric($min_w_meta) && floatval($min_w_meta) > 0)
+							? wc_format_decimal((float) $min_w_meta, true) : '1';
 					} elseif (!$weighable || $qty_is_whole) {
 						$qty_display = (string) (int) round($qty_raw);
 						$qty_input_val = $qty_display;
@@ -130,7 +139,9 @@ if (
 						: 'any';
 
 					if (!$ocwsu_units_qty_ui) {
-						$qty_input_min = $weighable ? '0.0001' : '1';
+						if (!$ocwsu_gram_weight_qty_ui) {
+							$qty_input_min = $weighable ? '0.0001' : '1';
+						}
 						$qty_input_step = $weighable ? $weight_step : '1';
 					}
 
@@ -242,6 +253,9 @@ if (
 											   data-ed-ocwsu-units-display="1"
 											   data-ed-ocwsu-kg-per-unit="<?php echo esc_attr(wc_format_decimal($ocwsu_kg_per_unit, 6)); ?>"
 											   aria-label="<?php esc_attr_e('מספר יחידות', 'deliz-short'); ?>"
+											   <?php elseif ($ocwsu_gram_weight_qty_ui) : ?>
+											   data-ed-ocwsu-cart-qty-unit="grams"
+											   aria-label="<?php esc_attr_e('משקל בגרמים', 'deliz-short'); ?>"
 											   <?php else : ?>
 											   aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>"
 											   <?php endif; ?>
