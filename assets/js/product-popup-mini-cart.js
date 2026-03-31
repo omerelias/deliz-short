@@ -43,6 +43,20 @@
         }
     }
 
+    /** תמיד console — מעקב כמות: ערך לפני → פעולה → ערך אחרי */
+    function logFloatCartQty(where, valueBefore, action, valueAfter, extra) {
+        const row = {
+            where: where,
+            valueBefore: valueBefore,
+            action: action,
+            valueAfter: valueAfter
+        };
+        if (extra && typeof extra === 'object') {
+            Object.assign(row, extra);
+        }
+        console.log('[ed-float-cart qty]', row);
+    }
+
     /** @returns {number|null} kg */
     function gramsDisplayToKg(gramsDisplay) {
         const v = parseFloat(String(gramsDisplay).replace(',', '.'));
@@ -88,7 +102,9 @@
         if (!isOcwsuFloatCartWeightInput(input)) {
             return;
         }
-        const u = getOcwsuFloatCartWeightUnit(input);
+        const valueBeforeToggle = input.value;
+        const unitBefore = getOcwsuFloatCartWeightUnit(input);
+        const u = unitBefore;
         const v = parseFloat(String(input.value).replace(',', '.'));
         if (!isFinite(v)) {
             return;
@@ -98,12 +114,26 @@
             if (g >= 1000) {
                 applyOcwsuFloatCartKgMode(input);
                 input.value = formatOcwsuKgDisplay(v * 0.001);
+                logFloatCartQty(
+                    'ocwsu-grams→kg',
+                    valueBeforeToggle,
+                    'עיגול מעל 1000ג → תצוגת ק"ג',
+                    input.value,
+                    {unitBefore: unitBefore, unitAfter: getOcwsuFloatCartWeightUnit(input), gramsRounded: g}
+                );
             }
         } else if (u === 'kg') {
             const g = Math.round(v * 1000);
             if (g < 1000) {
                 applyOcwsuFloatCartGramMode(input);
                 input.value = String(Math.max(0, g));
+                logFloatCartQty(
+                    'ocwsu-kg→grams',
+                    valueBeforeToggle,
+                    'מתחת ל־1000ג → תצוגת גרם',
+                    input.value,
+                    {unitBefore: unitBefore, unitAfter: getOcwsuFloatCartWeightUnit(input), gramsRounded: g}
+                );
             }
         }
     }
@@ -147,8 +177,12 @@
 
     function setQtyInputDisplayValue(input, quantityKg) {
         if (!input) return;
+        const beforeSet = input.value;
         if (isFinite(quantityKg) && quantityKg <= 0) {
             input.value = '0';
+            if (beforeSet !== input.value) {
+                logFloatCartQty('setQtyDisplay', beforeSet, 'כמות מהשרת ≤0 → 0', input.value, {quantityKg: quantityKg});
+            }
             return;
         }
         if (isOcwsuUnitsQtyInput(input)) {
@@ -156,6 +190,13 @@
             if (isFinite(kgPer) && kgPer > 0 && isFinite(quantityKg)) {
                 const units = quantityKg / kgPer;
                 input.value = Math.max(1, Math.round(units));
+                if (beforeSet !== input.value) {
+                    logFloatCartQty('setQtyDisplay', beforeSet, 'יחידות מק״ג שורה (עיגול+מינ׳ 1)', input.value, {
+                        quantityKg: quantityKg,
+                        kgPer: kgPer,
+                        unitsRaw: units
+                    });
+                }
                 return;
             }
         }
@@ -169,9 +210,18 @@
                 input.value = String(gRounded);
             }
             syncOcwsuWeightQtyUnitLabel(input);
+            if (beforeSet !== input.value) {
+                logFloatCartQty('setQtyDisplay', beforeSet, 'משקל OCWSU אחרי AJAX (ג׳ מעוגל)', input.value, {
+                    quantityKg: quantityKg,
+                    gRounded: gRounded
+                });
+            }
             return;
         }
         input.value = quantityKg;
+        if (beforeSet !== String(input.value)) {
+            logFloatCartQty('setQtyDisplay', beforeSet, 'ערך ישיר מק״ג', input.value, {quantityKg: quantityKg});
+        }
     }
 
     /**
@@ -195,10 +245,15 @@
      */
     function snapWeightQtyToStepCeil(value, step, minNum) {
         if (!isFinite(value)) {
+            logFloatCartQty('snap-step-ceil', value, '!isFinite → minNum', minNum, {step: step});
             return minNum;
         }
         if (!isFinite(step) || step <= 0 || !isFinite(minNum)) {
-            return Math.max(minNum, value);
+            const fallback = Math.max(minNum, value);
+            if (Math.abs(fallback - value) > 1e-9) {
+                logFloatCartQty('snap-step-ceil', value, 'step/min לא תקין → max(min,v)', fallback, {step: step, minNum: minNum});
+            }
+            return fallback;
         }
         const eps = 1e-9;
         const ratio = value / step;
@@ -206,7 +261,11 @@
         if (Math.abs(ratio - nearest) < 1e-6) {
             let snapped = nearest * step;
             snapped = parseFloat(snapped.toFixed(10));
-            return Math.max(minNum, snapped);
+            const out = Math.max(minNum, snapped);
+            if (Math.abs(out - value) > 1e-9) {
+                logFloatCartQty('snap-step-ceil', value, 'כבר על grid → max(min, snapped)', out, {step: step, minNum: minNum});
+            }
+            return out;
         }
         let snapped = Math.ceil(ratio - eps) * step;
         snapped = parseFloat(snapped.toFixed(10));
@@ -214,7 +273,11 @@
             snapped = Math.ceil((minNum - eps) / step) * step;
             snapped = parseFloat(snapped.toFixed(10));
         }
-        return Math.max(minNum, snapped);
+        const out = Math.max(minNum, snapped);
+        if (Math.abs(out - value) > 1e-9) {
+            logFloatCartQty('snap-step-ceil', value, 'ceil לפי step (הקלדה)', out, {step: step, minNum: minNum});
+        }
+        return out;
     }
 
     /**
@@ -235,6 +298,7 @@
 
         const action = btn.classList.contains('ed-float-cart__qty-btn--increase') ? 'increase' : 'decrease';
         const step = getQtyStep(input);
+        const valueBeforeClick = input.value;
         const currentValue = parseFloat(String(input.value).replace(',', '.'));
         const min = parseFloat(input.min);
         const minNum = isFinite(min) ? min : 1;
@@ -255,6 +319,12 @@
             }
             const eps = 1e-9;
             if (candidate < minNum - eps || candidate <= 0) {
+                logFloatCartQty('qty-btn', valueBeforeClick, 'לחיצה − → הסרת שורה (0)', '(שולח AJAX)', {
+                    cartItemKey: cartItemKey,
+                    base: base,
+                    candidate: candidate,
+                    minNum: minNum
+                });
                 updateCartItemQuantity(cartItemKey, 0);
                 return;
             }
@@ -272,6 +342,15 @@
                     syncOcwsuWeightQtyUnitLabel(input);
                 }
             }
+            logFloatCartQty('qty-btn', valueBeforeClick, action === 'increase' ? 'לחיצה +' : 'לחיצה −', input.value, {
+                cartItemKey: cartItemKey,
+                step: step,
+                baseParsed: base,
+                newValueComputed: newValue,
+                minNum: minNum,
+                ocwsuUnits: isOcwsuUnitsQtyInput(input),
+                ocwsuFloatWeight: isOcwsuFloatCartWeightInput(input)
+            });
             if (isOcwsuUnitsQtyInput(input)) {
                 const kg = kgFromOcwsuUnitsInput(input, newValue);
                 if (kg != null) {
@@ -294,6 +373,12 @@
                     updateCartItemQuantity(cartItemKey, qtyKg);
                 }
             }
+        } else {
+            logFloatCartQty('qty-btn', valueBeforeClick, action + ' (ללא שינוי תצוגה)', input.value, {
+                cartItemKey: cartItemKey,
+                base: base,
+                newValue: newValue
+            });
         }
     }
 
@@ -307,6 +392,7 @@
         const cartItemKey = input.dataset.cartItemKey;
         if (!cartItemKey) return;
 
+        const valueBeforeInput = input.value;
         const parsed = parseFloat(String(input.value).replace(',', '.'));
         const min = parseFloat(input.min);
         const minNum = isFinite(min) ? min : 1;
@@ -314,11 +400,16 @@
         // Explicit 0 (or negative) removes the line — no debounce (avoid showing "0" in the field)
         if (isFinite(parsed) && parsed <= 0) {
             clearTimeout(input._updateTimeout);
+            logFloatCartQty('qty-input', valueBeforeInput, 'הקלדה/שינוי ≤0 → הסרה', input.value, {
+                cartItemKey: cartItemKey,
+                parsed: parsed
+            });
             updateCartItemQuantity(cartItemKey, 0);
             return;
         }
 
         let newValue = isFinite(parsed) ? parsed : minNum;
+        const beforeSnap = newValue;
         if (isOcwsuUnitsQtyInput(input)) {
             newValue = Math.max(minNum, Math.round(newValue));
         } else {
@@ -330,18 +421,38 @@
         if (displayVal !== String(input.value).replace(',', '.').trim()) {
             input.value = displayVal;
         }
+        const valueAfterSnap = input.value;
+        if (valueAfterSnap !== valueBeforeInput || beforeSnap !== finalValue) {
+            logFloatCartQty('qty-input', valueBeforeInput, 'עיגול/מינימום/שדה', valueAfterSnap, {
+                cartItemKey: cartItemKey,
+                parsed: parsed,
+                beforeSnap: beforeSnap,
+                finalValue: finalValue,
+                minNum: minNum
+            });
+        }
         if (isOcwsuFloatCartWeightInput(input)) {
+            const beforeMode = input.value;
             maybeToggleOcwsuFloatCartWeightMode(input);
             syncOcwsuWeightQtyUnitLabel(input);
+            if (input.value !== beforeMode) {
+                logFloatCartQty('qty-input', beforeMode, 'אחרי snap → toggle ג׳/ק״ג', input.value, {cartItemKey: cartItemKey});
+            }
         }
 
         // Debounce the update
         clearTimeout(input._updateTimeout);
         input._updateTimeout = setTimeout(() => {
+            const sendDisplay = input.value;
             if (isOcwsuUnitsQtyInput(input)) {
                 const kg = kgFromOcwsuUnitsInput(input, finalValue);
                 if (kg != null) {
                     dbgMiniCartQty('units line change', {finalValue, kg});
+                    logFloatCartQty('qty-input-debounced', sendDisplay, 'שליחת AJAX (יחידות)', sendDisplay, {
+                        cartItemKey: cartItemKey,
+                        finalValue: finalValue,
+                        kgForWoo: kg
+                    });
                     updateCartItemQuantity(cartItemKey, kg);
                 }
             } else {
@@ -351,6 +462,11 @@
                     dbgMiniCartQty('weight line change', {finalDisplay: pv, qtyKgForWoo: qtyKg});
                 }
                 if (qtyKg != null && isFinite(qtyKg)) {
+                    logFloatCartQty('qty-input-debounced', sendDisplay, 'שליחת AJAX (משקל/כמות)', sendDisplay, {
+                        cartItemKey: cartItemKey,
+                        pv: pv,
+                        qtyKgForWoo: qtyKg
+                    });
                     updateCartItemQuantity(cartItemKey, qtyKg);
                 }
             }
@@ -439,6 +555,13 @@
             } else if (qtyInput) {
                 setQtyInputDisplayValue(qtyInput, quantity);
             }
+            logFloatCartQty(
+                'ajax-update-start',
+                oldValue,
+                isRemoval ? 'בקשת הסרה (אנימציה)' : 'תצוגה אופטימיסטית + בקשת רשת',
+                qtyInput ? qtyInput.value : oldValue,
+                {cartItemKey: cartItemKey, quantityPayload: quantity}
+            );
 
             // Use our AJAX endpoint for updating cart (better session handling)
             const ajaxUrl = window.ED_POPUP_CONFIG?.updateCartAjaxUrl || '/wp-admin/admin-ajax.php';
@@ -461,6 +584,9 @@
                 if (qtyInput) {
                     qtyInput.value = oldValue;
                 }
+                logFloatCartQty('ajax-update', oldValue, 'HTTP שגיאה → שחזור שדה', qtyInput ? qtyInput.value : '', {
+                    cartItemKey: cartItemKey
+                });
                 console.error('Failed to update cart item');
                 return;
             }
@@ -473,6 +599,10 @@
                 if (qtyInput) {
                     qtyInput.value = oldValue;
                 }
+                logFloatCartQty('ajax-update', oldValue, 'תשובת שרת שגיאה → שחזור', qtyInput ? qtyInput.value : '', {
+                    cartItemKey: cartItemKey,
+                    err: result.data?.errorMessage || 'Unknown error'
+                });
                 console.error('Error updating cart:', result.data?.errorMessage || 'Unknown error');
                 return;
             }
@@ -575,6 +705,17 @@
                 requestAnimationFrame(restoreFloatCartListScroll);
                 setTimeout(restoreFloatCartListScroll, 0);
                 setTimeout(restoreFloatCartListScroll, 80);
+
+                if (!isRemoval) {
+                    const hitAfter = document.querySelector(`[data-cart-item-key="${cartItemKey}"]`);
+                    const rowAfter = hitAfter && typeof hitAfter.closest === 'function'
+                        ? hitAfter.closest('.ed-float-cart__item')
+                        : null;
+                    const inpAfter = rowAfter ? rowAfter.querySelector('.ed-float-cart__qty-input') : null;
+                    logFloatCartQty('ajax-after-fragments', oldValue, 'מימוש fragments — ערך בשדה', inpAfter ? inpAfter.value : '(אין שדה)', {
+                        cartItemKey: cartItemKey
+                    });
+                }
             }
 
         } catch (error) {
@@ -583,6 +724,10 @@
             if (qtyInput) {
                 qtyInput.value = oldValue;
             }
+            logFloatCartQty('ajax-update', oldValue, 'חריגה → שחזור', qtyInput ? qtyInput.value : '', {
+                cartItemKey: cartItemKey,
+                error: String(error && error.message ? error.message : error)
+            });
         }
     }
 
@@ -603,6 +748,10 @@
      */
     async function updateCartItemQuantity(cartItemKey, quantity) {
         const isRemoval = isFinite(Number(quantity)) && Number(quantity) <= 0;
+        logFloatCartQty('updateCartItemQuantity', '(תור)', isRemoval ? 'הסרה' : 'עדכון', String(quantity), {
+            cartItemKey: cartItemKey,
+            quantity: quantity
+        });
 
         if (isRemoval) {
             pendingQtyByCartKey.delete(cartItemKey);
