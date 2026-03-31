@@ -9,6 +9,10 @@
     const state = window.EDProductPopupState; // Access shared state
     const core = window.EDProductPopupCore; // Access core functions like openPopup
 
+    /** Serialize qty updates per line; rapid +/- resolves to last target (avoids stale AJAX overwrites). */
+    const pendingQtyByCartKey = new Map();
+    const qtyWorkerByCartKey = new Map();
+
     function isOcwsuUnitsQtyInput(input) {
         return input && input.getAttribute('data-ed-ocwsu-units-display') === '1';
     }
@@ -99,6 +103,12 @@
         }
 
         if (newValue !== base) {
+            // Optimistic display so rapid +/- does not re-read a stale input value
+            if (isOcwsuUnitsQtyInput(input)) {
+                input.value = String(Math.max(1, Math.round(newValue)));
+            } else {
+                input.value = String(newValue);
+            }
             if (isOcwsuUnitsQtyInput(input)) {
                 const kg = kgFromOcwsuUnitsInput(input, newValue);
                 if (kg != null) {
@@ -121,7 +131,7 @@
         if (!cartItemKey) return;
 
         const parsed = parseFloat(String(input.value).replace(',', '.'));
-        const min = parseFloat(input.min); 
+        const min = parseFloat(input.min);  
         const minNum = isFinite(min) ? min : 1;
  
         // Explicit 0 (or negative) removes the line — no debounce (avoid showing "0" in the field)
@@ -200,9 +210,9 @@
     }
 
     /**
-     * Update cart item quantity
+     * Single AJAX update for one cart line (internal).
      */
-    async function updateCartItemQuantity(cartItemKey, quantity) {
+    async function performCartQuantityUpdate(cartItemKey, quantity) {
         const isRemoval = isFinite(Number(quantity)) && Number(quantity) <= 0;
         let removeRowState = null;
         let removalAnimPromise = null;
@@ -236,7 +246,6 @@
                 removalAnimPromise = startFloatCartRowRemovalAnimation(row);
             } else if (qtyInput) {
                 setQtyInputDisplayValue(qtyInput, quantity);
-                qtyInput.disabled = true;
             }
 
             // Use our AJAX endpoint for updating cart (better session handling)
@@ -259,7 +268,6 @@
                 removeRowState = null;
                 if (qtyInput) {
                     qtyInput.value = oldValue;
-                    qtyInput.disabled = false;
                 }
                 console.error('Failed to update cart item');
                 return;
@@ -272,7 +280,6 @@
                 removeRowState = null;
                 if (qtyInput) {
                     qtyInput.value = oldValue;
-                    qtyInput.disabled = false;
                 }
                 console.error('Error updating cart:', result.data?.errorMessage || 'Unknown error');
                 return;
@@ -280,11 +287,6 @@
 
             if (removalAnimPromise) {
                 await removalAnimPromise;
-            }
-
-            // Re-enable input (removal replaces markup via fragments)
-            if (qtyInput && !isRemoval) {
-                qtyInput.disabled = false;
             }
 
             // Update cart fragments using WooCommerce method
@@ -363,8 +365,42 @@
             revertRemovingRow(removeRowState);
             if (qtyInput) {
                 qtyInput.value = oldValue;
-                qtyInput.disabled = false;
             }
+        }
+    }
+
+    async function drainPendingQtyWorker(cartItemKey) {
+        try {
+            while (pendingQtyByCartKey.has(cartItemKey)) {
+                const q = pendingQtyByCartKey.get(cartItemKey);
+                pendingQtyByCartKey.delete(cartItemKey);
+                await performCartQuantityUpdate(cartItemKey, q);
+            }
+        } finally {
+            qtyWorkerByCartKey.delete(cartItemKey);
+        }
+    }
+
+    /**
+     * Update cart item quantity (queues rapid clicks per line so last target wins).
+     */
+    async function updateCartItemQuantity(cartItemKey, quantity) {
+        const isRemoval = isFinite(Number(quantity)) && Number(quantity) <= 0;
+
+        if (isRemoval) {
+            pendingQtyByCartKey.delete(cartItemKey);
+            const inFlight = qtyWorkerByCartKey.get(cartItemKey);
+            if (inFlight) {
+                await inFlight.catch(() => {});
+            }
+            await performCartQuantityUpdate(cartItemKey, quantity);
+            return;
+        }
+
+        pendingQtyByCartKey.set(cartItemKey, quantity);
+        if (!qtyWorkerByCartKey.has(cartItemKey)) {
+            const run = drainPendingQtyWorker(cartItemKey);
+            qtyWorkerByCartKey.set(cartItemKey, run);
         }
     }
 
@@ -469,11 +505,53 @@
     function prefillPopupWithCartData(cartItemData) {
         if (!state.popupElement || !cartItemData) return;
 
-        // Set quantity
-        const qtyInput = state.popupElement.querySelector('#popup-quantity-units, #popup-quantity-weight, #popup-quantity');
-        if (qtyInput && cartItemData.quantity) {
-            qtyInput.value = cartItemData.quantity;
-            qtyInput.dispatchEvent(new Event('change', {bubbles: true}));
+        // Quantity: WC line qty is kg for weighable; units UI must use ocwsu_quantity_in_units (e.g. 23 יח').
+        const ocwsu = state.popupData.ocwsu || {};
+        const unitsInCart = parseFloat(cartItemData.ocwsu_quantity_in_units) || 0;
+        const weightLineQty = parseFloat(cartItemData.ocwsu_quantity_in_weight_units) || 0;
+        const wcQtyRaw = parseFloat(cartItemData.quantity);
+        const wcQty = isFinite(wcQtyRaw) ? wcQtyRaw : 0;
+
+        const unitsInput = state.popupElement.querySelector('#popup-quantity-units');
+        const weightInput = state.popupElement.querySelector('#popup-quantity-weight');
+        const simpleInput = state.popupElement.querySelector('#popup-quantity');
+        const hasToggle = ocwsu.weighable && ocwsu.sold_by_units && ocwsu.sold_by_weight;
+
+        if (ocwsu.weighable && (ocwsu.sold_by_units || ocwsu.sold_by_weight)) {
+            state.popupElement.dataset.ocwsuQuantityInUnits = String(unitsInCart || 0);
+            state.popupElement.dataset.ocwsuQuantityInWeightUnits = String(weightLineQty || 0);
+        }
+
+        if (hasToggle) {
+            if (unitsInCart > 0) {
+                window.EDProductPopupQuantity?.setQuantityMode('units');
+                if (unitsInput) {
+                    unitsInput.value = String(unitsInCart);
+                    unitsInput.dispatchEvent(new Event('change', {bubbles: true}));
+                }
+                if (weightInput && wcQty > 0) {
+                    weightInput.value = String(wcQty);
+                }
+            } else {
+                window.EDProductPopupQuantity?.setQuantityMode('weight');
+                const w = weightLineQty > 0 ? weightLineQty : wcQty;
+                if (weightInput && w > 0) {
+                    weightInput.value = String(w);
+                    weightInput.dispatchEvent(new Event('change', {bubbles: true}));
+                }
+            }
+        } else if (unitsInput && !weightInput) {
+            if (unitsInCart > 0) {
+                unitsInput.value = String(unitsInCart);
+            }
+            unitsInput.dispatchEvent(new Event('change', {bubbles: true}));
+        } else if (weightInput && !unitsInput && wcQty > 0) {
+            weightInput.value = String(wcQty);
+            weightInput.dispatchEvent(new Event('change', {bubbles: true}));
+        } else if (simpleInput) {
+            const v = wcQty > 0 ? wcQty : 1;
+            simpleInput.value = String(v);
+            simpleInput.dispatchEvent(new Event('change', {bubbles: true}));
         }
 
         // Set variation if exists
@@ -497,34 +575,6 @@
         const noteInput = state.popupElement.querySelector('#popup-product-note');
         if (noteInput && cartItemData.product_note) {
             noteInput.value = cartItemData.product_note;
-        }
-
-        // Set ocwsu data if exists
-        if (cartItemData.ocwsu_quantity_in_units > 0 || cartItemData.ocwsu_quantity_in_weight_units > 0) {
-            // Store ocwsu data in popup element for later use
-            state.popupElement.dataset.ocwsuQuantityInUnits = cartItemData.ocwsu_quantity_in_units || 0;
-            state.popupElement.dataset.ocwsuQuantityInWeightUnits = cartItemData.ocwsu_quantity_in_weight_units || 0;
-
-            // If product has ocwsu toggle, set the correct mode
-            const ocwsu = state.popupData.ocwsu || {};
-            if (ocwsu.weighable && ocwsu.sold_by_units && ocwsu.sold_by_weight) {
-                // Determine mode based on which quantity is set
-                if (cartItemData.ocwsu_quantity_in_units > 0) {
-                    state.popupElement.dataset.quantityMode = 'units';
-                    const unitsInput = state.popupElement.querySelector('#popup-quantity-units');
-                    if (unitsInput) {
-                        unitsInput.value = cartItemData.ocwsu_quantity_in_units;
-                        unitsInput.dispatchEvent(new Event('change', {bubbles: true}));
-                    }
-                } else if (cartItemData.ocwsu_quantity_in_weight_units > 0) {
-                    state.popupElement.dataset.quantityMode = 'weight';
-                    const weightInput = state.popupElement.querySelector('#popup-quantity-weight');
-                    if (weightInput) {
-                        weightInput.value = cartItemData.ocwsu_quantity_in_weight_units;
-                        weightInput.dispatchEvent(new Event('change', {bubbles: true}));
-                    }
-                }
-            }
         }
 
         // Sync unit label from toggle (יח' / ק"ג)

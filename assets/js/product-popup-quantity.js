@@ -93,6 +93,40 @@
             syncQuantityLabelsFromToggle();
         }
 
+        bindQtyButtonListeners();
+    }
+
+    /**
+     * Programmatic units/weight toggle (e.g. edit-from-cart prefill).
+     */
+    function setQuantityMode(mode) {
+        if (!state.popupElement) return;
+        const toggleButtons = state.popupElement.querySelectorAll('.ed-product-popup__toggle-btn');
+        if (!toggleButtons.length) return;
+
+        toggleButtons.forEach(btn => {
+            btn.classList.toggle('is-active', btn.dataset.mode === mode);
+        });
+
+        const unitsContainer = state.popupElement.querySelector('#popup-quantity-units-container');
+        const weightContainer = state.popupElement.querySelector('#popup-quantity-weight-container');
+
+        if (mode === 'units') {
+            if (unitsContainer) unitsContainer.style.display = '';
+            if (weightContainer) weightContainer.style.display = 'none';
+            state.popupElement.dataset.quantityMode = 'units';
+        } else if (mode === 'weight') {
+            if (unitsContainer) unitsContainer.style.display = 'none';
+            if (weightContainer) weightContainer.style.display = '';
+            state.popupElement.dataset.quantityMode = 'weight';
+        }
+
+        syncQuantityLabelsFromToggle();
+    }
+
+    function bindQtyButtonListeners() {
+        if (!state.popupElement) return;
+
         // Quantity buttons
         state.popupElement.querySelectorAll('.ed-product-popup__qty-btn').forEach(btn => {
             btn.addEventListener('click', function () {
@@ -154,7 +188,8 @@
     // Expose functions
     window.EDProductPopupQuantity = {
         initQuantityInputs,
-        syncQuantityLabelsFromToggle
+        syncQuantityLabelsFromToggle,
+        setQuantityMode
     };
 
 })();

@@ -49,12 +49,12 @@
             <span>ק"ג</span>
           </button>
         </div>
-      `;
+      `; 
         }
 
         // Generate quantity input based on ocwsu settings
         if (ocwsu.weighable && ocwsu.sold_by_units && ocwsu.sold_by_weight) {
-            // Product can be sold both ways - show toggle and default to units 
+            // Product can be sold both ways - show toggle and default to units
             const minWeight = ocwsu.min_weight || 0.5;
             const hasNumericStep = ocwsu.weight_step && ocwsu.weight_step > 0;
             const stepAttr = hasNumericStep ? ocwsu.weight_step : 'any';
@@ -105,7 +105,7 @@
                  min="1" 
                  step="1"
                  class="ed-product-popup__qty-input">
-          <span class="ed-product-popup__qty-label">יחידות</span>
+          <span class="ed-product-popup__qty-label">יח'</span>
           </div>
           <button type="button" class="ed-product-popup__qty-btn" data-action="increase">+</button>
         </div>
