@@ -156,3 +156,19 @@ add_action('acf/save_post', function ($post_id) {
   file_put_contents($file, $css);
 
 }, 20);
+
+function ed_add_items_images_size_body_class($classes) {
+    if (!function_exists('get_field')) {
+        return $classes;
+    }
+
+    $items_images_size = get_field('items_images_size', 'option');
+
+    if ($items_images_size === 'square') {
+        $classes[] = 'square_images';
+    } elseif ($items_images_size === 'rectangular') {
+        $classes[] = 'rectangular_images';
+    }
+
+    return $classes;
+}
