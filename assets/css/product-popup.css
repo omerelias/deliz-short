@@ -754,26 +754,11 @@ body.popup-open {
 }
 
 @media only screen and (max-width: 650px) {
-  .ed-product-popup__footer {
-    display: grid;
-    grid-template-columns: 13% 40% 47%;
-    gap: 4px;
-    align-items: center;
-  }
 
   .ed-product-popup__quantity-toggle {
     grid-column: 1;
     gap: 2px;
     flex-direction: column;
-  }
-
-  .ed-product-popup__quantity {
-    grid-column: 2;
-    width: auto;
-  }
-
-  .ed-product-popup__add-btn {
-    grid-column: 3;
   }
 
   .ed-product-popup__toggle-btn {
