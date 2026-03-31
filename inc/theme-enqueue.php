@@ -120,7 +120,7 @@ add_action('wp_enqueue_scripts', function() {
         'shipping_intro_html' => '',
       );
 
-    wp_localize_script('checkout-sms-flow', 'oc_sms_auth', array(
+    $oc_sms_auth = array(
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('oc_sms_auth'),
         'is_logged_in' => is_user_logged_in() ? 1 : 0,
@@ -134,8 +134,12 @@ add_action('wp_enqueue_scripts', function() {
             'code_resent' => __('קוד נשלח מחדש', 'deliz-short'),
             'error_verifying' => __('שגיאה באימות הקוד', 'deliz-short'),
             'error_resending' => __('שגיאה בשליחה חוזרת של הקוד', 'deliz-short'),
-        )
-    ));
+        ),
+    );
+    if ( ! empty( $delivery_extra['delivery_extra_debug'] ) && is_array( $delivery_extra['delivery_extra_debug'] ) ) {
+        $oc_sms_auth['delivery_extra_debug'] = $delivery_extra['delivery_extra_debug'];
+    }
+    wp_localize_script('checkout-sms-flow', 'oc_sms_auth', $oc_sms_auth);
     
     // Checkout SMS popup CSS
     wp_enqueue_style(

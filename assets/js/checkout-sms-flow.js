@@ -7,9 +7,12 @@ jQuery(function($) {
             console.log('[Checkout SMS] oc_sms_auth available:', typeof oc_sms_auth !== 'undefined');
             if (typeof oc_sms_auth !== 'undefined') {
                 console.log('[Checkout SMS] oc_sms_auth:', oc_sms_auth);
+                if (oc_sms_auth.delivery_extra_debug) {
+                    console.info('[Checkout SMS] delivery_extra_debug (PHP log: wp-content/deliz-short-wc-debug.log):', oc_sms_auth.delivery_extra_debug);
+                }
             }
             this.bindEvents();
-            console.log('[Checkout SMS] Events bound');
+            console.log('[Checkout SMS] Events bound'); 
         },
 
         bindEvents: function() {
@@ -76,12 +79,57 @@ jQuery(function($) {
                 console.error('[Checkout SMS] Popup element not found! Make sure checkout-sms-popup.php is included in footer.');
                 return;
             }
-            
+
+            // Session/shipping may have changed after initial page load (e.g. OCWS popup); refresh flags in background.
+            CheckoutSMSFlow.refreshCheckoutSmsContext();
+
             $popup.fadeIn(300);
             $('body').addClass('checkout-sms-popup-open');
             $popup.find('.checkout-sms-popup__step--phone').addClass('active');
             $popup.find('.phone-input').focus();
             console.log('[Checkout SMS] Popup shown');
+        },
+
+        /**
+         * Re-fetch show_delivery_extra / shipping_intro_html from server (nonce: oc_sms_auth).
+         */
+        refreshCheckoutSmsContext: function(done) {
+            const cb = typeof done === 'function' ? done : function() {};
+            if (typeof oc_sms_auth === 'undefined' || !oc_sms_auth.ajaxurl) {
+                cb();
+                return;
+            }
+            $.ajax({
+                url: oc_sms_auth.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'deliz_short_sms_checkout_context',
+                    nonce: oc_sms_auth.nonce
+                },
+                success: function(response) {
+                    if (response.success && response.data) {
+                        oc_sms_auth.show_delivery_extra = !!response.data.show_delivery_extra;
+                        if (response.data.shipping_intro_html !== undefined) {
+                            oc_sms_auth.shipping_intro_html = response.data.shipping_intro_html;
+                        }
+                    }
+                    cb();
+                },
+                error: function() {
+                    cb();
+                }
+            });
+        },
+
+        /** After SMS login or new registration: shipping step when home delivery, else upsells/checkout. */
+        afterSuccessfulAuth: function() {
+            CheckoutSMSFlow.refreshCheckoutSmsContext(function() {
+                if (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.show_delivery_extra) {
+                    CheckoutSMSFlow.showStep('shipping');
+                } else {
+                    CheckoutSMSFlow.redirectAfterAuth();
+                }
+            });
         },
 
         closePopup: function() {
@@ -213,8 +261,7 @@ jQuery(function($) {
                 success: function(response) {
                     $button.prop('disabled', false).removeClass('disabled');
                     if (response.success) {
-                        // User logged in successfully - proceed to checkout / upsells
-                        CheckoutSMSFlow.redirectAfterAuth();
+                        CheckoutSMSFlow.afterSuccessfulAuth();
                     } else {
                         // Check if we need to show registration
                         if (response.data && (response.data.show_register || response.data.message && response.data.message.includes('not found'))) {
@@ -288,11 +335,7 @@ jQuery(function($) {
                 success: function(response) {
                     if (response.success) {
                         $button.prop('disabled', false).removeClass('disabled');
-                        if (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.show_delivery_extra) {
-                            CheckoutSMSFlow.showStep('shipping');
-                        } else {
-                            CheckoutSMSFlow.redirectAfterAuth();
-                        }
+                        CheckoutSMSFlow.afterSuccessfulAuth();
                     } else {
                         $button.prop('disabled', false).removeClass('disabled');
                         CheckoutSMSFlow.showError('register', response.data.message || response.data || 'שגיאה ברישום');

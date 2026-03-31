@@ -1,20 +1,14 @@
 jQuery(function($) {
     'use strict';
-    console.log('[Checkout Blocks] Script loaded');
 
     const ORDER_COMMENTS_STORAGE_KEY = 'deliz_checkout_order_comments';
 
     // Initialize checkout blocks
     function initCheckoutBlocks() {  
-        console.log('[Checkout Blocks] initCheckoutBlocks called');
-        
+
         const $blocks = $('.checkout-block');
         const $headers = $('.checkout-block__header');
         const $editButtons = $('.checkout-block__edit');
-        
-        console.log('[Checkout Blocks] Found blocks:', $blocks.length);
-        console.log('[Checkout Blocks] Found headers:', $headers.length);
-        console.log('[Checkout Blocks] Found edit buttons:', $editButtons.length);
         
         // Log each block's state
         $blocks.each(function(index) {
@@ -22,7 +16,6 @@ jQuery(function($) {
             const blockType = $block.data('block') || $block.attr('class');
             const isOpen = $block.hasClass('is-open');
             const isClosed = $block.hasClass('is-closed');
-            console.log(`[Checkout Blocks] Block ${index + 1}: type=${blockType}, is-open=${isOpen}, is-closed=${isClosed}`);
         });
         
         // Remove existing handlers to prevent duplicates
@@ -93,20 +86,15 @@ jQuery(function($) {
             }
         });
         
-        console.log('[Checkout Blocks] Initialization complete');
     }
     
     function toggleBlock($block) {
         const isOpen = $block.hasClass('is-open');
         const blockType = $block.data('block') || 'unknown';
-        
-        console.log('[Checkout Blocks] toggleBlock called for:', blockType, 'isOpen:', isOpen);
-        
+
         if (isOpen) {
-            console.log('[Checkout Blocks] Closing block:', blockType);
             closeBlock($block);
         } else {
-            console.log('[Checkout Blocks] Opening block:', blockType);
             openBlock($block);
         }
     }
@@ -560,39 +548,30 @@ jQuery(function($) {
 
     // Set initial state for blocks
     function setInitialBlockStates() {
-        console.log('[Checkout Blocks] setInitialBlockStates called');
-
         $('.checkout-block').each(function(index) {
             const $block = $(this);
             const blockType = $block.data('block') || $block.attr('class');
 
             // Skip order block
             if ($block.hasClass('checkout-block--order')) {
-                console.log(`[Checkout Blocks] Block ${index + 1} (${blockType}): Skipping order block`);
                 return;
             }
 
             const hasIsOpen = $block.hasClass('is-open');
             const hasIsClosed = $block.hasClass('is-closed');
 
-            console.log(`[Checkout Blocks] Block ${index + 1} (${blockType}): hasIsOpen=${hasIsOpen}, hasIsClosed=${hasIsClosed}`);
-
             // If block doesn't have is-open or is-closed, set default state
             if (!hasIsOpen && !hasIsClosed) {
                 // Billing block starts open, others start closed
                 if ($block.hasClass('checkout-block--billing')) {
-                    console.log(`[Checkout Blocks] Block ${index + 1}: Setting to is-open (billing)`);
                     $block.addClass('is-open').attr('aria-expanded', 'true');
                 } else {
-                    console.log(`[Checkout Blocks] Block ${index + 1}: Setting to is-closed (default)`);
                     $block.addClass('is-closed').attr('aria-expanded', 'false');
                 }
             } else {
-                console.log(`[Checkout Blocks] Block ${index + 1}: Already has state, keeping as is`);
             }
         });
 
-        console.log('[Checkout Blocks] setInitialBlockStates complete');
     }
 
     // Hide payment methods list when only one method is available
@@ -612,11 +591,6 @@ jQuery(function($) {
         const $checked = $('input[name="payment_method"]:checked');
         const $btn = $('#place_order');
 
-        console.log('[Checkout Blocks] updatePlaceOrderButtonText called', {
-            hasButton: !!$btn.length,
-            hasChecked: !!$checked.length
-        });
-
         if (!$btn.length || !$checked.length) {
             return;
         }
@@ -627,15 +601,6 @@ jQuery(function($) {
         const currentVal = $btn.val();
         const currentText = $btn.text();
         const text = dataText || currentVal || currentText;
-
-        console.log('[Checkout Blocks] payment method -> button text', {
-            id,
-            gateway,
-            dataText,
-            currentVal,
-            currentText,
-            finalText: text
-        });
 
         if (text) {
             $btn.val(text).text(text);
@@ -717,7 +682,6 @@ jQuery(function($) {
     }
 
     // Initialize on page load
-    console.log('[Checkout Blocks] Starting initialization...');
     setInitialBlockStates();
     initCheckoutBlocks(); 
     updatePaymentMethodsVisibility();
@@ -741,12 +705,9 @@ jQuery(function($) {
             (jqXHR.status === 0 || jqXHR.responseText === '-1')
         ) {
             updateOrderReviewReloaded = true;
-            console.warn('[Checkout Blocks] update_order_review returned -1; reloading checkout once to refresh nonces.');
             window.location.reload();
         }
     });
-
-    console.log('[Checkout Blocks] Initial page load complete');
 
     // Re-initialize after WooCommerce updates (fragments)
     $(document.body).on('updated_checkout', function() {

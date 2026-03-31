@@ -77,7 +77,6 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
 
             <!-- Step 4: Extra address details — only for home delivery (see checkout-sms-flow.js + deliz_short_checkout_sms_delivery_extra_for_localize) -->
             <div class="checkout-sms-popup__step checkout-sms-popup__step--shipping">
-                <div class="checkout-sms-popup__subtitle checkout-sms-popup__subtitle--shipping"><?php echo esc_html__( 'השלמת פרטי משלוח', 'deliz-short' ); ?></div>
                 <div class="checkout-sms-popup__shipping-intro" aria-live="polite"></div>
                 <form class="checkout-sms-shipping-form" method="post">
                     <div class="form-row">
