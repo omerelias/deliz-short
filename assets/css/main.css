@@ -49,6 +49,17 @@ select {
     color: var(--main-text-color-hover);
 }
 
+.form-login button.resend-code:not(.auth__close):not(.show-password-input){
+    height: auto;
+    line-height: normal;
+    padding: 0;
+    margin: 0;
+    font-size: 15px;
+    text-decoration: underline;
+    position: static;
+    margin-block-start: -15px;
+}
+
 .site-overlay {
     position: fixed;
     top: 0;
@@ -414,6 +425,10 @@ flex: 0 0 435px;
     object-fit: cover;
 }
 
+.main-content .menu-block ul.ed-mp__menu li.ed-mp__item a.ed-mp__link img.icon-style-1{
+    border-radius: 50%;
+}
+
 .center-column .ed-mp-products-wrap h2.ed-mp__title{
     margin-block-start: 0;
 }
@@ -432,6 +447,7 @@ flex: 0 0 435px;
 .center-column .ed-mp-products-wrap .ed-mp__products ul.products li{
     background: #fff;
     box-shadow: 0px 4px 47.8px 0px #00000017;
+    border-radius: 0 0 8px 8px;
 }
 
 .center-column .ed-mp-products-wrap .ed-mp__products ul.products li .loop-bottom-wrap{
@@ -553,9 +569,13 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__thumb img{
-    aspect-ratio: 247 / 163;
+    aspect-ratio: 3 / 2;
     object-fit: cover;
     border-radius: 5px;
+}
+
+body.square_images .ed-float-cart__items .ed-float-cart__item .ed-float-cart__thumb img{
+    aspect-ratio: 1 / 1;
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__details{
@@ -1033,16 +1053,30 @@ body.square_images .woocommerce ul.products li.product a img{
     body.basket-open .main-content .left-column{
         transform: translate(0);
         visibility: visible;
+        min-width: 95%;
+        padding: 0;
+        top: 0;
+        margin-top: 0;
     }
+
+    .ed-float-cart__inner {
+        height: 97vh;
+    }    
 
     .main-content .left-column .ed-float-cart {
         border: none;
-        padding-block-start: 0;
+        padding-block-start: 15px;
     }
 
     .ed-float-cart__items,
     .ed-float-cart__footer{
         padding-inline: 0;
+    }
+}
+
+@media (max-width: 990px) {
+    .site-header .container-header-inner{
+        width: 100%;
     }
 }
 
@@ -1414,6 +1448,12 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
 }
 
 @media (max-width: 991px) {
+
+    button.default-close-btn{
+        right: auto;
+        left: 25px;
+    }
+        
     .footer-top-right{
         flex-direction: column;
         gap: 25px;
@@ -1822,10 +1862,6 @@ form.woocommerce-checkout .ocws-days-with-slots-list-label{
 
     .woocommerce ul.products li.product.outofstock .loop-thumb-wrap .badge-oos{
         font-size: 15px;
-    }
-
-    .ed-float-cart__inner{
-        height: 95vh;
     }
 }
 

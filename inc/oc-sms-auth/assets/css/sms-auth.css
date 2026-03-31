@@ -63,7 +63,7 @@ position: absolute;
 }
 .authorization-panel--container .woocommerce-error,
 .authorization-panel--container .woocommerce-message{
-	width: 100%;
+	width: auto;
 }
 button.verify-button{
 	width: 100%;
