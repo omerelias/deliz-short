@@ -54,10 +54,11 @@
 
         // Generate quantity input based on ocwsu settings
         if (ocwsu.weighable && ocwsu.sold_by_units && ocwsu.sold_by_weight) {
-            // Product can be sold both ways - show toggle and default to units
+            // Product can be sold both ways - show toggle and default to units 
             const minWeight = ocwsu.min_weight || 0.5;
-            const step = ocwsu.weight_step || 0.1;
-            const unit = ocwsu.product_weight_units === 'kg' ? 'ק"ג' : 'גרם';
+            const hasNumericStep = ocwsu.weight_step && ocwsu.weight_step > 0;
+            const stepAttr = hasNumericStep ? ocwsu.weight_step : 'any';
+            const weightLabel = ocwsu.product_weight_units === 'kg' ? 'ק"ג' : 'גרם';
 
             quantityHTML = `
         <!-- Units input (default, shown first) -->
@@ -77,18 +78,18 @@
         </div>
         <!-- Weight input (hidden by default) -->
         <div class="ed-product-popup__quantity-input" data-quantity-mode="weight" id="popup-quantity-weight-container" style="display: none;">
-          <button type="button" class="ed-product-popup__qty-btn" data-action="decrease" data-step="${step}">-</button>
+          <button type="button" class="ed-product-popup__qty-btn" data-action="decrease">-</button>
           <div class="qty-wrap">
           <input type="number" 
                  id="popup-quantity-weight" 
                  name="quantity" 
                  value="${minWeight}" 
                  min="${minWeight}" 
-                 step="${step}"
+                 step="${stepAttr}"
                  class="ed-product-popup__qty-input">
-          <span class="ed-product-popup__qty-label">ק"ג</span>
+          <span class="ed-product-popup__qty-label">${weightLabel}</span>
           </div>
-          <button type="button" class="ed-product-popup__qty-btn" data-action="increase" data-step="${step}">+</button>
+          <button type="button" class="ed-product-popup__qty-btn" data-action="increase">+</button>
         </div>
       `;
         } else if (ocwsu.weighable && ocwsu.sold_by_units) {
@@ -112,23 +113,24 @@
         } else if (ocwsu.weighable && ocwsu.sold_by_weight) {
             // Weight input only
             const minWeight = ocwsu.min_weight || 0.5;
-            const step = ocwsu.weight_step || 0.1;
+            const hasNumericStep = ocwsu.weight_step && ocwsu.weight_step > 0;
+            const stepAttr = hasNumericStep ? ocwsu.weight_step : 'any';
             const unit = ocwsu.product_weight_units === 'kg' ? 'ק"ג' : 'גרם';
 
             quantityHTML = `
         <div class="ed-product-popup__quantity-input">
-          <button type="button" class="ed-product-popup__qty-btn" data-action="decrease" data-step="${step}">-</button>
+          <button type="button" class="ed-product-popup__qty-btn" data-action="decrease">-</button>
           <div class="qty-wrap">
           <input type="number" 
                  id="popup-quantity-weight" 
                  name="quantity" 
                  value="${minWeight}" 
                  min="${minWeight}" 
-                 step="${step}"
+                 step="${stepAttr}"
                  class="ed-product-popup__qty-input">
           <span class="ed-product-popup__qty-label">${unit}</span>
           </div>
-          <button type="button" class="ed-product-popup__qty-btn" data-action="increase" data-step="${step}">+</button>
+          <button type="button" class="ed-product-popup__qty-btn" data-action="increase">+</button>
         </div>
       `;
         } else {

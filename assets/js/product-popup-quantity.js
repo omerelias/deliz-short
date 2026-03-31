@@ -28,6 +28,22 @@
     }
 
     /**
+     * Step for +/- — same rules as floating mini cart (input step, or "any" → 0.1 kg).
+     */
+    function getPopupQtyStep(input) {
+        if (!input) return 1;
+        if (input.id === 'popup-quantity-units') {
+            return 1;
+        }
+        const raw = input.getAttribute('step');
+        if (!raw || raw === 'any') {
+            return input.id === 'popup-quantity-weight' ? 0.1 : 1;
+        }
+        const n = parseFloat(raw);
+        return !isFinite(n) || n <= 0 ? 1 : n;
+    }
+
+    /**
      * Initialize quantity inputs
      */
     function initQuantityInputs() {
@@ -83,31 +99,32 @@
                 const action = this.dataset.action;
                 const input = this.closest('.ed-product-popup__quantity-input').querySelector('input');
                 const min = parseFloat(input.min) || 1;
-                let value = parseFloat(input.value) || min;
-
-                // Check if this is a weight input (has step attribute on input, not button)
-                const isWeightInput = input.id === 'popup-quantity-weight';
-
-                // For weight inputs, always use step of 1 (as per user requirement)
-                // For other inputs, use the step from data attribute or default to 1
-                let step = 1;
-                if (!isWeightInput) {
-                    step = parseFloat(this.dataset.step) || 1;
+                const step = getPopupQtyStep(input);
+                let base = parseFloat(String(input.value).replace(',', '.'));
+                if (!isFinite(base)) {
+                    base = min;
                 }
 
+                let value = base;
                 if (action === 'increase') {
-                    value += step;
-                } else if (action === 'decrease' && value > min) {
-                    value -= step;
-                    // Ensure value doesn't go below minimum
-                    if (value < min) {
+                    value = Math.round((base + step) / step) * step;
+                    if (!isFinite(value)) {
+                        value = base + step;
+                    }
+                } else if (action === 'decrease') {
+                    let candidate = Math.round((base - step) / step) * step;
+                    if (!isFinite(candidate)) {
+                        candidate = base - step;
+                    }
+                    const eps = 1e-9;
+                    if (candidate < min - eps) {
                         value = min;
+                    } else {
+                        value = candidate;
                     }
                 }
 
-                // Round to step precision (for weight, step is 1, so round to 1 decimal)
-                const decimals = isWeightInput ? 1 : (step.toString().split('.')[1]?.length || 0);
-                value = parseFloat(value.toFixed(decimals));
+                value = parseFloat(value.toFixed(6));
 
                 input.value = value;
                 input.dispatchEvent(new Event('change', {bubbles: true}));
