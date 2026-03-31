@@ -111,12 +111,22 @@ add_action('wp_enqueue_scripts', function() {
     // Localize script with user login status
     $sms_auth = class_exists('OC_SMS_Auth') ? OC_SMS_Auth::get_instance() : null;
     $settings = $sms_auth ? $sms_auth->get_settings() : array();
-    
+
+    $delivery_extra = function_exists( 'deliz_short_checkout_sms_delivery_extra_for_localize' )
+      ? deliz_short_checkout_sms_delivery_extra_for_localize()
+      : array(
+        'show_delivery_extra' => false,
+        'delivery_address_line' => '',
+        'shipping_intro_html' => '',
+      );
+
     wp_localize_script('checkout-sms-flow', 'oc_sms_auth', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('oc_sms_auth'),
         'is_logged_in' => is_user_logged_in() ? 1 : 0,
         'code_expiry' => isset($settings['code_expiry']) ? $settings['code_expiry'] : 180,
+        'show_delivery_extra' => ! empty( $delivery_extra['show_delivery_extra'] ),
+        'shipping_intro_html' => isset( $delivery_extra['shipping_intro_html'] ) ? $delivery_extra['shipping_intro_html'] : '',
         'i18n' => array(
             'invalid_phone' => __('מספר טלפון לא תקין', 'deliz-short'),
             'code_sent' => __('קוד נשלח בהצלחה', 'deliz-short'),

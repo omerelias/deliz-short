@@ -111,7 +111,7 @@ class ED_Product_Popup {
   public static function init() {
     // Register REST API endpoint
     add_action('rest_api_init', [__CLASS__, 'register_rest_endpoint']);
-     
+
     // Register custom add to cart endpoint for debugging
     add_action('rest_api_init', [__CLASS__, 'register_add_to_cart_endpoint']); 
  

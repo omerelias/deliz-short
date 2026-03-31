@@ -738,3 +738,66 @@ add_action(
 );
 
 add_action( 'woocommerce_cart_loaded_from_session', 'deliz_short_maybe_restore_ship_from_backup_cookie', 99999 );
+
+/**
+ * Checkout SMS popup ("קומה / דירה / קוד כניסה"): show only for OC home delivery with a resolved street-level address from the shipping popup session.
+ *
+ * @return array{show_delivery_extra:bool, delivery_address_line:string, shipping_intro_html:string}
+ */
+function deliz_short_checkout_sms_delivery_extra_for_localize() {
+	$empty = array(
+		'show_delivery_extra'   => false,
+		'delivery_address_line' => '',
+		'shipping_intro_html'   => '',
+	);
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return $empty;
+	}
+	$methods = WC()->session->get( 'chosen_shipping_methods', array() );
+	$method  = is_array( $methods ) && isset( $methods[0] ) ? (string) $methods[0] : '';
+	if ( ! $method ) {
+		return $empty;
+	}
+	if ( function_exists( 'ocws_is_method_id_pickup' ) && ocws_is_method_id_pickup( $method ) ) {
+		return $empty;
+	}
+	if ( ! function_exists( 'ocws_is_method_id_shipping' ) || ! ocws_is_method_id_shipping( $method ) ) {
+		return $empty;
+	}
+
+	$city   = (string) WC()->session->get( 'chosen_city_name', '' );
+	$street = (string) WC()->session->get( 'chosen_street', '' );
+	$house  = (string) WC()->session->get( 'chosen_house_num', '' );
+
+	$checkout_data = WC()->session->get( 'checkout_data', array() );
+	if ( is_array( $checkout_data ) ) {
+		if ( $street === '' && ! empty( $checkout_data['billing_street'] ) ) {
+			$street = (string) $checkout_data['billing_street'];
+		}
+		if ( $house === '' && ! empty( $checkout_data['billing_house_num'] ) ) {
+			$house = (string) $checkout_data['billing_house_num'];
+		}
+		if ( $city === '' && ! empty( $checkout_data['billing_city_name'] ) ) {
+			$city = (string) $checkout_data['billing_city_name'];
+		}
+	}
+
+	// Require street-level detail (aligned with OCWS checkout google autocomplete heuristic).
+	if ( $street === '' || $house === '' || $city === '' ) {
+		return $empty;
+	}
+
+	$line = trim( sprintf( '%s %s, %s', $street, $house, $city ) );
+	if ( $line === '' ) {
+		return $empty;
+	}
+
+	/* translators: %s: delivery address line e.g. "אלנבי 123", תל אביב */
+	$intro = sprintf( __( 'נשלח ל%s – לאן בדיוק?', 'deliz-short' ), $line );
+
+	return array(
+		'show_delivery_extra'   => true,
+		'delivery_address_line' => $line,
+		'shipping_intro_html'   => esc_html( $intro ),
+	);
+}

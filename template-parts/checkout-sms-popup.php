@@ -20,7 +20,7 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
         </button>
         
         <div class="checkout-sms-popup__content">
-            <h2 class="checkout-sms-popup__title"><?php echo esc_html__('הכנס מס טלפון לביצוע הזמנה', 'deliz-short'); ?></h2>
+            <h2 class="checkout-sms-popup__title checkout-sms-popup__title--main"><?php echo esc_html__('הכנס מס טלפון לביצוע הזמנה', 'deliz-short'); ?></h2>
             
             <!-- Step 1: Phone Input -->
             <div class="checkout-sms-popup__step checkout-sms-popup__step--phone active">
@@ -75,9 +75,10 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
                 </form>
             </div>
 
-            <!-- Step 4: Shipping details after registration -->
+            <!-- Step 4: Extra address details — only for home delivery (see checkout-sms-flow.js + deliz_short_checkout_sms_delivery_extra_for_localize) -->
             <div class="checkout-sms-popup__step checkout-sms-popup__step--shipping">
-                <div class="checkout-sms-popup__subtitle"><?php echo esc_html__('השלמת פרטי משלוח', 'deliz-short'); ?></div>
+                <div class="checkout-sms-popup__subtitle checkout-sms-popup__subtitle--shipping"><?php echo esc_html__( 'השלמת פרטי משלוח', 'deliz-short' ); ?></div>
+                <div class="checkout-sms-popup__shipping-intro" aria-live="polite"></div>
                 <form class="checkout-sms-shipping-form" method="post">
                     <div class="form-row">
                         <input type="text" name="billing_floor" class="input-text"

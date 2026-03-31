@@ -113,18 +113,24 @@ jQuery(function($) {
             $popup.find('.checkout-sms-popup__error').empty();
 
             // Update title/description per step
-            const $title = $popup.find('.checkout-sms-popup__title');
+            const $titleMain = $popup.find('.checkout-sms-popup__title--main');
+            if (step === 'shipping') {
+                $titleMain.hide();
+            } else {
+                $titleMain.show();
+            }
             if (step === 'phone') {
-                $title.text('הכנס מס טלפון לביצוע הזמנה');
+                $titleMain.text('הכנס מס טלפון לביצוע הזמנה');
             } else if (step === 'code') {
-                $title.text('אימות מספר הטלפון');
+                $titleMain.text('אימות מספר הטלפון');
             } else if (step === 'register') {
-                $title.text('השלמת פרטי לקוח');
+                $titleMain.text('השלמת פרטי לקוח');
             } else if (step === 'shipping') {
-                $title.text('השלמת פרטי משלוח');
-                const $subtitle = $popup.find('.checkout-sms-popup__step--shipping .checkout-sms-popup__subtitle');
-                if ($subtitle.length) {
-                    $subtitle.text('נזכור את הפרטים לפעם הבאה');
+                const $intro = $popup.find('.checkout-sms-popup__shipping-intro');
+                if ($intro.length && typeof oc_sms_auth !== 'undefined' && oc_sms_auth.shipping_intro_html) {
+                    $intro.html(oc_sms_auth.shipping_intro_html);
+                } else if ($intro.length) {
+                    $intro.empty();
                 }
             }
         },
@@ -281,9 +287,12 @@ jQuery(function($) {
                 },
                 success: function(response) {
                     if (response.success) {
-                        // User registered and logged in - move to shipping details step
                         $button.prop('disabled', false).removeClass('disabled');
-                        CheckoutSMSFlow.showStep('shipping');
+                        if (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.show_delivery_extra) {
+                            CheckoutSMSFlow.showStep('shipping');
+                        } else {
+                            CheckoutSMSFlow.redirectAfterAuth();
+                        }
                     } else {
                         $button.prop('disabled', false).removeClass('disabled');
                         CheckoutSMSFlow.showError('register', response.data.message || response.data || 'שגיאה ברישום');
