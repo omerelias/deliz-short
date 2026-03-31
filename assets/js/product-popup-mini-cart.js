@@ -59,6 +59,34 @@
     }
 
     /**
+     * Snap typed weight qty to the next step multiple (ceil), e.g. step 0.5 + value 0.2 → 0.5.
+     * Values already on the grid stay unchanged (within epsilon).
+     */
+    function snapWeightQtyToStepCeil(value, step, minNum) {
+        if (!isFinite(value)) {
+            return minNum;
+        }
+        if (!isFinite(step) || step <= 0 || !isFinite(minNum)) {
+            return Math.max(minNum, value);
+        }
+        const eps = 1e-9;
+        const ratio = value / step;
+        const nearest = Math.round(ratio);
+        if (Math.abs(ratio - nearest) < 1e-6) {
+            let snapped = nearest * step;
+            snapped = parseFloat(snapped.toFixed(10));
+            return Math.max(minNum, snapped);
+        }
+        let snapped = Math.ceil(ratio - eps) * step;
+        snapped = parseFloat(snapped.toFixed(10));
+        if (snapped < minNum) {
+            snapped = Math.ceil((minNum - eps) / step) * step;
+            snapped = parseFloat(snapped.toFixed(10));
+        }
+        return Math.max(minNum, snapped);
+    }
+
+    /**
      * Handle mini cart quantity button clicks (plus/minus)
      */
     function handleMiniCartQuantityClick(e) {
@@ -144,11 +172,14 @@
         let newValue = isFinite(parsed) ? parsed : minNum;
         if (isOcwsuUnitsQtyInput(input)) {
             newValue = Math.max(minNum, Math.round(newValue));
+        } else {
+            newValue = snapWeightQtyToStepCeil(newValue, getQtyStep(input), minNum);
         }
         const finalValue = Math.max(minNum, newValue);
 
-        if (finalValue !== newValue) {
-            input.value = finalValue;
+        const displayVal = String(parseFloat(finalValue.toFixed(6)));
+        if (displayVal !== String(input.value).replace(',', '.').trim()) {
+            input.value = displayVal;
         }
 
         // Debounce the update
@@ -570,7 +601,7 @@
                 });
             }
         }
-
+ 
         // Set product note
         const noteInput = state.popupElement.querySelector('#popup-product-note');
         if (noteInput && cartItemData.product_note) {

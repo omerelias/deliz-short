@@ -49,7 +49,7 @@
             <span>ק"ג</span>
           </button>
         </div>
-      `; 
+      `;
         }
 
         // Generate quantity input based on ocwsu settings
