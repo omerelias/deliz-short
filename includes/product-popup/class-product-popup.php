@@ -38,6 +38,27 @@ if (!function_exists('deliz_short_ocwsu_product_weight_is_grams')) {
   }
 }
 
+if (!function_exists('deliz_short_get_float_cart_shipping_label')) {
+  /**
+   * Mini-cart shipping row label: chosen method from session/packages (checkout review-order logic).
+   */
+  function deliz_short_get_float_cart_shipping_label() {
+    if (!function_exists('WC') || !WC()->shipping()) {
+      return __('משלוח', 'deliz-short');
+    }
+    $shipping_label = __('משלוח', 'deliz-short');
+    $packages = WC()->shipping()->get_packages();
+    $session = WC()->session;
+    foreach ($packages as $i => $package) {
+      $chosen_method = ($session && isset($session->chosen_shipping_methods[ $i ])) ? $session->chosen_shipping_methods[ $i ] : '';
+      if ($chosen_method !== '' && !empty($package['rates'][ $chosen_method ])) {
+        $shipping_label = $package['rates'][ $chosen_method ]->get_label();
+      }
+    }
+    return $shipping_label;
+  }
+}
+
 class ED_Product_Popup {
 
   /**
@@ -107,7 +128,7 @@ class ED_Product_Popup {
       $template_file = get_template_directory() . '/template-parts/floating-mini-cart.php';
       if (file_exists($template_file)) {
         // Extract the items section from the template
-        $template_content = file_get_contents($template_file);
+        $template_content = file_get_contents($template_file); 
         // We'll use a simpler approach - just include the template and extract
         // But for now, let's use get_template_part with a custom output buffer
         foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
@@ -334,7 +355,16 @@ class ED_Product_Popup {
           </div>
         <?php
         endforeach;
-        
+
+        if ($cart->needs_shipping() && $cart->show_shipping()) :
+          ?>
+          <div class="ed-float-cart__row ed-float-cart__row--shipping cart-shipping">
+            <span><?php echo esc_html(deliz_short_get_float_cart_shipping_label()); ?></span>
+            <strong><?php echo wp_kses_post($cart->get_cart_shipping_total()); ?></strong>
+          </div>
+          <?php
+        endif;
+
         if ( ! empty( $fees ) ) :
           foreach ( $fees as $fee ) :
             if ( (float) $fee->amount < 0 ) :
@@ -804,6 +834,9 @@ class ED_Product_Popup {
       'updateCartNonce' => wp_create_nonce('ed-update-cart-nonce'),
       /** When true (or localStorage edDebugCartQty=1), mini-cart qty logs to console. */
       'debugCartQty' => ( defined( 'WP_DEBUG' ) && WP_DEBUG ),
+      'i18nFloatCart' => [
+        'shipping' => __('משלוח', 'deliz-short'),
+      ],
     ]);
   }
   
