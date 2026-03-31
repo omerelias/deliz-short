@@ -52,7 +52,16 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
   // Header: title + free-shipping bar (deliz_short_float_cart_header_shipping) — keep in sync after partial cart AJAX.
   if ( preg_match( '/<header\s+class="ed-float-cart__header"[^>]*>[\s\S]*?<\/header>/u', $full, $m ) ) {
     $fragments['#ed-float-cart header.ed-float-cart__header'] = $m[0];
+  } 
+
+  // Dedicated fragment: nested progress bar HTML breaks naive header regex; ensures bar returns after qty AJAX.
+  ob_start();
+  echo '<div class="ed-float-cart__header-shipping">';
+  if ( function_exists( 'WC' ) && WC()->cart && ! WC()->cart->is_empty() ) {
+    do_action( 'deliz_short_float_cart_header_shipping' );
   }
+  echo '</div>';
+  $fragments['#ed-float-cart .ed-float-cart__header-shipping'] = ob_get_clean();
 
   // Checkout CTA + ~ running total (non-empty cart only in template).
   if ( preg_match( '/<div\s+class="ed-float-cart__actions"[^>]*>[\s\S]*?<\/div>/u', $full, $m ) ) {

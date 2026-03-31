@@ -128,7 +128,7 @@ class ED_Product_Popup {
       $template_file = get_template_directory() . '/template-parts/floating-mini-cart.php';
       if (file_exists($template_file)) {
         // Extract the items section from the template
-        $template_content = file_get_contents($template_file); 
+        $template_content = file_get_contents($template_file);
         // We'll use a simpler approach - just include the template and extract
         // But for now, let's use get_template_part with a custom output buffer
         foreach ($cart->get_cart() as $cart_item_key => $cart_item) {

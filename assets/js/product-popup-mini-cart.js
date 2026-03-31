@@ -399,6 +399,14 @@
                     }
                 }
 
+                const freeShipWrapSel = '#ed-float-cart .ed-float-cart__header-shipping';
+                if (fragments[freeShipWrapSel] && typeof jQuery !== 'undefined') {
+                    const shipWrap = document.querySelector(freeShipWrapSel);
+                    if (shipWrap && String(fragments[freeShipWrapSel]).length) {
+                        jQuery(shipWrap).replaceWith(fragments[freeShipWrapSel]);
+                    }
+                }
+
                 // Fragment values are full outer HTML (e.g. entire .ed-float-cart__items wrapper) — replace nodes, do not nest via innerHTML.
                 if (fragments['div.ed-float-cart__items'] && typeof jQuery !== 'undefined') {
                     const miniCartItems = document.querySelector('#ed-float-cart .ed-float-cart__items');

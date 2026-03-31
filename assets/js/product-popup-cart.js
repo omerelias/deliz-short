@@ -177,6 +177,13 @@
                     jQuery(headerEl).replaceWith(result.fragments[floatHeaderSel]);
                 }
             }
+            const freeShipWrapSel = '#ed-float-cart .ed-float-cart__header-shipping';
+            if (result.fragments[freeShipWrapSel] && typeof jQuery !== 'undefined') {
+                const shipWrap = document.querySelector(freeShipWrapSel);
+                if (shipWrap && String(result.fragments[freeShipWrapSel]).length) {
+                    jQuery(shipWrap).replaceWith(result.fragments[freeShipWrapSel]);
+                }
+            }
             const checkoutActionsSel = '#ed-float-cart .ed-float-cart__actions';
             if (result.fragments[checkoutActionsSel] && typeof jQuery !== 'undefined') {
                 const actionsEl = document.querySelector(checkoutActionsSel);

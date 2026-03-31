@@ -292,6 +292,45 @@ function deliz_short_free_shipping_threshold_wc_instance( $method ) {
 }
 
 /**
+ * Min fee thresholds from free_shipping instances available in calculated packages.
+ * When the customer is below the free-shipping minimum, WC often switches session to flat_rate etc.,
+ * so we still need the threshold from the zone's free_shipping rate for the progress bar.
+ *
+ * @return float|null
+ */
+function deliz_short_free_shipping_threshold_from_wc_package_rates() {
+	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+		return null;
+	}
+	$cart = WC()->cart;
+	if ( $cart->is_empty() || ! $cart->needs_shipping() ) {
+		return null;
+	}
+	$cart->calculate_shipping();
+	$packages = WC()->shipping()->get_packages();
+	$best     = null;
+	foreach ( $packages as $package ) {
+		if ( empty( $package['rates'] ) || ! is_array( $package['rates'] ) ) {
+			continue;
+		}
+		foreach ( $package['rates'] as $rate_id => $rate ) {
+			$rate_id = (string) $rate_id;
+			if ( strpos( $rate_id, 'free_shipping:' ) !== 0 ) {
+				continue;
+			}
+			$t = deliz_short_free_shipping_threshold_wc_instance( $rate_id );
+			if ( null !== $t && $t > 0 && ( null === $best || $t < $best ) ) {
+				$best = $t;
+			}
+		}
+	}
+	if ( null !== $best ) {
+		deliz_short_free_ship_bar_debug( 'threshold_from_packages: RETURN', $best );
+	}
+	return $best;
+}
+
+/**
  * Data for floating cart free-shipping bar template.
  *
  * @param WC_Cart|null $cart Cart.
@@ -320,6 +359,11 @@ function deliz_short_get_free_shipping_bar_data( $cart = null ) {
 	if ( $cart->is_empty() ) {
 		deliz_short_free_ship_bar_debug( 'get_bar_data: RETURN empty — cart is_empty' );
 		return $empty;
+	}
+
+	// Keep session chosen_shipping_methods aligned with current cart (e.g. after crossing min free shipping).
+	if ( $cart->needs_shipping() ) {
+		$cart->calculate_totals();
 	}
 
 	foreach ( $cart->get_applied_coupons() as $code ) {
@@ -369,16 +413,25 @@ function deliz_short_get_free_shipping_bar_data( $cart = null ) {
 		$branch    = 'oc_advanced';
 		$threshold = deliz_short_free_shipping_threshold_oc_advanced();
 	} else {
-		deliz_short_free_ship_bar_debug( 'get_bar_data: RETURN empty — shipping method not pickup/advanced/free_shipping', $method );
-		return $empty;
+		$branch = 'unknown';
+		deliz_short_free_ship_bar_debug( 'get_bar_data: non-matching shipping method (e.g. flat_rate after leaving free tier); trying fallbacks', $method );
 	}
 	deliz_short_free_ship_bar_debug( 'get_bar_data: branch + threshold before legacy', array( 'branch' => $branch, 'threshold' => $threshold ) );
 
-	if ( ( null === $threshold || $threshold <= 0 ) && '' === $method ) {
+	if ( ( null === $threshold || $threshold <= 0 )
+		&& ( '' === $method || 'oc_advanced' === $branch || 'unknown' === $branch )
+	) {
 		$legacy = get_option( 'woocommerce_free_shipping_1_settings' );
 		deliz_short_free_ship_bar_debug( 'get_bar_data: legacy free_shipping_1 attempt', $legacy );
 		if ( is_array( $legacy ) && isset( $legacy['min_amount'] ) ) {
 			$threshold = floatval( $legacy['min_amount'] );
+		}
+	}
+
+	if ( ( null === $threshold || $threshold <= 0 ) && 'pickup' !== $branch ) {
+		$from_rates = deliz_short_free_shipping_threshold_from_wc_package_rates();
+		if ( null !== $from_rates && $from_rates > 0 ) {
+			$threshold = $from_rates;
 		}
 	}
 
