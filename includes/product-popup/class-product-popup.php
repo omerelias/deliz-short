@@ -111,7 +111,7 @@ class ED_Product_Popup {
   public static function init() {
     // Register REST API endpoint
     add_action('rest_api_init', [__CLASS__, 'register_rest_endpoint']);
-    
+     
     // Register custom add to cart endpoint for debugging
     add_action('rest_api_init', [__CLASS__, 'register_add_to_cart_endpoint']); 
  
@@ -286,19 +286,11 @@ class ED_Product_Popup {
             }
           }
           if ($ocwsu_float_cart_weight_attrs) {
-            $grams_rounded_float = (int) round((float) $qty_raw * 1000);
-            $ocwsu_raw_float_show_kg = ($grams_rounded_float >= 1000);
-            if ($ocwsu_raw_float_show_kg) {
-              $qty_input_val = deliz_short_format_ocwsu_cart_weight_display_value($qty_raw, false);
-              $qty_display = $qty_input_val;
-              $qty_input_min = $ocwsu_min_kg_str;
-              $qty_input_step = ($ocwsu_step_kg_str === 'any' ? 'any' : $ocwsu_step_kg_str);
-            } else {
-              $qty_input_val = deliz_short_format_ocwsu_cart_weight_display_value($qty_raw * 1000, true);
-              $qty_display = $qty_input_val;
-              $qty_input_min = $ocwsu_min_grams_str;
-              $qty_input_step = ($weight_step === 'any' ? 'any' : $ocwsu_step_grams_str);
-            }
+            $ocwsu_raw_float_show_kg = true;
+            $qty_input_val = deliz_short_format_ocwsu_cart_weight_display_value($qty_raw, false);
+            $qty_display = $qty_input_val;
+            $qty_input_min = $ocwsu_min_kg_str;
+            $qty_input_step = ($ocwsu_step_kg_str === 'any' ? 'any' : $ocwsu_step_kg_str);
           }
           $thumbnail = $product->get_image('woocommerce_thumbnail');
           $remove_url = wc_get_cart_remove_url($cart_item_key);
@@ -330,7 +322,7 @@ class ED_Product_Popup {
               }
             }
             if ($ocwsu_one_item_kg > 0) {
-              if (deliz_short_ocwsu_product_weight_is_grams($product_weight_units)) {
+              if ($ocwsu_one_item_kg < 1) {
                 $uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_one_item_kg * 1000, true);
                 $ocwsu_display = sprintf('%s %s', $uv, __( 'גרם', 'deliz-short' ));
               } else {
