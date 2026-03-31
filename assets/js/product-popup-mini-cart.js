@@ -24,6 +24,10 @@
 
     function setQtyInputDisplayValue(input, quantityKg) {
         if (!input) return;
+        if (isFinite(quantityKg) && quantityKg <= 0) {
+            input.value = '0';
+            return;
+        }
         if (isOcwsuUnitsQtyInput(input)) {
             const kgPer = parseFloat(input.getAttribute('data-ed-ocwsu-kg-per-unit'));
             if (isFinite(kgPer) && kgPer > 0 && isFinite(quantityKg)) {
@@ -80,9 +84,18 @@
                 newValue = base + step;
             }
             newValue = parseFloat(newValue.toFixed(6));
-        } else if (action === 'decrease' && base > minNum) {
-            newValue = Math.max(minNum, Math.round((base - step) / step) * step);
-            newValue = parseFloat(newValue.toFixed(6));
+        } else if (action === 'decrease') {
+            let candidate = Math.round((base - step) / step) * step;
+            candidate = parseFloat(candidate.toFixed(6));
+            if (!isFinite(candidate)) {
+                candidate = parseFloat((base - step).toFixed(6));
+            }
+            const eps = 1e-9;
+            if (candidate < minNum - eps || candidate <= 0) {
+                updateCartItemQuantity(cartItemKey, 0);
+                return;
+            }
+            newValue = candidate;
         }
 
         if (newValue !== base) {
@@ -108,8 +121,16 @@
         if (!cartItemKey) return;
 
         const parsed = parseFloat(String(input.value).replace(',', '.'));
-        const min = parseFloat(input.min);
+        const min = parseFloat(input.min); 
         const minNum = isFinite(min) ? min : 1;
+ 
+        // Explicit 0 (or negative) removes the line — no debounce (avoid showing "0" in the field)
+        if (isFinite(parsed) && parsed <= 0) {
+            clearTimeout(input._updateTimeout);
+            updateCartItemQuantity(cartItemKey, 0); 
+            return;
+        }
+
         let newValue = isFinite(parsed) ? parsed : minNum;
         if (isOcwsuUnitsQtyInput(input)) {
             newValue = Math.max(minNum, Math.round(newValue));
@@ -134,20 +155,88 @@
         }, 500);
     }
 
+    /** Match ed_menu_products fadeOutBox (category switch on .ed-mp__link) */
+    const ED_MP_BOX_TRANSITION = 'opacity 0.22s ease, transform 0.22s ease';
+
+    /**
+     * Same motion as category product box fade-out; resolves when transition ends (or fallback).
+     */
+    function startFloatCartRowRemovalAnimation(row) {
+        return new Promise((resolve) => {
+            let done = false;
+            const complete = () => {
+                if (done) return;
+                done = true;
+                row.removeEventListener('transitionend', onEnd);
+                clearTimeout(fallbackId);
+                resolve();
+            };
+            const onEnd = (e) => {
+                if (e.target !== row || e.propertyName !== 'opacity') return;
+                complete();
+            };
+            row.addEventListener('transitionend', onEnd);
+            const fallbackId = setTimeout(complete, 350);
+
+            requestAnimationFrame(() => {
+                row.style.transition = ED_MP_BOX_TRANSITION;
+                row.style.opacity = '0';
+                row.style.transform = 'translateY(10px)';
+            });
+        });
+    }
+
+    function revertRemovingRow(state) {
+        if (!state) return;
+        const { row, opacity, transition, pointerEvents, transform } = state;
+        row.style.transition = 'none';
+        row.style.opacity = opacity;
+        row.style.transform = transform;
+        row.style.pointerEvents = pointerEvents;
+        row.style.transition = transition;
+        row.querySelectorAll('button, .ed-float-cart__qty-input').forEach((el) => {
+            el.disabled = false;
+        });
+    }
+
     /**
      * Update cart item quantity
      */
     async function updateCartItemQuantity(cartItemKey, quantity) {
+        const isRemoval = isFinite(Number(quantity)) && Number(quantity) <= 0;
+        let removeRowState = null;
+        let removalAnimPromise = null;
+        let qtyInput = null;
+        let oldValue = null;
+
         try {
-            // Find the input element and update it immediately (optimistic update)
-            const cartItem = document.querySelector(`[data-cart-item-key="${cartItemKey}"]`);
-            const qtyInput = cartItem?.querySelector('.ed-float-cart__qty-input');
-            let oldValue = null;
+            const hitEl = document.querySelector(`[data-cart-item-key="${cartItemKey}"]`);
+            const row = hitEl && typeof hitEl.closest === 'function'
+                ? hitEl.closest('.ed-float-cart__item')
+                : null;
+            qtyInput = row ? row.querySelector('.ed-float-cart__qty-input') : null;
 
             if (qtyInput) {
                 oldValue = qtyInput.value;
+            }
+
+            // Removing: Volt-style fade/slide like ed-mp category box — fragments apply after animation ends
+            if (isRemoval && row) {
+                removeRowState = {
+                    row,
+                    opacity: row.style.opacity,
+                    transition: row.style.transition,
+                    pointerEvents: row.style.pointerEvents,
+                    transform: row.style.transform
+                };
+                row.style.pointerEvents = 'none';
+                row.querySelectorAll('button, .ed-float-cart__qty-input').forEach((el) => {
+                    el.disabled = true;
+                });
+                removalAnimPromise = startFloatCartRowRemovalAnimation(row);
+            } else if (qtyInput) {
                 setQtyInputDisplayValue(qtyInput, quantity);
-                qtyInput.disabled = true; // Disable during update
+                qtyInput.disabled = true;
             }
 
             // Use our AJAX endpoint for updating cart (better session handling)
@@ -166,7 +255,8 @@
             });
 
             if (!response.ok) {
-                // Revert on error
+                revertRemovingRow(removeRowState);
+                removeRowState = null;
                 if (qtyInput) {
                     qtyInput.value = oldValue;
                     qtyInput.disabled = false;
@@ -178,7 +268,8 @@
             const result = await response.json();
 
             if (!result.success || result.data?.error) {
-                // Revert on error
+                revertRemovingRow(removeRowState);
+                removeRowState = null;
                 if (qtyInput) {
                     qtyInput.value = oldValue;
                     qtyInput.disabled = false;
@@ -187,8 +278,12 @@
                 return;
             }
 
-            // Re-enable input
-            if (qtyInput) {
+            if (removalAnimPromise) {
+                await removalAnimPromise;
+            }
+
+            // Re-enable input (removal replaces markup via fragments)
+            if (qtyInput && !isRemoval) {
                 qtyInput.disabled = false;
             }
 
@@ -265,11 +360,9 @@
 
         } catch (error) {
             console.error('Error updating cart item quantity:', error);
-
-            // Revert on error
-            const cartItem = document.querySelector(`[data-cart-item-key="${cartItemKey}"]`);
-            const qtyInput = cartItem?.querySelector('.ed-float-cart__qty-input');
+            revertRemovingRow(removeRowState);
             if (qtyInput) {
+                qtyInput.value = oldValue;
                 qtyInput.disabled = false;
             }
         }
