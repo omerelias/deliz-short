@@ -52,7 +52,7 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
   // Header: title + free-shipping bar (deliz_short_float_cart_header_shipping) — keep in sync after partial cart AJAX.
   if ( preg_match( '/<header\s+class="ed-float-cart__header"[^>]*>[\s\S]*?<\/header>/u', $full, $m ) ) {
     $fragments['#ed-float-cart header.ed-float-cart__header'] = $m[0];
-  } 
+  }
 
   // Dedicated fragment: nested progress bar HTML breaks naive header regex; ensures bar returns after qty AJAX.
   ob_start();

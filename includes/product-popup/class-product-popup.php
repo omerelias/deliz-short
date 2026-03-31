@@ -127,7 +127,7 @@ class ED_Product_Popup {
       // Render cart items using the same template logic
       $template_file = get_template_directory() . '/template-parts/floating-mini-cart.php';
       if (file_exists($template_file)) {
-        // Extract the items section from the template
+        // Extract the items section from the template 
         $template_content = file_get_contents($template_file);
         // We'll use a simpler approach - just include the template and extract
         // But for now, let's use get_template_part with a custom output buffer
@@ -146,22 +146,44 @@ class ED_Product_Popup {
           $quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
           $ocwsu_units_qty_ui = ($weighable && $sold_by_units && $quantity_in_units > 0);
           $ocwsu_gram_weight_qty_ui = ($weighable && $sold_by_weight && !$ocwsu_units_qty_ui && deliz_short_ocwsu_product_weight_is_grams($product_weight_units));
+          $ocwsu_weight_input_show_kg = false;
           $ocwsu_kg_per_unit = 0.0;
           if ($ocwsu_units_qty_ui) {
             $ocwsu_kg_per_unit = $qty_raw / max($quantity_in_units, 1e-9);
           }
           $qty_is_whole = ( abs($qty_raw - round($qty_raw)) < 1e-9 );
+          $weight_step_meta = get_post_meta($product_id, '_ocwsu_weight_step', true);
+          $weight_step = ($weight_step_meta !== '' && is_numeric($weight_step_meta) && floatval($weight_step_meta) > 0)
+              ? wc_format_decimal((float) $weight_step_meta, true)
+              : 'any';
+          $min_w_meta_oc = get_post_meta($product_id, '_ocwsu_min_weight', true);
+          $ocwsu_min_g = ($min_w_meta_oc !== '' && is_numeric($min_w_meta_oc) && floatval($min_w_meta_oc) > 0)
+              ? floatval($min_w_meta_oc)
+              : 1.0;
+          $ocwsu_min_grams_str = wc_format_decimal($ocwsu_min_g, true);
+          $ocwsu_min_kg_str = wc_format_decimal(max(0.0001, $ocwsu_min_g / 1000), true);
+          $ocwsu_step_kg_str = ($weight_step !== 'any' && is_numeric($weight_step))
+              ? wc_format_decimal(floatval($weight_step) / 1000, true)
+              : 'any';
           if ($ocwsu_units_qty_ui) {
             $qty_display = wc_format_decimal($quantity_in_units, 0);
             $qty_input_val = $qty_display;
             $qty_input_min = '1';
             $qty_input_step = '1';
           } elseif ($ocwsu_gram_weight_qty_ui) {
-            $qty_input_val = deliz_short_format_ocwsu_cart_weight_display_value($qty_raw * 1000, true);
-            $qty_display = $qty_input_val;
-            $min_w_meta = get_post_meta($product_id, '_ocwsu_min_weight', true);
-            $qty_input_min = ($min_w_meta !== '' && is_numeric($min_w_meta) && floatval($min_w_meta) > 0)
-              ? wc_format_decimal((float) $min_w_meta, true) : '1';
+            $grams_rounded = (int) round((float) $qty_raw * 1000);
+            $ocwsu_weight_input_show_kg = ($grams_rounded >= 1000);
+            if ($ocwsu_weight_input_show_kg) {
+              $qty_input_val = deliz_short_format_ocwsu_cart_weight_display_value($qty_raw, false);
+              $qty_display = $qty_input_val;
+              $qty_input_min = $ocwsu_min_kg_str;
+              $qty_input_step = $ocwsu_step_kg_str;
+            } else {
+              $qty_input_val = deliz_short_format_ocwsu_cart_weight_display_value($qty_raw * 1000, true);
+              $qty_display = $qty_input_val;
+              $qty_input_min = $ocwsu_min_grams_str;
+              $qty_input_step = $weight_step;
+            }
           } elseif (!$weighable || $qty_is_whole) {
               $qty_display = (string) (int) round($qty_raw);
               $qty_input_val = $qty_display;
@@ -169,15 +191,13 @@ class ED_Product_Popup {
               $qty_display = wc_format_decimal($qty_raw, true);
               $qty_input_val = $qty_display;
           }
-          $weight_step_meta = get_post_meta($product_id, '_ocwsu_weight_step', true);
-          $weight_step = ($weight_step_meta !== '' && is_numeric($weight_step_meta) && floatval($weight_step_meta) > 0)
-              ? wc_format_decimal((float) $weight_step_meta, true)
-              : 'any';
           if (!$ocwsu_units_qty_ui) {
             if (!$ocwsu_gram_weight_qty_ui) {
               $qty_input_min = $weighable ? '0.0001' : '1';
             }
-            $qty_input_step = $weighable ? $weight_step : '1';
+            if (!$ocwsu_gram_weight_qty_ui) {
+              $qty_input_step = $weighable ? $weight_step : '1';
+            }
           }
           $thumbnail = $product->get_image('woocommerce_thumbnail');
           $remove_url = wc_get_cart_remove_url($cart_item_key);
@@ -249,14 +269,20 @@ class ED_Product_Popup {
                            data-ed-ocwsu-kg-per-unit="<?php echo esc_attr(wc_format_decimal($ocwsu_kg_per_unit, 6)); ?>"
                            aria-label="<?php esc_attr_e('מספר יחידות', 'deliz-short'); ?>"
                       <?php elseif ($ocwsu_gram_weight_qty_ui) : ?>
-                           data-ed-ocwsu-cart-qty-unit="grams"
-                           aria-label="<?php esc_attr_e('משקל בגרמים', 'deliz-short'); ?>"
+                           data-ed-ocwsu-cart-qty-unit="<?php echo $ocwsu_weight_input_show_kg ? 'kg' : 'grams'; ?>"
+                           data-ed-ocwsu-gram-min="<?php echo esc_attr($ocwsu_min_grams_str); ?>"
+                           data-ed-ocwsu-gram-step="<?php echo esc_attr($weight_step === 'any' ? 'any' : $weight_step); ?>"
+                           data-ed-ocwsu-kg-min="<?php echo esc_attr($ocwsu_min_kg_str); ?>"
+                           data-ed-ocwsu-kg-step="<?php echo esc_attr($ocwsu_step_kg_str === 'any' ? 'any' : $ocwsu_step_kg_str); ?>"
+                           aria-label="<?php echo esc_attr($ocwsu_weight_input_show_kg ? __('משקל בק"ג', 'deliz-short') : __('משקל בגרמים', 'deliz-short')); ?>"
                       <?php else : ?>
                            aria-label="<?php esc_attr_e('כמות', 'deliz-short'); ?>"
                       <?php endif; ?>
                     >
                     <?php if ($ocwsu_units_qty_ui) : ?>
                       <span class="ed-float-cart__qty-units-label"><?php esc_html_e("יח'", 'deliz-short'); ?></span>
+                    <?php elseif ($ocwsu_gram_weight_qty_ui) : ?>
+                      <span class="ed-float-cart__qty-units-label"><?php echo esc_html($ocwsu_weight_input_show_kg ? __('ק"ג', 'deliz-short') : __('גרם', 'deliz-short')); ?></span>
                     <?php elseif ($weighable && $sold_by_weight && $ocwsu_weight_qty_label !== '') : ?>
                       <span class="ed-float-cart__qty-units-label"><?php echo esc_html($weight_unit); ?></span>
                     <?php endif; ?>
@@ -836,6 +862,8 @@ class ED_Product_Popup {
       'debugCartQty' => ( defined( 'WP_DEBUG' ) && WP_DEBUG ),
       'i18nFloatCart' => [
         'shipping' => __('משלוח', 'deliz-short'),
+        'weightKg' => __('ק"ג', 'deliz-short'),
+        'weightGram' => __('גרם', 'deliz-short'),
       ],
     ]);
   }

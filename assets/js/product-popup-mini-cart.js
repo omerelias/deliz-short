@@ -13,13 +13,18 @@
     const pendingQtyByCartKey = new Map();
     const qtyWorkerByCartKey = new Map();
  
-    function isOcwsuUnitsQtyInput(input) {
+    function isOcwsuUnitsQtyInput(input) { 
         return input && input.getAttribute('data-ed-ocwsu-units-display') === '1';
     }
 
-    /** Sold by weight with product unit "grams" — input shows grams; Woo cart qty is kg. */
-    function isOcwsuGramCartQtyInput(input) {
-        return input && input.getAttribute('data-ed-ocwsu-cart-qty-unit') === 'grams';
+    /** OCWSU float line: input shows grams (<1000 g rounded) or kg (from 1000 g); cart stays kg. */
+    function getOcwsuFloatCartWeightUnit(input) {
+        const u = input && input.getAttribute('data-ed-ocwsu-cart-qty-unit');
+        return (u === 'grams' || u === 'kg') ? u : null;
+    }
+
+    function isOcwsuFloatCartWeightInput(input) {
+        return getOcwsuFloatCartWeightUnit(input) !== null;
     }
 
     function edMiniCartQtyDebugEnabled() {
@@ -47,6 +52,90 @@
         return parseFloat((v * 0.001).toFixed(6));
     }
 
+    function formatOcwsuKgDisplay(kg) {
+        if (!isFinite(kg)) {
+            return '';
+        }
+        let s = kg.toFixed(6).replace(/\.?0+$/, '');
+        if (s === '' || s === '.') {
+            s = '0';
+        }
+        return s;
+    }
+
+    function applyOcwsuFloatCartGramMode(input) {
+        const gmin = input.getAttribute('data-ed-ocwsu-gram-min');
+        const gstep = input.getAttribute('data-ed-ocwsu-gram-step');
+        if (gmin) {
+            input.min = gmin;
+        }
+        input.step = (!gstep || gstep === 'any') ? 'any' : gstep;
+        input.setAttribute('data-ed-ocwsu-cart-qty-unit', 'grams');
+    }
+
+    function applyOcwsuFloatCartKgMode(input) {
+        const kmin = input.getAttribute('data-ed-ocwsu-kg-min');
+        const kstep = input.getAttribute('data-ed-ocwsu-kg-step');
+        if (kmin) {
+            input.min = kmin;
+        }
+        input.step = (!kstep || kstep === 'any') ? 'any' : kstep;
+        input.setAttribute('data-ed-ocwsu-cart-qty-unit', 'kg');
+    }
+
+    /** Switch grams↔kg display when crossing 1000 g total (aligned with PHP). */
+    function maybeToggleOcwsuFloatCartWeightMode(input) {
+        if (!isOcwsuFloatCartWeightInput(input)) {
+            return;
+        }
+        const u = getOcwsuFloatCartWeightUnit(input);
+        const v = parseFloat(String(input.value).replace(',', '.'));
+        if (!isFinite(v)) {
+            return;
+        }
+        if (u === 'grams') {
+            const g = Math.round(v);
+            if (g >= 1000) {
+                applyOcwsuFloatCartKgMode(input);
+                input.value = formatOcwsuKgDisplay(v * 0.001);
+            }
+        } else if (u === 'kg') {
+            const g = Math.round(v * 1000);
+            if (g < 1000) {
+                applyOcwsuFloatCartGramMode(input);
+                input.value = String(Math.max(0, g));
+            }
+        }
+    }
+
+    function syncOcwsuWeightQtyUnitLabel(input) {
+        if (!isOcwsuFloatCartWeightInput(input)) {
+            return;
+        }
+        const field = input.closest('.ed-float-cart__qty-field');
+        const span = field && field.querySelector('.ed-float-cart__qty-units-label');
+        if (!span) {
+            return;
+        }
+        const cfg = window.ED_POPUP_CONFIG && window.ED_POPUP_CONFIG.i18nFloatCart;
+        const kgLabel = (cfg && cfg.weightKg) ? cfg.weightKg : 'ק"ג';
+        const gLabel = (cfg && cfg.weightGram) ? cfg.weightGram : 'גרם';
+        span.textContent = getOcwsuFloatCartWeightUnit(input) === 'kg' ? kgLabel : gLabel;
+    }
+
+    /** @returns {number|null} kg */
+    function ocwsuFloatCartDisplayToKg(input, displayVal) {
+        const u = getOcwsuFloatCartWeightUnit(input);
+        if (u === 'grams') {
+            return gramsDisplayToKg(displayVal);
+        }
+        if (u === 'kg') {
+            const v = parseFloat(String(displayVal).replace(',', '.'));
+            return isFinite(v) ? parseFloat(v.toFixed(6)) : null;
+        }
+        return null;
+    }
+
     function kgFromOcwsuUnitsInput(input, units) {
         const kgPer = parseFloat(input.getAttribute('data-ed-ocwsu-kg-per-unit'));
         const u = parseFloat(String(units).replace(',', '.'));
@@ -70,8 +159,16 @@
                 return;
             }
         }
-        if (isOcwsuGramCartQtyInput(input) && isFinite(quantityKg)) {
-            input.value = String(parseFloat((quantityKg * 1000).toFixed(6)));
+        if (isOcwsuFloatCartWeightInput(input) && isFinite(quantityKg)) {
+            const gRounded = Math.round(quantityKg * 1000);
+            if (gRounded >= 1000) {
+                applyOcwsuFloatCartKgMode(input);
+                input.value = formatOcwsuKgDisplay(quantityKg);
+            } else {
+                applyOcwsuFloatCartGramMode(input);
+                input.value = String(gRounded);
+            }
+            syncOcwsuWeightQtyUnitLabel(input);
             return;
         }
         input.value = quantityKg;
@@ -170,6 +267,10 @@
                 input.value = String(Math.max(1, Math.round(newValue)));
             } else {
                 input.value = String(newValue);
+                if (isOcwsuFloatCartWeightInput(input)) {
+                    maybeToggleOcwsuFloatCartWeightMode(input);
+                    syncOcwsuWeightQtyUnitLabel(input);
+                }
             }
             if (isOcwsuUnitsQtyInput(input)) {
                 const kg = kgFromOcwsuUnitsInput(input, newValue);
@@ -178,13 +279,14 @@
                     updateCartItemQuantity(cartItemKey, kg);
                 }
             } else {
-                const qtyKg = isOcwsuGramCartQtyInput(input) ? gramsDisplayToKg(newValue) : newValue;
-                if (isOcwsuGramCartQtyInput(input)) {
-                    dbgMiniCartQty('grams line +/-', {
+                const pv = parseFloat(String(input.value).replace(',', '.'));
+                const qtyKg = isOcwsuFloatCartWeightInput(input) ? ocwsuFloatCartDisplayToKg(input, pv) : newValue;
+                if (isOcwsuFloatCartWeightInput(input)) {
+                    dbgMiniCartQty('weight line +/-', {
                         action,
                         step,
                         baseDisplay: base,
-                        newDisplayGrams: newValue,
+                        newDisplay: newValue,
                         qtyKgForWoo: qtyKg
                     });
                 }
@@ -228,6 +330,10 @@
         if (displayVal !== String(input.value).replace(',', '.').trim()) {
             input.value = displayVal;
         }
+        if (isOcwsuFloatCartWeightInput(input)) {
+            maybeToggleOcwsuFloatCartWeightMode(input);
+            syncOcwsuWeightQtyUnitLabel(input);
+        }
 
         // Debounce the update
         clearTimeout(input._updateTimeout);
@@ -239,9 +345,10 @@
                     updateCartItemQuantity(cartItemKey, kg);
                 }
             } else {
-                const qtyKg = isOcwsuGramCartQtyInput(input) ? gramsDisplayToKg(finalValue) : finalValue;
-                if (isOcwsuGramCartQtyInput(input)) {
-                    dbgMiniCartQty('grams line change', {finalDisplayGrams: finalValue, qtyKgForWoo: qtyKg});
+                const pv = parseFloat(String(input.value).replace(',', '.'));
+                const qtyKg = isOcwsuFloatCartWeightInput(input) ? ocwsuFloatCartDisplayToKg(input, pv) : finalValue;
+                if (isOcwsuFloatCartWeightInput(input)) {
+                    dbgMiniCartQty('weight line change', {finalDisplay: pv, qtyKgForWoo: qtyKg});
                 }
                 if (qtyKg != null && isFinite(qtyKg)) {
                     updateCartItemQuantity(cartItemKey, qtyKg);
