@@ -68,7 +68,7 @@ jQuery(function($) {
                     }
                 },
                 error: function() {
-                    $button.prop('disabled', false).removeClass('disabled'); 
+                    $button.prop('disabled', false).removeClass('disabled');
                     smsAuth.showError('.sms-auth-form', oc_sms_auth.i18n.error_sending);
                 }
             });

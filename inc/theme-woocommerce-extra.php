@@ -1053,3 +1053,29 @@ function deliz_short_ajax_sms_checkout_context() {
 
 add_action( 'wp_ajax_deliz_short_sms_checkout_context', 'deliz_short_ajax_sms_checkout_context' );
 add_action( 'wp_ajax_nopriv_deliz_short_sms_checkout_context', 'deliz_short_ajax_sms_checkout_context' );
+
+/**
+ * ספירת מוצרים לתצוגה בצ'קאאוט: שורת סל עם כמות בין 0 ל־1 (לא כולל) נספרת כמוצר אחד,
+ * כדי שלא יוצג "0 מוצרים" בגלל שקילה או כמויות עשרוניות.
+ *
+ * @param WC_Cart|null $cart עגלה או null ל־WC()->cart.
+ * @return int
+ */
+function deliz_short_cart_display_items_count( $cart = null ) {
+	$cart = $cart ? $cart : ( function_exists( 'WC' ) ? WC()->cart : null );
+	if ( ! $cart || $cart->is_empty() ) {
+		return 0;
+	}
+	$total = 0.0;
+	foreach ( $cart->get_cart() as $item ) {
+		if ( empty( $item['quantity'] ) ) {
+			continue;
+		}
+		$q = (float) wc_stock_amount( $item['quantity'] );
+		if ( $q <= 0 ) {
+			continue;
+		}
+		$total += ( $q < 1 ) ? 1.0 : $q;
+	}
+	return (int) round( $total );
+}

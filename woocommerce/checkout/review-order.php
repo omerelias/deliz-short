@@ -49,7 +49,7 @@ foreach ( $packages as $i => $package ) {
 	<tbody class="checkout-order-items-body is-open">
         <?php
         // Toggle row to open/close products list
-        $items_count = WC()->cart->get_cart_contents_count();
+        $items_count = deliz_short_cart_display_items_count();
         ?>
         <tr class="order-items-toggle">
             <td colspan="2">
@@ -100,7 +100,7 @@ foreach ( $packages as $i => $package ) {
 
 
 			}
-		}		
+		}
 		?>
 	</tbody>
 	<tfoot>

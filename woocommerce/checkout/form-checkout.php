@@ -43,7 +43,7 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 
 			<div class="col-2">
 				<?php do_action( 'woocommerce_checkout_before_order_review_heading' ); ?>
-				
+
 				<div class="checkout-block checkout-block--order" data-block="order" data-popup-id="checkout-block-popup--order" id="order_review">
 					<?php do_action( 'woocommerce_checkout_before_order_review' ); ?>
 					<div class="checkout-order-compact">
@@ -51,7 +51,8 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 						<span class="checkout-order-compact__sep">–</span>
 						<button type="button" class="checkout-order-compact__products-link" data-popup-id="checkout-block-popup--order" aria-label="<?php esc_attr_e( 'צפה בפרטי ההזמנה', 'deliz-short' ); ?>">
 							<?php
-							$items_count = WC()->cart->get_cart_contents_count();
+							$items_count = deliz_short_cart_display_items_count();
+
 							echo esc_html( sprintf( _n( '%d מוצר', '%d מוצרים', $items_count, 'deliz-short' ), $items_count ) );
 							?>
 						</button>
@@ -108,7 +109,7 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 		<?php do_action( 'woocommerce_checkout_after_customer_details' ); ?>
 
 	<?php endif; ?>
-	
+
 
 </form>
 
