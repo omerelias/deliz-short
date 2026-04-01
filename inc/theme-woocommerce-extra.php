@@ -736,7 +736,7 @@ add_action(
 	5,
 	1
 );
- 
+
 add_action( 'woocommerce_cart_loaded_from_session', 'deliz_short_maybe_restore_ship_from_backup_cookie', 99999 );
 
 /**

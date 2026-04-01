@@ -145,14 +145,31 @@
   }
 
   /**
+   * After upsell step (or when no upsells): SMS for guests, else go to checkout.
+   */
+  function proceedToCheckoutOrSms(checkoutUrl) {
+    if (checkoutUrl) {
+      window.edCheckoutUrl = checkoutUrl;
+    }
+    if (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.is_logged_in == 0 &&
+        typeof window.CheckoutSMSFlow !== 'undefined' && typeof window.CheckoutSMSFlow.showPopup === 'function') {
+      window.CheckoutSMSFlow.showPopup();
+      return;
+    }
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
+    }
+  }
+
+  /**
    * Skip upsells and continue checkout
    */
   function skipUpsells() {
     hidePopup();
     
-    // If we have a stored checkout URL (from floating cart link), redirect to it
+    // If we have a stored checkout URL (from floating cart link), SMS first for guests then redirect
     if (window.edCheckoutUrl) {
-      window.location.href = window.edCheckoutUrl;
+      proceedToCheckoutOrSms(window.edCheckoutUrl);
       return;
     }
     
@@ -196,7 +213,7 @@
           loadProducts();
         } else {
           console.log('❌ No upsells, continuing with checkout');
-          // No upsells, continue with checkout
+          // No upsells, continue with checkout (SMS flow applies to floating-cart path, not form submit here)
           checkoutForm.off('submit', interceptSubmit);
           checkoutForm.submit();
         }
@@ -425,26 +442,12 @@
       
       const $link = $(this); 
       const checkoutUrl = $link.attr('href');
+      window.edCheckoutUrl = checkoutUrl;
       
       console.log('🔵 Checkout URL:', checkoutUrl);
       console.log('🔵 Config:', config);
       
-      // Check if user needs SMS authentication first
-      if (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.is_logged_in == 0) {
-        console.log('🔵 User not logged in - checking SMS auth first');
-        // Store checkout URL for after SMS auth
-        window.edCheckoutUrl = checkoutUrl;
-        // Trigger SMS popup via CheckoutSMSFlow if available
-        if (typeof window.CheckoutSMSFlow !== 'undefined' && typeof window.CheckoutSMSFlow.showPopup === 'function') {
-          console.log('🔵 Opening SMS popup');
-          window.CheckoutSMSFlow.showPopup();
-          return false;
-        } else {
-          console.log('⚠️ CheckoutSMSFlow not available, proceeding with upsells check');
-        }
-      }
-      
-      // Check if upsells exist
+      // Upsells first; SMS only after upsell step or when there are no upsells (see proceedToCheckoutOrSms)
       $.ajax({
         url: config.ajaxUrl,
         type: 'POST',
@@ -459,23 +462,19 @@
           console.log('✅ Has upsells:', response.data && response.data.has_upsells);
           if (response.success && response.data && response.data.has_upsells) {
             console.log('✅ Showing popup with upsells');
-            // Store checkout URL for later
-            window.edCheckoutUrl = checkoutUrl;
-            // Show popup and load products
+            // Show popup and load products (edCheckoutUrl already set)
             showPopup();
             loadProducts();
           } else {
             console.log('❌ No upsells, going to checkout');
-            // No upsells, go to checkout
-            window.location.href = checkoutUrl;
+            proceedToCheckoutOrSms(checkoutUrl);
           }
         },
         error: function(xhr, status, error) {
           console.error('❌ AJAX Error:', error);
           console.error('❌ Status:', status);
           console.error('❌ XHR:', xhr);
-          // On error, go to checkout
-          window.location.href = checkoutUrl;
+          proceedToCheckoutOrSms(checkoutUrl);
         },
       });
       

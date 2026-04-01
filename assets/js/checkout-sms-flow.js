@@ -43,6 +43,11 @@ jQuery(function($) {
         },
 
         handleCheckoutClick: function(e) {
+            // Floating-cart checkout: checkout-upsells runs first (upsell → SMS). Do not open SMS here.
+            if ($(e.currentTarget).hasClass('ed-float-cart__btn--checkout')) {
+                return;
+            }
+
             console.log('[Checkout SMS] Checkout button clicked');
             console.log('[Checkout SMS] oc_sms_auth defined:', typeof oc_sms_auth !== 'undefined');
             

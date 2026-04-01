@@ -7,8 +7,9 @@ jQuery(function($) {
 
         bindEvents: function() {
             $('.sms-auth-form').on('submit', this.handleSendCode);
-            $('.verify-button').on('click', this.handleVerifyCode);
-            $(document).on('click', '.resend-code', this.handleResendCode);
+            // Scope to login popup only — checkout uses #checkout-sms-popup .verify-button (handled by checkout-sms-flow.js)
+            $(document).on('click', '.sms-auth-container .verify-button', this.handleVerifyCode);
+            $(document).on('click', '.sms-auth-container .resend-code', this.handleResendCode);
         },
 
         showError: function(container, message) {
@@ -45,9 +46,10 @@ jQuery(function($) {
                 },
                 success: function(response) {
                     if (response.success) {
-                        $('.sms-auth-form').hide();
-                        $('.sms-verification-form').show();
-                        smsAuth.startCodeTimer();
+                        const $scope = $form.closest('.sms-auth-container');
+                        $scope.find('.sms-auth-form').hide();
+                        $scope.find('.sms-verification-form').show();
+                        smsAuth.startCodeTimer($scope);
                     } else {
                         $button.prop('disabled', false).removeClass('disabled');
                         if (response.data.show_register) {
@@ -66,7 +68,7 @@ jQuery(function($) {
                     }
                 },
                 error: function() {
-                    $button.prop('disabled', false).removeClass('disabled');
+                    $button.prop('disabled', false).removeClass('disabled'); 
                     smsAuth.showError('.sms-auth-form', oc_sms_auth.i18n.error_sending);
                 }
             });
@@ -74,26 +76,15 @@ jQuery(function($) {
 
         handleVerifyCode: function(e) {
             e.preventDefault();
-            const $button = $(this);
-            let code = '';
-            $('.code-input').each(function () {
-                const val = $(this).val();
-                if (val) {
-                    code = val;
-                    return false; // עצור בלולאה
-                }
-            });
+            const $scope = $(e.target).closest('.sms-auth-container');
+            if (!$scope.length) {
+                return;
+            }
+            const $verifyForm = $scope.find('.sms-verification-form');
+            const code = ($scope.find('.sms-verification-form .code-input').val() || '').trim();
+            const phone = ($scope.find('.sms-auth-form .phone-input').val() || '').trim();
 
-            let phone = '';
-            $('.phone-input').each(function () {
-                const val = $(this).val();
-                if (val) {
-                    phone = val;
-                    return false;
-                }
-            });
-            //disable the button
-            $('.verify-button').prop('disabled', true).addClass('disabled');
+            $scope.find('.verify-button').prop('disabled', true).addClass('disabled');
             $.ajax({
                 url: oc_sms_auth.ajaxurl,
                 type: 'POST',
@@ -104,30 +95,31 @@ jQuery(function($) {
                     nonce: oc_sms_auth.nonce
                 },
                 success: function(response) {
-                    $('.verify-button').prop('disabled', false).removeClass('disabled');
+                    $scope.find('.verify-button').prop('disabled', false).removeClass('disabled');
                     if (response.success) {
                         window.location.reload();
                     } else {
-                        if(!$('.woocommerce-error').length) {
-                            $('.sms-verification-form').prepend(
-                                '<div class="woocommerce-error">' + 
-                                response.data.message + 
+                        const errMsg = (response.data && response.data.message) ? response.data.message : '';
+                        if (!$verifyForm.find('.woocommerce-error').length) {
+                            $verifyForm.prepend(
+                                '<div class="woocommerce-error">' +
+                                errMsg +
                                 '</div>'
                             );
                         } else {
-                            $('.woocommerce-error').html(response.data.message);
+                            $verifyForm.find('.woocommerce-error').html(errMsg);
                         }
                     }
                 },
                 error: function() {
-                    if(!$('.woocommerce-error').length) {
-                        $('.sms-verification-form').prepend(
-                            '<div class="woocommerce-error">' + 
-                            oc_sms_auth.i18n.error_verifying + 
+                    if (!$verifyForm.find('.woocommerce-error').length) {
+                        $verifyForm.prepend(
+                            '<div class="woocommerce-error">' +
+                            oc_sms_auth.i18n.error_verifying +
                             '</div>'
                         );
                     } else {
-                        $('.woocommerce-error').html(oc_sms_auth.i18n.error_verifying);
+                        $verifyForm.find('.woocommerce-error').html(oc_sms_auth.i18n.error_verifying);
                     }
                 }
             });
@@ -135,10 +127,15 @@ jQuery(function($) {
 
         handleResendCode: function(e) {
             e.preventDefault();
+            const $scope = $(e.target).closest('.sms-auth-container');
+            if (!$scope.length) {
+                return;
+            }
             const $button = $(this);
-            
+            const $verifyForm = $scope.find('.sms-verification-form');
+
             $button.prop('disabled', true).addClass('disabled');
-            $('.woocommerce-error').remove(); // Clear previous errors
+            $verifyForm.find('.woocommerce-error').remove();
 
             $.ajax({
                 url: oc_sms_auth.ajaxurl,
@@ -150,49 +147,51 @@ jQuery(function($) {
                 success: function(response) {
                     $button.prop('disabled', false).removeClass('disabled');
                     if (response.success) {
-                        smsAuth.startCodeTimer();
-                        // Show success message
-                        $('.sms-verification-form').prepend(
-                            '<div class="woocommerce-message">' + 
-                            oc_sms_auth.i18n.code_resent + 
+                        smsAuth.startCodeTimer($scope);
+                        $verifyForm.prepend(
+                            '<div class="woocommerce-message">' +
+                            oc_sms_auth.i18n.code_resent +
                             '</div>'
                         );
                     } else {
                         $button.prop('disabled', false).removeClass('disabled');
-                        smsAuth.showError('.sms-verification-form', response.data.message || response.data);
+                        smsAuth.showError($verifyForm, response.data.message || response.data);
                     }
                 },
                 error: function() {
                     $button.prop('disabled', false).removeClass('disabled');
-                    smsAuth.showError('.sms-verification-form', oc_sms_auth.i18n.error_resending);
+                    smsAuth.showError($verifyForm, oc_sms_auth.i18n.error_resending);
                 }
             });
         },
 
-        startCodeTimer: function() {
-            // Clear any existing timer
+        startCodeTimer: function($scope) {
+            const $root = $scope && $scope.length ? $scope : $('.sms-auth-container').first();
+            if (!$root.length) {
+                return;
+            }
             if (this.codeTimer) {
                 clearInterval(this.codeTimer);
             }
-            
+
             let timeLeft = oc_sms_auth.code_expiry || 180;
-            const $timerDisplay = $('.verification-code-timer');
-            
+            let $timerDisplay = $root.find('.verification-code-timer');
+
             if (!$timerDisplay.length) {
-                $('.verification-code-input').after('<div class="verification-code-timer"></div>');
+                $root.find('.verification-code-input').first().after('<div class="verification-code-timer"></div>');
+                $timerDisplay = $root.find('.verification-code-timer');
             }
-            
-            // Store timer reference
+
             this.codeTimer = setInterval(() => {
                 timeLeft--;
-                $('.verification-code-timer').text(
-                    `${Math.floor(timeLeft/60)}:${(timeLeft % 60).toString().padStart(2, '0')}`
+                $timerDisplay.text(
+                    `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`
                 );
-                
+
                 if (timeLeft <= 0) {
                     clearInterval(this.codeTimer);
-                    $('.sms-verification-form').hide();
-                    $('.sms-auth-form').show();
+                    $root.find('.sms-verification-form').hide();
+                    $root.find('.sms-auth-form').show();
                 }
             }, 1000);
         }
