@@ -68,6 +68,23 @@ position: absolute;
 button.verify-button{
 	width: 100%;
 }
+.confirm-sms-code__actions{
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+	align-items: stretch;
+	width: 100%;
+}
+.confirm-sms-code__actions .verify-button{
+	flex: 7 1 0;
+	min-width: 0;
+	width: auto;
+}
+.confirm-sms-code__actions .resend-code{
+	flex: 3 1 0;
+	min-width: 0;
+	width: auto;
+}
 button.submit-sms.disabled,
 button.verify-button.disabled{
 	opacity: 1;
@@ -93,8 +110,7 @@ button.verify-button.disabled:after{
 button.resend-code{
     background: transparent !important;
     color: #000 !important;
-    position: absolute;
-    bottom: -20px;
+    position: static;
     padding: 0;
     text-decoration: underline;
 }

@@ -5,7 +5,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 999999;
+    z-index: 9999999999;
     display: none;
 }
 
@@ -40,7 +40,7 @@
     max-width: 450px;
     width: 100%;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    z-index: 1;
+    z-index: 5000000;
     pointer-events: auto;
 }
 
@@ -130,7 +130,7 @@
 
 .checkout-sms-popup .button {
     width: 100%;
-    padding: 14px;
+    padding: 7px;
     background: var(--color-primary, #007bff);
     color: #fff;
     border: none;
@@ -141,6 +141,8 @@
     transition: background 0.2s;
     margin-top: 10px;
 }
+
+
 
 .checkout-sms-popup .button:hover:not(.disabled) {
     background: var(--color-primary-hover, #0056b3);
@@ -155,6 +157,30 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+.checkout-sms-popup .confirm-sms-code__actions {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: 100%;
+    align-items: stretch;
+}
+
+.checkout-sms-popup .confirm-sms-code__actions .button {
+    width: auto;
+    margin-top: 0;
+}
+
+.checkout-sms-popup .confirm-sms-code__actions .verify-button {
+    flex: 6 2 0;
+    min-width: 0;
+}
+
+.checkout-sms-popup .confirm-sms-code__actions .resend-code {
+    flex: 3 1 0;
+    min-width: 0;
+    position: static;
 }
 
 .checkout-sms-popup .verification-code-input {
@@ -186,15 +212,36 @@
     margin: 0;
     border: 1px solid #fcc;
 }
+ 
+/* Legacy/cached builds: message was nested inside .woocommerce-error */
+.checkout-sms-popup__error > .woocommerce-error:has(> .woocommerce-message) {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: inherit;
+}
 
 .checkout-sms-popup__error .woocommerce-message {
-    background: #efe;
-    color: #060;
-    padding: 12px;
-    border-radius: 6px;
+    background: linear-gradient(180deg, #f4fbf6 0%, #e8f5ec 100%);
+    color: #0d4d24;
+    padding: 12px 14px;
+    border-radius: 8px;
     font-size: 14px;
+    line-height: 1.45;
     margin: 0;
-    border: 1px solid #cfc;
+    border: 1px solid #b8dcc4;
+    box-shadow: 0 1px 2px rgba(13, 77, 36, 0.06);
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .checkout-sms-popup__error .woocommerce-message {
+        padding: 12px 0;
+    }
+}
+
+.checkout-sms-popup__error .woocommerce-message {
+    margin-top: 25px;
 }
 
 .verification-code-timer {
@@ -233,3 +280,6 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
     right: 15px;
 }
 
+.woocommerce-message::before{
+    content: "";
+}

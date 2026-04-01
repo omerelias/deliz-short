@@ -191,6 +191,10 @@ jQuery(function($) {
                 $error.empty();
                 return;
             }
+            if (typeof message === 'string' && /class\s*=\s*["']woocommerce-message["']/.test(message)) {
+                $error.html(message);
+                return;
+            }
             $error.html('<div class="woocommerce-error">' + message + '</div>');
         },
 
@@ -298,7 +302,7 @@ jQuery(function($) {
                     $button.prop('disabled', false).removeClass('disabled');
                     if (response.success) {
                         CheckoutSMSFlow.startCodeTimer();
-                        CheckoutSMSFlow.showError('code', '<div class="woocommerce-message">' + oc_sms_auth.i18n.code_resent + '</div>');
+                        CheckoutSMSFlow.showError('code', '<div class="woocommerce-message" role="status">' + oc_sms_auth.i18n.code_resent + '</div>');
                     } else {
                         CheckoutSMSFlow.showError('code', response.data.message || response.data || oc_sms_auth.i18n.error_resending);
                     }

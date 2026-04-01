@@ -49,6 +49,26 @@ select {
     color: var(--main-text-color-hover);
 }
 
+.form-login .confirm-sms-code__actions{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: 100%;
+    align-items: stretch;
+}
+
+.form-login .confirm-sms-code__actions .verify-button:not(.auth__close):not(.show-password-input),
+.form-login .confirm-sms-code__actions .resend-code:not(.auth__close):not(.show-password-input){
+    flex: 7 1 0;
+    min-width: 0;
+    width: auto;
+    margin-block: 0;
+}
+
+.form-login .confirm-sms-code__actions .resend-code:not(.auth__close):not(.show-password-input){
+    flex: 3 1 0;
+}
+
 .form-login button.resend-code:not(.auth__close):not(.show-password-input){
     height: auto;
     line-height: normal;
@@ -57,7 +77,6 @@ select {
     font-size: 15px;
     text-decoration: underline;
     position: static;
-    margin-block-start: -15px;
 }
 
 .site-overlay {
@@ -914,7 +933,7 @@ body.square_images .woocommerce ul.products li.product a img{
         top: 0;
         align-self: flex-start;
         width: 100%;
-        z-index: 100;
+        z-index: 10;
         background: #fff;
         padding-block: 10px;
     }

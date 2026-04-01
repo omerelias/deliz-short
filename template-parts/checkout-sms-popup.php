@@ -41,12 +41,14 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
                     <div class="verification-code-input">
                         <input type="text" name="verification_code" maxlength="6" class="code-input" placeholder="<?php esc_attr_e('קוד אימות', 'deliz-short'); ?>" />
                     </div>
-                    <button type="submit" class="button verify-button">
-                        <?php echo esc_html__('אימות', 'deliz-short'); ?>
-                    </button>
-                    <button type="button" class="button resend-code" data-resend-count="0">
-                        <?php echo esc_html__('שלח קוד חדש', 'deliz-short'); ?>
-                    </button>
+                    <div class="confirm-sms-code__actions">
+                        <button type="submit" class="button verify-button">
+                            <?php echo esc_html__('אימות', 'deliz-short'); ?>
+                        </button>
+                        <button type="button" class="button resend-code" data-resend-count="0">
+                            <?php echo esc_html__('שלח קוד חדש', 'deliz-short'); ?>
+                        </button>
+                    </div>
                 </div>
                 <div class="checkout-sms-popup__error"></div>
             </div>

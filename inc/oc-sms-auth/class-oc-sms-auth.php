@@ -182,12 +182,14 @@ class OC_SMS_Auth {
                     <div class="verification-code-input">
                         <input type="text" name="verification_code" maxlength="6" class="code-input"  />
                     </div>
-                    <button type="button" class="button verify-button">
-                        <?php echo esc_html($this->settings['verify_button_text']); ?>
-                    </button>
-                    <button type="button" class="button resend-code" data-resend-count="0">
-                        <?php echo esc_html($this->settings['resend_button_text']); ?>
-                    </button>
+                    <div class="confirm-sms-code__actions">
+                        <button type="button" class="button verify-button">
+                            <?php echo esc_html($this->settings['verify_button_text']); ?>
+                        </button>
+                        <button type="button" class="button resend-code" data-resend-count="0">
+                            <?php echo esc_html($this->settings['resend_button_text']); ?>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="subtitle or">או התחברות עם סיסמא</div>
