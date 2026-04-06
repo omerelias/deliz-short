@@ -415,6 +415,3 @@ $options = $product_data['options'] ?? [];
   </div>
 
 </div>
-
-
-

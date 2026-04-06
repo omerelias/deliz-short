@@ -226,36 +226,69 @@ $config = [
 //items area
 add_shortcode('ed_products_box', function ($atts) {
   $atts = shortcode_atts([
-    'class' => 'ed-mp-products-wrap',
+    'class'     => 'ed-mp-products-wrap',
     'title_tag' => 'h2',
-    'per_page' => 12,
-    'columns' => 2,
+    'per_page'  => 12,
+    'columns'   => 2,
   ], $atts, 'ed_products_box');
 
   $tag = tag_escape($atts['title_tag']);
 
-  $title_html = '';
+  $title_html    = '';
   $products_html = '';
+  $subcats_html  = '';
 
-  // ✅ אם נכנסו ישירות ל /cat/{slug}/ אז mp_cat קיים מה-rewrite
+  // אם נכנסו ישירות ל /cat/{slug}/ אז mp_cat קיים מה-rewrite
   $slug = get_query_var('mp_cat');
+
   if ($slug) {
     $term = get_term_by('slug', $slug, 'product_cat');
+
     if ($term && !is_wp_error($term)) {
       $title_html = esc_html($term->name);
+
+      // מוצרים של הקטגוריה הנוכחית
       $products_html = do_shortcode(sprintf(
         '[products category="%s" limit="%d" paginate="false" columns="%d"]',
         esc_attr($slug),
-        (int)$atts['per_page'],
-        (int)$atts['columns']
+        (int) $atts['per_page'],
+        (int) $atts['columns']
       ));
+
+      // תתי קטגוריות עם מוצרים בלבד
+      $children = get_terms([
+        'taxonomy'   => 'product_cat',
+        'parent'     => (int) $term->term_id,
+        'hide_empty' => true,
+        'orderby'    => 'menu_order',
+        'order'      => 'ASC',
+      ]);
+
+      if (!is_wp_error($children) && !empty($children)) {
+        $items = [];
+
+        foreach ($children as $child) {
+          $url = trailingslashit(home_url('cat/' . $child->slug));
+
+          $items[] = sprintf(
+            '<a class="ed-mp__subcat-link" href="%s">%s</a>',
+            esc_url($url),
+            esc_html($child->name)
+          );
+        }
+
+        if (!empty($items)) {
+          $subcats_html = '<div class="ed-mp__subcats" data-ed-products-subcats="1">' . implode('', $items) . '</div>';
+        }
+      }
     }
   }
 
   return '
-  <div class="'. esc_attr($atts['class']) .'">
-    <'.$tag.' class="ed-mp__title" data-ed-products-title="1">'.$title_html.'</'.$tag.'>
-    <div class="ed-mp__products" data-ed-products-box="1" aria-live="polite">'.$products_html.'</div>
+  <div class="' . esc_attr($atts['class']) . '">
+    <' . $tag . ' class="ed-mp__title" data-ed-products-title="1">' . $title_html . '</' . $tag . '>
+    ' . $subcats_html . '
+    <div class="ed-mp__products" data-ed-products-box="1" aria-live="polite">' . $products_html . '</div>
   </div>';
 });
 
@@ -280,12 +313,11 @@ function ed_menu_products_js_shared() {
   const cfg = window.ED_MENU_PRODUCTS;
   const I18N = {$ed_mp_i18n};
   if (!cfg) return;
- 
+
   const box   = document.querySelector(cfg.productsSelector);
   const title = document.querySelector(cfg.titleSelector);
   if (!box) return;
 
-  // Volt-like animation on products box: smooth fade/slide between results
   if (!box.style.transition) {
     box.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
   }
@@ -302,6 +334,29 @@ function ed_menu_products_js_shared() {
   let lastTerm = null;
   let beforeSearch = null;
 
+  function getSubcatsEl() {
+    return document.querySelector('[data-ed-products-subcats="1"]');
+  }
+
+  function removeSubcats() {
+    const el = getSubcatsEl();
+    if (el) el.remove();
+  }
+
+  function replaceSubcats(html) {
+    const currentEl = getSubcatsEl();
+
+    if (html && String(html).trim()) {
+      if (currentEl) {
+        currentEl.outerHTML = html;
+      } else if (title) {
+        title.insertAdjacentHTML('afterend', html);
+      }
+    } else if (currentEl) {
+      currentEl.remove();
+    }
+  }
+
   function fadeOutBox() {
     if (!box) return;
     box.style.opacity = '0';
@@ -310,7 +365,6 @@ function ed_menu_products_js_shared() {
 
   function fadeInBox() {
     if (!box) return;
-    // Start from slightly lower opacity/position, then animate to visible
     box.style.opacity = '0';
     box.style.transform = 'translateY(10px)';
     requestAnimationFrame(() => {
@@ -322,13 +376,11 @@ function ed_menu_products_js_shared() {
   function getTermFromUrl() {
     const u = new URL(location.href);
 
-    // 1) Pretty URL: /cat/{slug}/
     const p = u.pathname.replace(/\\/+$/, '');
     const parts = p.split('/').filter(Boolean);
     const i = parts.indexOf('cat');
     if (i !== -1 && parts[i + 1]) return parts[i + 1];
 
-    // 2) Fallback old query param
     return u.searchParams.get('mp_cat') || '';
   }
 
@@ -349,13 +401,12 @@ function ed_menu_products_js_shared() {
     };
   }
 
-
   async function loadTerm(term, {push=false} = {}) {
-
     if (term === 'rebuy') {
       await loadRebuyFromPhp({ push });
       return;
-    }  
+    }
+
     lastTerm = term;
     term = term || cfg.defaultSlug;
     if (!term || term === current) return;
@@ -363,7 +414,6 @@ function ed_menu_products_js_shared() {
     current = term;
     setActive(term);
 
-    // Fade out current products while loading new category
     fadeOutBox();
 
     if (controller) controller.abort();
@@ -371,11 +421,9 @@ function ed_menu_products_js_shared() {
 
     box.classList.add('is-loading');
 
-    // טייטל זמני מהלינק בתפריט (כדי שלא יהיה ריק עד שהשרת חוזר)
     const link = links().find(a => a.dataset.edTerm === term);
     if (link) setTitle(link.textContent.trim());
 
-    // ✅ מצב "קנייה חוזרת"
     if (term === 'rebuy') {
       await loadRebuy({ push });
       return;
@@ -390,23 +438,20 @@ function ed_menu_products_js_shared() {
       if (!res.ok) throw new Error('Request failed');
       const data = await res.json();
 
-      // html של מוצרים
       box.innerHTML = data.html || '';
       box.classList.remove('is-loading');
-      // Fade in newly loaded products
       fadeInBox();
 
-      // שם קטגוריה מדויק מהשרת
       if (data.term && data.term.name) setTitle(data.term.name);
 
-      // ✅ Update cart fragments if provided (for AJAX navigation sync)
+      replaceSubcats(data.subcats_html || '');
+
       if (data.fragments && typeof data.fragments === 'object') {
         updateCartFragments(data.fragments);
       }
 
-      // עדכון URL: /cat/{slug}/
       if (push) {
-        const base = (cfg.catBase || '/cat/').replace(/\\/+$/, '/') ; // מבטיח / בסוף
+        const base = (cfg.catBase || '/cat/').replace(/\\/+$/, '/');
         const newUrl = new URL(base + term + '/', window.location.origin);
         history.pushState({term}, '', newUrl.toString());
       }
@@ -414,146 +459,150 @@ function ed_menu_products_js_shared() {
       if (e.name === 'AbortError') return;
       box.classList.remove('is-loading');
       box.innerHTML = '<p>' + I18N.loadError + '</p>';
+      removeSubcats();
     }
   }
 
-async function loadRebuyFromPhp({push=false} = {}) {
-  current = 'rebuy';
-  setActive('rebuy');
-  setTitle(I18N.rebuyTitle);
-  fadeOutBox();
-  box.classList.add('is-loading');
+  async function loadRebuyFromPhp({push=false} = {}) {
+    current = 'rebuy';
+    setActive('rebuy');
+    setTitle(I18N.rebuyTitle);
+    removeSubcats();
+    fadeOutBox();
+    box.classList.add('is-loading');
 
-  try {
-    if (!cfg.rebuyViewEndpoint) {
-      console.error('Missing cfg.rebuyViewEndpoint');
-      throw new Error('missing endpoint');
-    }
-
-    const reqUrl = new URL(cfg.rebuyViewEndpoint);
-
-    const res = await fetch(reqUrl.toString(), {
-      credentials: 'same-origin',
-      headers: {
-        'X-WP-Nonce': cfg.restNonce
-      }
-    });
-
-    const raw = await res.text(); // תמיד קוראים text כדי שלא ניתקע על JSON
-    if (!res.ok) {
-      console.error('rebuy-view failed', res.status, raw);
-      throw new Error('rebuy-view failed: ' + res.status);
-    }
-
-    let data;
     try {
-      data = JSON.parse(raw);
-    } catch (e) { 
-      console.error('rebuy-view non-json response', raw);
-      throw e;
-    }
+      if (!cfg.rebuyViewEndpoint) {
+        console.error('Missing cfg.rebuyViewEndpoint');
+        throw new Error('missing endpoint');
+      }
 
-    box.innerHTML = (data && data.html) ? data.html : '<p>' + I18N.contentUnavailable + '</p>';
-    box.classList.remove('is-loading');
-    fadeInBox();
+      const reqUrl = new URL(cfg.rebuyViewEndpoint);
 
-    if (push) {
-      const base = (cfg.catBase || '/cat/').replace(/\/+$/, '/');
-      const newUrl = new URL(base + 'rebuy' + '/', window.location.origin);
-      history.pushState({term: 'rebuy'}, '', newUrl.toString());
+      const res = await fetch(reqUrl.toString(), {
+        credentials: 'same-origin',
+        headers: {
+          'X-WP-Nonce': cfg.restNonce
+        }
+      });
+
+      const raw = await res.text();
+      if (!res.ok) {
+        console.error('rebuy-view failed', res.status, raw);
+        throw new Error('rebuy-view failed: ' + res.status);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        console.error('rebuy-view non-json response', raw);
+        throw e;
+      }
+
+      box.innerHTML = (data && data.html) ? data.html : '<p>' + I18N.contentUnavailable + '</p>';
+      box.classList.remove('is-loading');
+      fadeInBox();
+
+      replaceSubcats((data && data.subcats_html) ? data.subcats_html : '');
+
+      if (push) {
+        const base = (cfg.catBase || '/cat/').replace(/\/+$/, '/');
+        const newUrl = new URL(base + 'rebuy' + '/', window.location.origin);
+        history.pushState({term: 'rebuy'}, '', newUrl.toString());
+      }
+    } catch (e) {
+      console.error('rebuy-view error', e);
+      box.classList.remove('is-loading');
+      box.innerHTML = '<p>' + I18N.rebuyLoadError + '</p>';
+      removeSubcats();
     }
-  } catch (e) {
-    console.error('rebuy-view error', e);
-    box.classList.remove('is-loading');
-    box.innerHTML = '<p>' + I18N.rebuyLoadError + '</p>';
   }
-}
-
-
 
   async function loadRebuy({push=false} = {}) {
-  if (!cfg.rebuyEndpoint) return;
+    if (!cfg.rebuyEndpoint) return;
 
-  current = 'rebuy';
-  setActive('rebuy');
-  setTitle(I18N.purchaseHistoryTitle);
+    current = 'rebuy';
+    setActive('rebuy');
+    setTitle(I18N.purchaseHistoryTitle);
+    removeSubcats();
 
-  fadeOutBox();
-  box.classList.add('is-loading');
+    fadeOutBox();
+    box.classList.add('is-loading');
 
-  const makeTabs = () => {
-    return '<div class="ed-rb">' +
-      '<div class="ed-rb__tabs" role="tablist">' +
-      '<button class="ed-rb__tab is-active" type="button" data-rb-tab="all">' + I18N.rebuyTabAll + '</button>' +
-      '<button class="ed-rb__tab" type="button" data-rb-tab="last">' + I18N.rebuyTabLast + '</button>' +
-      '</div>' +
-      '<div class="ed-rb__panel" data-rb-panel="1"></div>' +
-      '</div>';
-  };
+    const makeTabs = () => {
+      return '<div class="ed-rb">' +
+        '<div class="ed-rb__tabs" role="tablist">' +
+        '<button class="ed-rb__tab is-active" type="button" data-rb-tab="all">' + I18N.rebuyTabAll + '</button>' +
+        '<button class="ed-rb__tab" type="button" data-rb-tab="last">' + I18N.rebuyTabLast + '</button>' +
+        '</div>' +
+        '<div class="ed-rb__panel" data-rb-panel="1"></div>' +
+        '</div>';
+    };
 
-  box.innerHTML = makeTabs();
-  const panel = box.querySelector('[data-rb-panel="1"]');
+    box.innerHTML = makeTabs();
+    const panel = box.querySelector('[data-rb-panel="1"]');
 
-  async function fetchMode(mode) {
-    const url = new URL(cfg.rebuyEndpoint);
-    url.searchParams.set('mode', mode);
-    url.searchParams.set('per_page', cfg.perPage);
+    async function fetchMode(mode) {
+      const url = new URL(cfg.rebuyEndpoint);
+      url.searchParams.set('mode', mode);
+      url.searchParams.set('per_page', cfg.perPage);
 
-    const res = await fetch(url.toString(), {
-      credentials: 'same-origin',
-      headers: {
-        'X-WP-Nonce': cfg.restNonce
-      }
-    });
+      const res = await fetch(url.toString(), {
+        credentials: 'same-origin',
+        headers: {
+          'X-WP-Nonce': cfg.restNonce
+        }
+      });
 
-    if (!res.ok) throw new Error('rebuy failed: ' + res.status);
-    return await res.json();
-  }
-
-  try {
-    // טוענים ברירת מחדל "all"
-    const data = await fetchMode('all');
-    panel.innerHTML = data.html || '';
-    box.classList.remove('is-loading');
-    fadeInBox();
-
-    // ✅ Update cart fragments if provided
-    if (data.fragments && typeof data.fragments === 'object') {
-      updateCartFragments(data.fragments);
+      if (!res.ok) throw new Error('rebuy failed: ' + res.status);
+      return await res.json();
     }
 
-    if (push) {
-      const base = (cfg.catBase || '/cat/').replace(/\/+$/, '/');
-      history.pushState({term: 'rebuy'}, '', new URL(base + 'rebuy' + '/', window.location.origin).toString());
-    }
-
-    // קליקים על טאבים
-    box.addEventListener('click', async (e) => {
-      const btn = e.target.closest('[data-rb-tab]');
-      if (!btn) return;
-
-      const mode = btn.dataset.rbTab;
-      box.querySelectorAll('.ed-rb__tab').forEach(b => b.classList.toggle('is-active', b === btn));
-
-      panel.innerHTML = '';
-      box.classList.add('is-loading');
-
-      const d = await fetchMode(mode);
-      panel.innerHTML = d.html || '';
+    try {
+      const data = await fetchMode('all');
+      panel.innerHTML = data.html || '';
       box.classList.remove('is-loading');
-      
-      // ✅ Update cart fragments if provided
-      if (d.fragments && typeof d.fragments === 'object') {
-        updateCartFragments(d.fragments);
+      fadeInBox();
+
+      replaceSubcats(data.subcats_html || '');
+
+      if (data.fragments && typeof data.fragments === 'object') {
+        updateCartFragments(data.fragments);
       }
-    }, { once: true });
 
-  } catch (e) {
-    box.classList.remove('is-loading');
-    box.innerHTML = '<p>' + I18N.rebuyLoadError + '</p>';
+      if (push) {
+        const base = (cfg.catBase || '/cat/').replace(/\/+$/, '/');
+        history.pushState({term: 'rebuy'}, '', new URL(base + 'rebuy' + '/', window.location.origin).toString());
+      }
+
+      box.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-rb-tab]');
+        if (!btn) return;
+
+        const mode = btn.dataset.rbTab;
+        box.querySelectorAll('.ed-rb__tab').forEach(b => b.classList.toggle('is-active', b === btn));
+
+        panel.innerHTML = '';
+        box.classList.add('is-loading');
+
+        const d = await fetchMode(mode);
+        panel.innerHTML = d.html || '';
+        box.classList.remove('is-loading');
+
+        replaceSubcats(d.subcats_html || '');
+
+        if (d.fragments && typeof d.fragments === 'object') {
+          updateCartFragments(d.fragments);
+        }
+      }, { once: true });
+
+    } catch (e) {
+      box.classList.remove('is-loading');
+      box.innerHTML = '<p>' + I18N.rebuyLoadError + '</p>';
+      removeSubcats();
+    }
   }
-}
-
 
   function getSearchWrap() {
     return document.querySelector(cfg.searchWrapSelector || '.search');
@@ -567,7 +616,6 @@ async function loadRebuyFromPhp({push=false} = {}) {
     const wrap = getSearchWrap();
     if (!wrap) return;
 
-    // כפתור זכוכית
     if (!wrap.querySelector('.ed-search-btn')) {
       const b = document.createElement('button');
       b.type = 'button';
@@ -577,7 +625,6 @@ async function loadRebuyFromPhp({push=false} = {}) {
       wrap.appendChild(b);
     }
 
-    // כפתור X
     if (!wrap.querySelector('.ed-search-clear')) {
       const c = document.createElement('button');
       c.type = 'button';
@@ -594,14 +641,8 @@ async function loadRebuyFromPhp({push=false} = {}) {
     if (!wrap) return;
     const s = wrap.querySelector('.ed-search-btn');
     const c = wrap.querySelector('.ed-search-clear');
-    if (s) s.style.display = show ? 'none' : 'inline-flex';               
+    if (s) s.style.display = show ? 'none' : 'inline-flex';
     if (c) c.style.display = show ? 'inline-flex' : 'none';
-  }
-
-  function stripQueryFromUrl() {
-    const u = new URL(location.href);
-    u.searchParams.delete('q');
-    history.pushState({term: lastTerm || current || cfg.defaultSlug}, '', u.toString());
   }
 
   async function loadSearch(q, {push=false} = {}) {
@@ -612,7 +653,6 @@ async function loadRebuyFromPhp({push=false} = {}) {
     q = (q || '').trim();
     if (!q) return;
 
-    // שמירת מצב לפני חיפוש פעם אחת
     if (!beforeSearch) {
       beforeSearch = {
         html: box.innerHTML,
@@ -622,9 +662,9 @@ async function loadRebuyFromPhp({push=false} = {}) {
       };
     }
 
-    // UI
-    setActive('');               // אין active קטגוריה בזמן חיפוש
+    setActive('');
     setTitle(I18N.searchResultsPrefix + query);
+    removeSubcats();
     showClear(true);
 
     if (controller) controller.abort();
@@ -646,7 +686,8 @@ async function loadRebuyFromPhp({push=false} = {}) {
       box.classList.remove('is-loading');
       fadeInBox();
 
-      // ✅ Update cart fragments if provided
+      replaceSubcats(data.subcats_html || '');
+
       if (data.fragments && typeof data.fragments === 'object') {
         updateCartFragments(data.fragments);
       }
@@ -655,6 +696,7 @@ async function loadRebuyFromPhp({push=false} = {}) {
       if (e.name === 'AbortError') return;
       box.classList.remove('is-loading');
       box.innerHTML = '<p>' + I18N.searchError + '</p>';
+      removeSubcats();
     }
   }
 
@@ -662,24 +704,20 @@ async function loadRebuyFromPhp({push=false} = {}) {
     const input = getSearchInput();
     if (input) input.value = '';
 
-    // החזר מצב קודם
     if (beforeSearch) {
       box.innerHTML = beforeSearch.html || '';
       setTitle(beforeSearch.title || '');
 
-      // תחזיר active קטגוריה
       const backTerm = beforeSearch.term || cfg.defaultSlug;
-      current = null; // כדי לא לחסום loadTerm בגלל "term === current"
-      loadTerm(backTerm, {push: true}); // גם יעדכן URL ל /cat/{slug}/
+      current = null;
+      loadTerm(backTerm, {push: true});
       beforeSearch = null;
     } else {
-      // fallback: פשוט חזור לקטגוריה אחרונה
       current = null;
       loadTerm(lastTerm || cfg.defaultSlug, {push: true});
     }
 
     showClear(false);
-    //stripQueryFromUrl();
   }
 
   function bindSearch() {
@@ -698,20 +736,23 @@ async function loadRebuyFromPhp({push=false} = {}) {
       loadSearch(query, {push: false});
     };
 
-  const MIN_LEN = 2;
+    const MIN_LEN = 2;
 
-  const runLive = debounce(() => {
-    const query = (input.value || '').trim();
-    if (!query) { if (beforeSearch) clearSearch(); return; }
-    if (query.length < MIN_LEN) return;
-    loadSearch(query, { push: false });
-  }, 300);
+    const runLive = debounce(() => {
+      const query = (input.value || '').trim();
+      if (!query) {
+        if (beforeSearch) clearSearch();
+        return;
+      }
+      if (query.length < MIN_LEN) return;
+      loadSearch(query, { push: false });
+    }, 300);
 
-  input.addEventListener('input', (e) => {
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    runLive();
-  }, true);
+    input.addEventListener('input', (e) => {
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      runLive();
+    }, true);
 
     btn && btn.addEventListener('click', run);
     input.addEventListener('keydown', (e) => {
@@ -722,20 +763,16 @@ async function loadRebuyFromPhp({push=false} = {}) {
     clearBtn && clearBtn.addEventListener('click', clearSearch);
   }
 
-  // להפעיל אחרי שהדף נטען
   document.addEventListener('DOMContentLoaded', bindSearch);
 
-  // ✅ Helper function to update cart fragments
   function updateCartFragments(fragments) {
     if (!fragments || typeof fragments !== 'object') return;
-    
+
     Object.keys(fragments).forEach(selector => {
       const element = document.querySelector(selector);
       if (element && fragments[selector]) {
         element.outerHTML = fragments[selector];
-        
-        // Re-initialize any event listeners if needed
-        // (WooCommerce fragments should handle this, but we ensure it)
+
         if (typeof jQuery !== 'undefined' && jQuery.fn.trigger) {
           jQuery(document.body).trigger('wc_fragment_refresh');
         }
@@ -743,10 +780,9 @@ async function loadRebuyFromPhp({push=false} = {}) {
     });
   }
 
-  // ✅ Refresh cart fragments on demand (for BFCache and manual refresh)
   async function refreshCartFragments() {
     if (!cfg.cartFragmentsEndpoint) return;
-    
+
     try {
       const url = new URL(cfg.cartFragmentsEndpoint);
       const res = await fetch(url.toString(), { credentials: 'same-origin' });
@@ -761,47 +797,45 @@ async function loadRebuyFromPhp({push=false} = {}) {
     }
   }
 
-  // ✅ Handle BFCache (Back/Forward Cache) - refresh cart on page restore
   window.addEventListener('pageshow', function(event) {
-    // event.persisted is true when page is restored from BFCache
     if (event.persisted) {
-      // Refresh cart fragments to ensure they're up-to-date
       refreshCartFragments();
-      
-      // Also reload the current category to ensure everything is fresh
+
       const term = getTermFromUrl();
       if (term) {
-        current = null; // Reset to allow reload
+        current = null;
         loadTerm(term, {push: false});
       }
     }
   });
 
-  // ✅ Also refresh fragments on visibility change (tab switch)
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
-      // Tab became visible - refresh fragments in case cart changed in another tab
       refreshCartFragments();
     }
   });
 
-  // קליקים על תפריט מכל מקום בעמוד
   document.addEventListener('click', (e) => {
-    const a = e.target.closest(cfg.menuSelector);
-    if (!a) return;
-    e.preventDefault();
-    loadTerm(a.dataset.edTerm, {push: true});
+    const menuLink = e.target.closest(cfg.menuSelector);
+    if (menuLink) {
+      e.preventDefault();
+      loadTerm(menuLink.dataset.edTerm, {push: true});
+      return;
+    }
+
+    const subcatLink = e.target.closest('[data-ed-subcat]');
+    if (subcatLink) {
+      e.preventDefault();
+      loadTerm(subcatLink.dataset.edSubcat, {push: true});
+    }
   });
 
-  // Back/Forward
   window.addEventListener('popstate', () => {
     const term = getTermFromUrl();
     loadTerm(term);
-    // Refresh fragments on navigation
     refreshCartFragments();
   });
 
-  // טעינה ראשונית: מה-URL או הראשון בתפריט
   loadTerm(getTermFromUrl() || cfg.defaultSlug, {push:false});
 })();
 JS;

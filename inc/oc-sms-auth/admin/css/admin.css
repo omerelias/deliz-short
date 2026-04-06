@@ -137,7 +137,6 @@
 }
 
 .nav-tab {
-    float: left;
     border: 1px solid #c3c4c7;
     border-bottom: none;
     margin-left: .5em;
@@ -198,17 +197,17 @@
 }
 
 /* Form Elements */
-.form-table {
+body.woocommerce_page_oc_sms_auth_options .form-table {
     background: #fff;
     margin-top: 0;
 }
 
-.form-table th {
+body.woocommerce_page_oc_sms_auth_options .form-table th {
     padding: 20px 10px 20px 0;
     width: 200px;
 }
 
-.form-table td {
+body.woocommerce_page_oc_sms_auth_options .form-table td {
     padding: 15px 10px;
     vertical-align: top;
 }
@@ -255,7 +254,7 @@ input[type="number"] {
 }
 
 /* Settings Form */
-.form-table {
+body.woocommerce_page_oc_sms_auth_options .form-table {
     background: #fff;
     border: 1px solid #c3c4c7;
     border-radius: 4px;
@@ -263,13 +262,13 @@ input[type="number"] {
     box-shadow: 0 1px 1px rgba(0,0,0,.04);
 }
 
-.form-table th {
+    body.woocommerce_page_oc_sms_auth_options .form-table th {
     padding: 20px;
     width: 200px;
     vertical-align: top;
 }
 
-.form-table td {
+body.woocommerce_page_oc_sms_auth_options .form-table td {
     padding: 20px 10px;
     vertical-align: top;
 }

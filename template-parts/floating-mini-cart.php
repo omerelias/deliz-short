@@ -226,7 +226,8 @@ if (
 					$thumbnail = $product->get_image('woocommerce_thumbnail');
 					$remove_url = wc_get_cart_remove_url($cart_item_key);
 					$line_price = WC()->cart->get_product_price($product); // מחיר ליחידה (עם מטבע)
-					$subtotal = WC()->cart->get_product_subtotal($product, $qty_raw); // סה"כ שורה
+					//$subtotal = WC()->cart->get_product_subtotal($product, $qty_raw); // סה"כ שורה
+
 
 					// oc-woo-sale-units: weighable line under title — משקל בלבד (לא "יחידה"), ולמכירה לפי משקל המשקל מופיע ליד שדה הכמות
 					$ocwsu_display = '';
@@ -406,7 +407,7 @@ if (
 								</button>
 							</div>                       
 						<div class="ed-float-cart__price">
-							<span class="ed-float-cart__subtotal"><?php echo wp_kses_post($subtotal); ?></span>
+							<span class="ed-float-cart__subtotal"><?php echo apply_filters( 'woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal( $product, $cart_item['quantity'] ), $cart_item, $cart_item_key ); ?></span>
 						</div>
                     </div>
                          <?php
@@ -488,7 +489,7 @@ if (
 
 					<div class="ed-float-cart__row">
 						<span><?php echo esc_html__('סה"כ ביניים', 'deliz-short'); ?></span>
-						<strong><?php echo wp_kses_post(wc_price($cart->get_subtotal())); ?></strong>
+						<strong><?php echo wp_kses_post( WC()->cart->get_cart_subtotal() ); ?></strong>
 					</div>
 
 					<?php

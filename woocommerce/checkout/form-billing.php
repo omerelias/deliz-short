@@ -176,7 +176,9 @@ if ( isset( $_COOKIE['oc_shipping_to_other_address'] ) && $_COOKIE['oc_shipping_
 			<?php do_action( 'ocws_send_to_other_person_fields' ); ?>
 		</div>
 	<?php } ?>
-
+				<p class="checkout-block-popup__actions">
+					<button type="button" class="checkout-block-popup__confirm button"><?php esc_html_e( 'אישור', 'deliz-short' ); ?></button>
+				</p>
 	<?php //do_action( 'woocommerce_after_checkout_billing_form', $checkout ); ?>
 		</div>
 				</div>

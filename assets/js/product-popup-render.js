@@ -167,19 +167,77 @@
             optionsHTML += '</div></div>';
         }
 
+          function normalizeOptionValue(value) {
+              return String(value ?? '').trim().toLowerCase();
+          }
+
+          function buildVariationStockMap(variations) {
+              const stockMap = {};
+
+              if (!Array.isArray(variations)) return stockMap;
+
+              variations.forEach((variation) => {
+                  if (!variation || !variation.attributes) return;
+
+                  const attrValues = Object.values(variation.attributes).filter(Boolean);
+                  if (!attrValues.length) return;
+
+                  const value = normalizeOptionValue(attrValues[0]);
+
+                  stockMap[value] = !!variation.in_stock;
+              });
+
+              return stockMap;
+          }      
+
         // WooCommerce Attributes (for variations or simple product attributes)
+        const variationStockMap = buildVariationStockMap(variations);
+        console.log('variationStockMap:', variationStockMap);
+        console.log('variations raw:', variations);
         if (attributes && attributes.length > 0) {
             attributes.forEach(attr => {
                 if (!attr || !attr.options || attr.options.length === 0) return;
-                // Use the full attribute name (including pa_ prefix if exists)
-                const attrName = attr.name; // This already includes pa_ if it's a taxonomy
+
+                const attrName = attr.name;
+
+                console.log('attr:', attr);
+
                 optionsHTML += `<div class="ed-product-popup__option-group"><label class="ed-product-popup__option-label">${attr.label || attr.name}</label><div class="ed-product-popup__radio-group" data-attribute="${attrName}">`;
 
                 attr.options.forEach((option, idx) => {
-                    const optionSlug = option.slug || sanitizeTitle(option.name || option);
-                    const optionName = option.name || option;
-                    // Use full attribute name in input name (attribute_pa_xxx or attribute_xxx)
-                    optionsHTML += `<label class="ed-product-popup__radio"><input type="radio" name="attribute_${attrName}" value="${optionSlug}" ${idx === 0 ? 'checked' : ''}><span class="ed-product-popup__radio-label">${optionName}</span></label>`;
+                    const optionName = option?.name || option;
+                    const optionSlug = option?.slug || sanitizeTitle(optionName);
+
+                    const normalizedName = normalizeOptionValue(optionName);
+                    const normalizedSlug = normalizeOptionValue(optionSlug);
+
+                    const hasMatchByName = Object.prototype.hasOwnProperty.call(variationStockMap, normalizedName);
+                    const hasMatchBySlug = Object.prototype.hasOwnProperty.call(variationStockMap, normalizedSlug);
+
+                    const optionOutOfStock =
+                        (hasMatchByName && variationStockMap[normalizedName] === false) ||
+                        (hasMatchBySlug && variationStockMap[normalizedSlug] === false);
+
+                    console.log('option debug:', {
+                        option,
+                        optionName,
+                        optionSlug,
+                        normalizedName,
+                        normalizedSlug,
+                        hasMatchByName,
+                        hasMatchBySlug,
+                        optionOutOfStock
+                    });
+
+                    const optionLabel = optionOutOfStock ? `${optionName} - אזל מהמלאי` : optionName;
+                    const optionClass = optionOutOfStock ? ' is-out-of-stock' : '';
+
+                    optionsHTML += `
+                        <label class="ed-product-popup__radio${optionClass}">
+                            <input type="radio" name="attribute_${attrName}" value="${optionSlug}" ${idx === 0 ? 'checked' : ''}>
+                            <span class="ed-product-popup__radio-label">${optionLabel}</span>
+                        </label>
+                    `;
                 });
 
                 optionsHTML += '</div></div>';

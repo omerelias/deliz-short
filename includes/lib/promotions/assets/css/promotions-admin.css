@@ -1,445 +1,445 @@
-/* Promotions Admin Styles - RTL Support */
-
-.ed-promotions-admin {
-  max-width: 1200px;
-  direction: rtl;
-  text-align: right;
-}
-
-.ed-promotions-table {
-  margin-top: 20px;
-}
-
-.ed-promotions-table th {
-  font-weight: 600;
-}
-
-.ed-promotion-status {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.ed-promotion-status-active {
-  background-color: #00a32a;
-  color: #fff;
-}
-
-.ed-promotion-status-future {
-  background-color: #2271b1;
-  color: #fff;
-}
-
-.ed-promotion-status-ended {
-  background-color: #d63638;
-  color: #fff;
-}
-
-.ed-promotion-status-disabled {
-  background-color: #8c8f94;
-  color: #fff;
-}
-
-.column-actions {
-  width: 200px;
-}
-
-.column-actions .button {
-  margin-left: 5px;
-  margin-bottom: 5px;
-}
-
-/* Promotion Form */
-.ed-promotion-form-wrapper {
-  background: #fff;
-  padding: 20px;
-  border: 1px solid #ccd0d4;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
-  margin-top: 20px;
-}
-
-.ed-promotion-step {
-  max-width: 100%;
-}
-
-.ed-promotion-step h2 {
-  margin-top: 0;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #2271b1;
-}
-
-/* Type Selector */
-.ed-promotion-type-selector {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  margin: 20px 0;
-}
-
-.ed-promotion-type-option {
-  display: block;
-  cursor: pointer;
-}
-
-.ed-promotion-type-option input[type="radio"] {
-  display: none;
-}
-
-.ed-promotion-type-card {
-  border: 2px solid #ccd0d4;
-  border-radius: 4px;
-  padding: 20px;
-  transition: all 0.3s ease;
-  background: #fff;
-}
-
-.ed-promotion-type-option:hover .ed-promotion-type-card {
-  border-color: #2271b1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.ed-promotion-type-option input[type="radio"]:checked + .ed-promotion-type-card {
-  border-color: #2271b1;
-  background-color: #f0f6fc;
-  box-shadow: 0 2px 8px rgba(34, 113, 177, 0.2);
-}
-
-.ed-promotion-type-card h3 {
-  margin: 0 0 10px 0;
-  color: #1d2327;
-  font-size: 18px;
-}
-
-.ed-promotion-type-card p {
-  margin: 0;
-  color: #646970;
-  font-size: 14px;
-}
-
-/* Form Fields */
-.ed-promotion-step-content {
-  margin: 20px 0;
-}
-
-.ed-promotion-step-layout {
-  display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 30px;
-  align-items: start;
-}
-
-.ed-form-field {
-  margin-bottom: 20px;
-}
-
-.ed-form-field label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 600;
-  color: #1d2327;
-}
-
-.ed-form-field .required {
-  color: #d63638;
-}
-
-.ed-form-field input[type="text"],
-.ed-form-field input[type="number"],
-.ed-form-field select {
-  width: 100%;
-  max-width: 400px;
-  padding: 8px 12px;
-  border: 1px solid #8c8f94;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.ed-form-field input[type="text"]:focus,
-.ed-form-field input[type="number"]:focus,
-.ed-form-field select:focus {
-  border-color: #2271b1;
-  box-shadow: 0 0 0 1px #2271b1;
-  outline: none;
-}
-
-.ed-form-field .field-suffix {
-  margin-left: 5px;
-  color: #646970;
-}
-
-.ed-form-field .field-label-after {
-  margin-left: 10px;
-  color: #646970;
-}
-
-.ed-form-field .field-note {
-  font-weight: normal;
-  color: #646970;
-  font-size: 12px;
-}
-
-/* Search Results */
-.ed-target-results {
-  position: relative;
-  margin-top: 5px;
-}
-
-.ed-search-results {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  background: #fff;
-  border: 1px solid #8c8f94;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  max-height: 200px;
-  overflow-y: auto;
-  position: absolute;
-  z-index: 1000;
-  width: 100%;
-  max-width: 400px;
-}
-
-.ed-search-results li {
-  padding: 10px 12px;
-  cursor: pointer;
-  border-bottom: 1px solid #f0f0f1;
-}
-
-.ed-search-results li:last-child {
-  border-bottom: none;
-}
-
-.ed-search-results li:hover {
-  background-color: #f0f6fc;
-}
-
-/* Form Actions */
-.ed-promotion-form-actions {
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #ccd0d4;
-  display: flex;
-  gap: 10px;
-  flex-direction: row-reverse; /* RTL: buttons order reversed */
-}
-
-.ed-promotion-form-actions .button {
-  min-width: 120px;
-}
-
-/* Messages */
-.ed-promotion-form-messages {
-  margin-top: 20px;
-}
-
-.ed-promotion-form-messages .notice {
-  margin: 0;
-}
-
-/* Date Picker */
-.ed-form-field .ed-datepicker {
-  max-width: 200px;
-  margin-right: 10px;
-}
-
-.ed-form-field .ed-select-date {
-  margin-left: 10px;
-}
-
-/* Preview Section */
-.ed-promotion-preview-section {
-  position: sticky;
-  top: 20px;
-  background: #fff;
-  border: 1px solid #ccd0d4;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.ed-promotion-preview-section h3 {
-  margin: 0 0 10px 0;
-  font-size: 18px;
-  color: #1d2327;
-}
-
-.ed-promotion-preview-section .description {
-  margin: 0 0 20px 0;
-  color: #646970;
-  font-size: 13px;
-}
-
-.ed-promotion-preview-product {
-  background: #fff;
-  border-radius: 4px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.ed-preview-product-image {
-  position: relative;
-  width: 100%;
-  padding-top: 75%; /* 4:3 aspect ratio */
-  background: #f0f0f1;
-  overflow: hidden;
-}
-
-.ed-preview-product-image img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.ed-preview-placeholder-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f0f0f1;
-}
-
-.ed-preview-placeholder-image .dashicons {
-  font-size: 48px;
-  width: 48px;
-  height: 48px;
-  color: #8c8f94;
-}
-
-.ed-preview-badge-container {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 10;
-}
-
-.ed-preview-badge {
-  display: inline-block;
-  background-color: #d63638;
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  line-height: 1.4;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.ed-preview-product-info {
-  padding: 15px;
-}
-
-.ed-preview-product-name {
-  margin: 0 0 10px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1d2327;
-  line-height: 1.4;
-}
-
-.ed-preview-product-price {
-  font-size: 18px;
-  font-weight: 700;
-  color: #2271b1;
-}
-
-.ed-preview-product-price .price {
-  color: #2271b1;
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .ed-promotion-step-layout {
-    grid-template-columns: 1fr;
-  }
-  
-  .ed-promotion-preview-section {
-    position: static;
-    margin-top: 30px;
-  }
-}
-
-@media (max-width: 782px) {
-  .ed-promotion-type-selector {
-    grid-template-columns: 1fr;
-  }
-  
-  .ed-form-field input[type="text"],
-  .ed-form-field input[type="number"],
-  .ed-form-field select {
-    max-width: 100%;
-  }
-}
-
-/* Advanced Scheduling */
-.ed-advanced-scheduling-section {
-  background: #f9f9f9;
-  padding: 20px;
-  border-radius: 4px;
-}
-
-.ed-weekdays-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.ed-weekday-checkbox {
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  background: #fff;
-  border: 1px solid #ccd0d4;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ed-weekday-checkbox:hover {
-  border-color: #2271b1;
-  background: #f0f6fc;
-}
-
-.ed-weekday-checkbox input[type="checkbox"] {
-  margin-left: 8px;
-  cursor: pointer;
-}
-
-.ed-weekday-checkbox:has(input[type="checkbox"]:checked) {
-  border-color: #2271b1;
-  background: #f0f6fc;
-  font-weight: 600;
-}
-
-.ed-time-range-fields {
-  margin-top: 15px;
-  padding: 15px;
-  background: #fff;
-  border: 1px solid #ccd0d4;
-  border-radius: 4px;
-}
-
-.ed-time-range-fields input[type="time"] {
-  padding: 8px 12px;
-  border: 1px solid #8c8f94;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.ed-time-range-fields input[type="time"]:focus {
-  border-color: #2271b1;
-  box-shadow: 0 0 0 1px #2271b1;
-  outline: none;
-}
-
+/* Promotions Admin Styles - RTL Support */
+
+.ed-promotions-admin {
+  max-width: 1200px;
+  direction: rtl;
+  text-align: right;
+}
+
+.ed-promotions-table {
+  margin-top: 20px;
+}
+
+.ed-promotions-table th {
+  font-weight: 600;
+}
+
+.ed-promotion-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ed-promotion-status-active {
+  background-color: #00a32a;
+  color: #fff;
+}
+
+.ed-promotion-status-future {
+  background-color: #2271b1;
+  color: #fff;
+}
+
+.ed-promotion-status-ended {
+  background-color: #d63638;
+  color: #fff;
+}
+
+.ed-promotion-status-disabled {
+  background-color: #8c8f94;
+  color: #fff;
+}
+
+.column-actions {
+  width: 200px;
+}
+
+.column-actions .button {
+  margin-left: 5px;
+  margin-bottom: 5px;
+}
+
+/* Promotion Form */
+.ed-promotion-form-wrapper {
+  background: #fff;
+  padding: 20px;
+  border: 1px solid #ccd0d4;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  margin-top: 20px;
+}
+
+.ed-promotion-step {
+  max-width: 100%;
+}
+
+.ed-promotion-step h2 {
+  margin-top: 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #2271b1;
+}
+
+/* Type Selector */
+.ed-promotion-type-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.ed-promotion-type-option {
+  display: block;
+  cursor: pointer;
+}
+
+.ed-promotion-type-option input[type="radio"] {
+  display: none;
+}
+
+.ed-promotion-type-card {
+  border: 2px solid #ccd0d4;
+  border-radius: 4px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  background: #fff;
+}
+
+.ed-promotion-type-option:hover .ed-promotion-type-card {
+  border-color: #2271b1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ed-promotion-type-option input[type="radio"]:checked + .ed-promotion-type-card {
+  border-color: #2271b1;
+  background-color: #f0f6fc;
+  box-shadow: 0 2px 8px rgba(34, 113, 177, 0.2);
+}
+
+.ed-promotion-type-card h3 {
+  margin: 0 0 10px 0;
+  color: #1d2327;
+  font-size: 18px;
+}
+
+.ed-promotion-type-card p {
+  margin: 0;
+  color: #646970;
+  font-size: 14px;
+}
+
+/* Form Fields */
+.ed-promotion-step-content {
+  margin: 20px 0;
+}
+
+.ed-promotion-step-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 30px;
+  align-items: start;
+}
+
+.ed-form-field {
+  margin-bottom: 20px;
+}
+
+.ed-form-field label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.ed-form-field .required {
+  color: #d63638;
+}
+
+.ed-form-field input[type="text"],
+.ed-form-field input[type="number"],
+.ed-form-field select {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 12px;
+  border: 1px solid #8c8f94;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.ed-form-field input[type="text"]:focus,
+.ed-form-field input[type="number"]:focus,
+.ed-form-field select:focus {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+  outline: none;
+}
+
+.ed-form-field .field-suffix {
+  margin-left: 5px;
+  color: #646970;
+}
+
+.ed-form-field .field-label-after {
+  margin-left: 10px;
+  color: #646970;
+}
+
+.ed-form-field .field-note {
+  font-weight: normal;
+  color: #646970;
+  font-size: 12px;
+}
+
+/* Search Results */
+.ed-target-results {
+  position: relative;
+  margin-top: 5px;
+}
+
+.ed-search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #8c8f94;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  z-index: 1000;
+  width: 100%;
+  max-width: 400px;
+}
+
+.ed-search-results li {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f1;
+}
+
+.ed-search-results li:last-child {
+  border-bottom: none;
+}
+
+.ed-search-results li:hover {
+  background-color: #f0f6fc;
+}
+
+/* Form Actions */
+.ed-promotion-form-actions {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ccd0d4;
+  display: flex;
+  gap: 10px;
+  flex-direction: row-reverse; /* RTL: buttons order reversed */
+}
+
+.ed-promotion-form-actions .button {
+  min-width: 120px;
+}
+
+/* Messages */
+.ed-promotion-form-messages {
+  margin-top: 20px;
+}
+
+.ed-promotion-form-messages .notice {
+  margin: 0;
+}
+
+/* Date Picker */
+.ed-form-field .ed-datepicker {
+  max-width: 200px;
+  margin-right: 10px;
+}
+
+.ed-form-field .ed-select-date {
+  margin-left: 10px;
+}
+
+/* Preview Section */
+.ed-promotion-preview-section {
+  position: sticky;
+  top: 20px;
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ed-promotion-preview-section h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #1d2327;
+}
+
+.ed-promotion-preview-section .description {
+  margin: 0 0 20px 0;
+  color: #646970;
+  font-size: 13px;
+}
+
+.ed-promotion-preview-product {
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ed-preview-product-image {
+  position: relative;
+  width: 100%;
+  padding-top: 75%; /* 4:3 aspect ratio */
+  background: #f0f0f1;
+  overflow: hidden;
+}
+
+.ed-preview-product-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ed-preview-placeholder-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f1;
+}
+
+.ed-preview-placeholder-image .dashicons {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #8c8f94;
+}
+
+.ed-preview-badge-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+}
+
+.ed-preview-badge {
+  display: inline-block;
+  background-color: #d63638;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1.4;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ed-preview-product-info {
+  padding: 15px;
+}
+
+.ed-preview-product-name {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d2327;
+  line-height: 1.4;
+}
+
+.ed-preview-product-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2271b1;
+}
+
+.ed-preview-product-price .price {
+  color: #2271b1;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .ed-promotion-step-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .ed-promotion-preview-section {
+    position: static;
+    margin-top: 30px;
+  }
+}
+
+@media (max-width: 782px) {
+  .ed-promotion-type-selector {
+    grid-template-columns: 1fr;
+  }
+  
+  .ed-form-field input[type="text"],
+  .ed-form-field input[type="number"],
+  .ed-form-field select {
+    max-width: 100%;
+  }
+}
+
+/* Advanced Scheduling */
+.ed-advanced-scheduling-section {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 4px;
+}
+
+.ed-weekdays-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.ed-weekday-checkbox {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ed-weekday-checkbox:hover {
+  border-color: #2271b1;
+  background: #f0f6fc;
+}
+
+.ed-weekday-checkbox input[type="checkbox"] {
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.ed-weekday-checkbox:has(input[type="checkbox"]:checked) {
+  border-color: #2271b1;
+  background: #f0f6fc;
+  font-weight: 600;
+}
+
+.ed-time-range-fields {
+  margin-top: 15px;
+  padding: 15px;
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 4px;
+}
+
+.ed-time-range-fields input[type="time"] {
+  padding: 8px 12px;
+  border: 1px solid #8c8f94;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.ed-time-range-fields input[type="time"]:focus {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+  outline: none;
+}
+

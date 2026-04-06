@@ -382,13 +382,19 @@ jQuery(function ($) {
   });  
 
   // Scroll to top when clicking category links in the sidebar slider
-  $(document).on('click', '.ed-mp__link', function () {
-    try {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (e) {
-      window.scrollTo(0, 0);
-    }
-  });
+    $(document).on('click', '.ed-mp__link', function () {
+        var topOffset = 120;
+        var targetTop = 0;
+
+        try {
+            window.scrollTo({
+            top: targetTop + topOffset,
+            behavior: 'auto'
+            });
+        } catch (e) {
+            window.scrollTo(0, topOffset);
+        }
+    });
 
 });
 

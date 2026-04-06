@@ -1,102 +1,102 @@
-/* Floating cart — free shipping bar (Figma Deliz-New / סל קניות) */
-
-.ed-float-cart__header-shipping {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  margin-top: 8px;
-}
-
-.ed-float-cart__header-shipping .ed-free-ship-bar {
-  margin: 0;
-}
-
-/* chip בפוטר (היה קודם בהדר) */
-.ed-float-cart__footer-shipping-chip {
-  width: 100%;
-  margin: 0 0 12px;
-}
-
-.ed-free-ship-bar {
-  margin: 0 0 14px;
-  text-align: center;
-}
-
-.ed-free-ship-bar__label {
-  margin: 0 0 12px;
-  font-family: "Heebo", sans-serif;
-  font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: -0.3px;
-  color: #191919;
-}
-
-.ed-free-ship-bar__visual {
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  gap: 0;
-  max-width: 80%;
-  margin: 0 auto;
-  /* DOM: מסילה → אייקון | row-reverse: אייקון משמאל, מסילה מימין */
-}
-
-.ed-free-ship-bar__goal {
-  flex: 0 0 36px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #f7f4e8;
-  border: 1px solid #000;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 2;
-  flex-shrink: 0;
-}
-
-.ed-free-ship-bar__track {
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 13px;
-  background: #efefef;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-left: -18px;
-  position: relative;
-  z-index: 1;
-  align-self: center;
-  /* מילוי מימין לשמאל: הפרוסה מוצמדת לקצה ימין של המסילה */
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-}
-
-.ed-free-ship-bar__fill {
-  height: 100%;
-  flex: 0 0 auto;
-  background: #ff957d;
-  /* קצה ימין חיצוני (לכיוון סוף המסילה), שמאל פנימי */
-  border-radius: 8px 10px 10px 8px;
-  transition: width 0.4s ease;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-.ed-free-ship-bar--complete .ed-free-ship-bar__fill {
-  border-radius: 10px;
-}
-
-.ed-free-ship-bar__truck {
-  display: block;
-  flex-shrink: 0;
-      width: 25px;
-    height: 25px;
-}
-
-.ed-free-ship-bar--complete .ed-free-ship-bar__label {
-  color: #191919;
-}
+/* Floating cart — free shipping bar (Figma Deliz-New / סל קניות) */
+
+.ed-float-cart__header-shipping {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.ed-float-cart__header-shipping .ed-free-ship-bar {
+  margin: 0;
+}
+
+/* chip בפוטר (היה קודם בהדר) */
+.ed-float-cart__footer-shipping-chip {
+  width: 100%;
+  margin: 0 0 12px;
+}
+
+.ed-free-ship-bar {
+  margin: 0 0 14px;
+  text-align: center;
+}
+
+.ed-free-ship-bar__label {
+  margin: 0 0 12px;
+  font-family: "Heebo", sans-serif;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.3px;
+  color: #191919;
+}
+
+.ed-free-ship-bar__visual {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 0;
+  max-width: 80%;
+  margin: 0 auto;
+  /* DOM: מסילה → אייקון | row-reverse: אייקון משמאל, מסילה מימין */
+}
+
+.ed-free-ship-bar__goal {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f7f4e8;
+  border: 1px solid #000;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.ed-free-ship-bar__track {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 13px;
+  background: #efefef;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-left: -18px;
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  /* מילוי מימין לשמאל: הפרוסה מוצמדת לקצה ימין של המסילה */
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.ed-free-ship-bar__fill {
+  height: 100%;
+  flex: 0 0 auto;
+  background: #ff957d;
+  /* קצה ימין חיצוני (לכיוון סוף המסילה), שמאל פנימי */
+  border-radius: 8px 10px 10px 8px;
+  transition: width 0.4s ease;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.ed-free-ship-bar--complete .ed-free-ship-bar__fill {
+  border-radius: 10px;
+}
+
+.ed-free-ship-bar__truck {
+  display: block;
+  flex-shrink: 0;
+      width: 25px;
+    height: 25px;
+}
+
+.ed-free-ship-bar--complete .ed-free-ship-bar__label {
+  color: #191919;
+}
