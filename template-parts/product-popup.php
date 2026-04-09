@@ -85,6 +85,22 @@ $options = $product_data['options'] ?? [];
 
         </h2>
 
+        <?php
+        $slt = $product_data['shop_loop_after_title'] ?? [];
+        if ( ! empty( $slt['fixed_unit_html'] ) || ! empty( $slt['price_per_html'] ) ) :
+          ?>
+          <div class="ed-product-popup__after-title-loop">
+            <?php
+            if ( ! empty( $slt['fixed_unit_html'] ) ) {
+              echo wp_kses_post( $slt['fixed_unit_html'] );
+            }
+            if ( ! empty( $slt['price_per_html'] ) ) {
+              echo wp_kses_post( $slt['price_per_html'] );
+            }
+            ?>
+          </div>
+        <?php endif; ?>
+
 
 
         <!-- Price Display -->

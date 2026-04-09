@@ -280,6 +280,33 @@ body.ed-checkout-upsells-popup-open .ed-product-popup {
 
 }
 
+/* Shop loop parity: fixed OCWSU unit line + price per 100g/ml under title */
+
+.ed-product-popup__after-title-loop {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  margin-block-end: 10px;
+}
+
+.ed-product-popup__after-title-loop .ed-loop-product-ocwsu-unit,
+.ed-product-popup__after-title-loop .price_per {
+  float: none;
+  margin: 0;
+  padding: 0;
+  color: #4d4d4d;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 300;
+  text-align: right;
+}
+
+.ed-product-popup__after-title-loop .price_per {
+  text-align: left;
+}
 
 
 .ed-product-popup__title {
