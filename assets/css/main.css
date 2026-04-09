@@ -617,8 +617,8 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
 .ed-float-cart__items .ed-float-cart__item{
     position: relative;
     border-bottom: 1px solid #e9ebee;
-    padding-block-end: 25px;
-    margin-block-end: 25px;
+    padding-block-end: 35px;
+    margin-block-end: 35px;
 }
 
 /* אישור הסרת מוצר: שכבה חצי-שקופה + fade כמו .ed-product-popup (product-popup.css) */
@@ -773,13 +773,14 @@ body.square_images .ed-float-cart__items .ed-float-cart__item .ed-float-cart__th
     border-radius: var(--radius);
     cursor: pointer;
     font-size: 12px;
-    margin-block-start: 10px;
+    margin-block-start: 0;
     display: none;
     margin-inline: auto;
     position: absolute;
     left: auto;
     right: 85px;
     width: 85px;
+    bottom: 8px;
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__actions-row .ed-float-cart__edit-btn:hover{
