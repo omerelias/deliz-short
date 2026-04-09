@@ -225,7 +225,6 @@ if (
 
 					$permalink = $product->is_visible() ? $product->get_permalink($cart_item) : '';
 					$thumbnail = $product->get_image('woocommerce_thumbnail');
-					$remove_url = wc_get_cart_remove_url($cart_item_key);
 					$line_price = WC()->cart->get_product_price($product); // מחיר ליחידה (עם מטבע)
 					//$subtotal = WC()->cart->get_product_subtotal($product, $qty_raw); // סה"כ שורה
 
@@ -305,13 +304,24 @@ if (
 
 					<div class="ed-float-cart__item" role="listitem"
 						 data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">
+						<div class="ed-float-cart__remove-confirm" hidden aria-hidden="true">
+							<p class="ed-float-cart__remove-confirm-msg"><?php echo esc_html__('האם להסיר?', 'deliz-short'); ?></p>
+							<div class="ed-float-cart__remove-confirm-actions">
+								<button type="button" class="ed-float-cart__remove-confirm-yes">
+									<?php echo esc_html__('כן', 'deliz-short'); ?>
+								</button>
+								<button type="button" class="ed-float-cart__remove-confirm-no">
+									<?php echo esc_html__('לא', 'deliz-short'); ?>
+								</button>
+							</div>
+						</div>
                         <div class="cart_item_inner">
-						<a href="<?php echo esc_url($remove_url); ?>"
-						   class="ed-float-cart__remove remove remove_from_cart_button"
+						<button type="button"
+						   class="ed-float-cart__remove"
 						   aria-label="<?php echo esc_attr(sprintf(__('הסר %s מהסל', 'deliz-short'), $name_full)); ?>"
 						   data-product_id="<?php echo esc_attr($product_id); ?>"
 						   data-cart_item_key="<?php echo esc_attr($cart_item_key); ?>"
-						   data-product_sku="<?php echo esc_attr($product->get_sku()); ?>">×</a>
+						   data-product_sku="<?php echo esc_attr($product->get_sku()); ?>">×</button>
 
 						<div class="ed-float-cart__thumb">
 							<?php

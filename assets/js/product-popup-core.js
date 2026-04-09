@@ -43,6 +43,9 @@
         // Check if URL contains product slug - open popup on page load
         checkUrlForProduct();
 
+        // הסרה מסל צף: אישור (שכבה) — capture כדי לעצור לפני handlers אחרים
+        document.addEventListener('click', window.EDProductPopupMiniCart?.handleFloatCartRemoveConfirmClick, true);
+
         // Listen for mini cart quantity controls
         document.addEventListener('click', window.EDProductPopupMiniCart?.handleMiniCartQuantityClick);
 

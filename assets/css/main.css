@@ -617,6 +617,68 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     margin-block-end: 25px;
 }
 
+/* אישור הסרת מוצר: שכבה חצי-שקופה על השורה */
+.ed-float-cart__items .ed-float-cart__item .ed-float-cart__remove-confirm{
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(2px);
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.ed-float-cart__items .ed-float-cart__item.is-remove-confirming .ed-float-cart__remove-confirm{
+    display: flex;
+}
+
+.ed-float-cart__remove-confirm-msg{
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f0f0f;
+    line-height: 1.3;
+}
+
+.ed-float-cart__remove-confirm-actions{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.ed-float-cart__remove-confirm-yes,
+.ed-float-cart__remove-confirm-no{
+    min-width: 72px;
+    padding: 8px 16px;
+    font-size: 15px;
+    font-family: inherit;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid #0f0f0f;
+    background: #fff;
+    color: #0f0f0f;
+}
+
+.ed-float-cart__remove-confirm-yes{
+    background: var(--color-primary);
+    color: var(--main-text-color);
+    border-color: var(--color-primary);
+}
+
+.ed-float-cart__remove-confirm-yes:hover,
+.ed-float-cart__remove-confirm-no:hover{
+    opacity: 0.92;
+}
+
 .ed-float-cart__items .ed-float-cart__item .cart_item_inner{
     display: flex;
     gap: 0;
@@ -626,7 +688,7 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     border-bottom: none;
 }
 
-.ed-float-cart__items .ed-float-cart__item .remove_from_cart_button{
+.ed-float-cart__items .ed-float-cart__item .ed-float-cart__remove{
     position: absolute;
     left: 0;
     font-size: 30px;
@@ -634,7 +696,12 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     text-decoration: none;
     color: #a8a8a8;
     line-height: 20px;
-        display: none;
+    display: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__thumb{
