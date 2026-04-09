@@ -444,9 +444,9 @@ flex: 0 0 435px;
 }
 
 .main-content .menu-block ul.ed-mp__menu li.ed-mp__item a.ed-mp__link img{
-    width: 50px;
-    height: 50px;  
-    border-radius: var(--radius);  
+    width: var(--menu-img-size, 50px);
+    height: var(--menu-img-size, 50px);
+    border-radius: var(--radius);
     object-fit: cover;
 }
 
@@ -1073,6 +1073,11 @@ body.square_images .woocommerce ul.products li.product a img{
     body.menu-with-icons .main-content .menu-block ul.ed-mp__menu a.ed-mp__link span{
         position: relative;
         left: 5px;
+    }
+
+    body.menu-with-icons .main-content .menu-block ul.ed-mp__menu a.ed-mp__link img{
+        width: var(--menu-img-size-mobile, 50px);
+        height: var(--menu-img-size-mobile, 50px);
     }
 
     body.menu-with-icons .main-content .menu-block ul.ed-mp__menu a.ed-mp__link{
