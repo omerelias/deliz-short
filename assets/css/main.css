@@ -432,6 +432,19 @@ flex: 0 0 435px;
     color:var(--menu-link-color-active);
 }
 
+.main-content .menu-block ul.ed-mp__menu a.ed-mp__link.no-icon{
+    display: block;
+    height: 80%;
+    line-height: calc(75px - 80%);
+    border-right: 4px solid transparent;
+    padding-inline-start: 15px;
+}
+
+.main-content .menu-block ul.ed-mp__menu a.ed-mp__link.no-icon:hover,
+.main-content .menu-block ul.ed-mp__menu a.ed-mp__link.no-icon.is-active{
+    border-right: 4px solid var(--menu-link-color-active);
+}
+
 .main-content .menu-block ul.ed-mp__menu li.ed-mp__item {
     padding: 0;
     margin: 0;

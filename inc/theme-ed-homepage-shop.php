@@ -205,7 +205,7 @@ $config = [
           $href = home_url('/cat/' . $c['slug'] . '/');
           ?>
           <li class="ed-mp__item">
-            <a class="ed-mp__link"
+            <a class="ed-mp__link <?php if (!$menu_icons_show): ?>no-icon<?php endif; ?>"
                href="<?php echo esc_url($href); ?>"
                data-ed-term="<?php echo esc_attr($c['slug']); ?>">
               <?php if($menu_icons_show): ?>
