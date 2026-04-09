@@ -304,8 +304,8 @@ if (
 
 					<div class="ed-float-cart__item" role="listitem"
 						 data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">
-						<div class="ed-float-cart__remove-confirm" hidden aria-hidden="true">
-							<p class="ed-float-cart__remove-confirm-msg"><?php echo esc_html__('האם להסיר?', 'deliz-short'); ?></p>
+						<div class="ed-float-cart__remove-confirm" aria-hidden="true">
+							<p class="ed-float-cart__remove-confirm-msg"><?php echo esc_html( sprintf( __( 'האם להסיר את %s?', 'deliz-short' ), $float_cart_product_title ) ); ?></p>
 							<div class="ed-float-cart__remove-confirm-actions">
 								<button type="button" class="ed-float-cart__remove-confirm-yes">
 									<?php echo esc_html__('כן', 'deliz-short'); ?>

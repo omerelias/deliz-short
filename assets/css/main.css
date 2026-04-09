@@ -617,12 +617,12 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     margin-block-end: 25px;
 }
 
-/* אישור הסרת מוצר: שכבה חצי-שקופה על השורה */
+/* אישור הסרת מוצר: שכבה חצי-שקופה + fade כמו .ed-product-popup (product-popup.css) */
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__remove-confirm{
     position: absolute;
     inset: 0;
     z-index: 8;
-    display: none;
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -633,10 +633,27 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     backdrop-filter: blur(2px);
     border-radius: 8px;
     box-sizing: border-box;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(6px);
+    transition: opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        visibility 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .ed-float-cart__items .ed-float-cart__item.is-remove-confirming .ed-float-cart__remove-confirm{
-    display: flex;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ed-float-cart__items .ed-float-cart__item .ed-float-cart__remove-confirm{
+        transition: none;
+        transform: none;
+    }
 }
 
 .ed-float-cart__remove-confirm-msg{

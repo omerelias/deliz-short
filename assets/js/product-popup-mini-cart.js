@@ -582,8 +582,6 @@
 
         if (overlay) {
 
-            overlay.setAttribute('hidden', '');
-
             overlay.setAttribute('aria-hidden', 'true');
 
         }
@@ -621,8 +619,6 @@
         }
 
         row.classList.add('is-remove-confirming');
-
-        overlay.removeAttribute('hidden');
 
         overlay.setAttribute('aria-hidden', 'false');
 
