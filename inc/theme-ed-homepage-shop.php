@@ -156,10 +156,11 @@ add_shortcode('ed_menu_sidebar', function ($atts) {
   }
 
   if (is_user_logged_in()) {
+    $rebuy_image = get_field('rebuy_image', 'option');
     array_unshift($cats, [
       'title'    => __( 'קנייה חוזרת', 'deliz-short' ),
       'slug'     => 'rebuy',
-      'icon_url' => 'https://deliz-short.mywebsite.co.il/wp-content/uploads/2026/01/%D7%91%D7%A9%D7%A8-%D7%91%D7%A7%D7%A8.jpg', // אם תרצה אייקון קבוע תגיד לי
+      'icon_url' => $rebuy_image ?: 'https://deliz-short.mywebsite.co.il/wp-content/uploads/2026/01/%D7%91%D7%A9%D7%A8-%D7%91%D7%A7%D7%A8.jpg', // אם תרצה אייקון קבוע תגיד לי
     ]);
   }
 
