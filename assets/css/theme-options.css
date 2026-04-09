@@ -4,7 +4,9 @@
   --color-primary-hover: #ff957d;
   --main-text-color: #ffffff;
   --main-text-color-hover: #ffffff;
-  --color-secondary: #084035;
+  --item-title-color: #dd9933;
+  --item-price-color: #81d742;
+  --item-sale-price-color: #dd3333;
   --floating-cart-bg: #1e73be;
   --floating-cart-text-color: #ffffff;
   --radius: 10px;

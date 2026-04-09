@@ -108,6 +108,12 @@ add_action('acf/save_post', function ($post_id) {
 
   $secondary = get_field('second_color', 'option'); // second_color
 
+  $item_title_color = get_field('item_title_color', 'option'); // item_title_color
+
+  $item_price_color = get_field('item_price_color', 'option'); // item_price_color
+
+  $item_sale_price_color = get_field('item_sale_price_color', 'option'); // item_sale_price_color
+
   //$second_color_hover = get_field('second_color_hover', 'option'); // second_color_hover
 
   $floating_cart_bg = get_field('floating_cart_bg', 'option');  // צבע רקע כפתור סל צף
@@ -200,7 +206,11 @@ add_action('acf/save_post', function ($post_id) {
 
   if ($main_text_color_hover)   $css .= "  --main-text-color-hover: " . $main_text_color_hover . ";\n";  
 
-  if ($secondary) $css .= "  --color-secondary: " . $secondary . ";\n";
+  if ($item_title_color) $css .= "  --item-title-color: " . $item_title_color . ";\n";
+
+  if ($item_price_color) $css .= "  --item-price-color: " . $item_price_color . ";\n";
+
+  if ($item_sale_price_color) $css .= "  --item-sale-price-color: " . $item_sale_price_color . ";\n";
 
   //if ($second_color_hover)   $css .= "  --color-secondary-hover: " . $second_color_hover . ";\n";
 
