@@ -54,6 +54,36 @@ if (!function_exists('deliz_short_ocwsu_meta_weight_to_grams')) {
   }
 }
 
+if (!function_exists('deliz_short_ocwsu_format_fixed_unit_weight_display')) {
+  /**
+   * תצוגת משקל יחידה קבועה (OCWSU): מתחת ל־1 ק"ג — גרמים (700 גרם); מ־1 ק"ג ומעלה — ק"ג (2.5 ק"ג, לא 2500 גרם).
+   * תומך גם ביחידת מוצר "גרם" בשדה (_ocwsu_unit_weight = 700).
+   *
+   * @param float|int|string $raw_unit_weight    ערך _ocwsu_unit_weight כפי שהוזן במטא.
+   * @param string           $product_weight_units _ocwsu_product_weight_units.
+   * @return string למשל "700 גרם" או "2.5 ק"ג", או מחרוזת ריקה.
+   */
+  function deliz_short_ocwsu_format_fixed_unit_weight_display($raw_unit_weight, $product_weight_units) {
+    if (!function_exists('deliz_short_ocwsu_meta_weight_to_grams') || !function_exists('deliz_short_format_ocwsu_cart_weight_display_value')) {
+      return '';
+    }
+    $raw = floatval($raw_unit_weight);
+    if ($raw <= 0) {
+      return '';
+    }
+    $kg = deliz_short_ocwsu_meta_weight_to_grams($raw, $product_weight_units) / 1000.0;
+    if ($kg <= 0) {
+      return '';
+    }
+    if ($kg < 1) {
+      $g = deliz_short_format_ocwsu_cart_weight_display_value($kg * 1000, true);
+      return sprintf('%s %s', $g, __('גרם', 'deliz-short'));
+    }
+    $kgs = deliz_short_format_ocwsu_cart_weight_display_value($kg, false);
+    return sprintf('%s %s', $kgs, __('ק"ג', 'deliz-short'));
+  }
+}
+
 if (!function_exists('deliz_short_float_cart_line_title_variation')) {
   /**
    * Float mini-cart: parent product title + formatted variation (not appended to title with a dash).
@@ -194,6 +224,7 @@ class ED_Product_Popup {
           $sold_by_units = (get_post_meta($product_id, '_ocwsu_sold_by_units', true) === 'yes');
           $sold_by_weight = (get_post_meta($product_id, '_ocwsu_sold_by_weight', true) === 'yes');
           $product_weight_units = get_post_meta($product_id, '_ocwsu_product_weight_units', true);
+          $unit_weight_type_oc = get_post_meta($product_id, '_ocwsu_unit_weight_type', true);
           $quantity_in_units = isset($cart_item['ocwsu_quantity_in_units']) ? floatval($cart_item['ocwsu_quantity_in_units']) : 0;
           $ocwsu_units_qty_ui = ($weighable && $sold_by_units && $quantity_in_units > 0);
           $ocwsu_gram_weight_qty_ui = ($weighable && $sold_by_weight && !$ocwsu_units_qty_ui && deliz_short_ocwsu_product_weight_is_grams($product_weight_units));
@@ -287,7 +318,7 @@ class ED_Product_Popup {
           }
           if ($ocwsu_float_cart_weight_attrs) {
             $ocwsu_raw_float_show_kg = true;
-            $qty_input_val = deliz_short_format_ocwsu_cart_weight_display_value($qty_raw, false);
+            $qty_input_val = deliz_short_format_ocwsu_cart_weight_display_value($qty_raw, false); 
             $qty_display = $qty_input_val;
             $qty_input_min = $ocwsu_min_kg_str;
             $qty_input_step = ($ocwsu_step_kg_str === 'any' ? 'any' : $ocwsu_step_kg_str);
@@ -310,26 +341,35 @@ class ED_Product_Popup {
             $weight_unit = $use_grams ? __( 'גרם', 'deliz-short' ) : __( 'ק"ג', 'deliz-short' );
             $weight_value = deliz_short_format_ocwsu_cart_weight_display_value($weight_value, $use_grams);
             $ocwsu_weight_qty_label = sprintf('%s %s', $weight_value, $weight_unit);
-            $ocwsu_one_item_kg = 0.0;
-            if ($sold_by_units && $quantity_in_units > 0) {
-              $ocwsu_one_item_kg = $qty_raw / max($quantity_in_units, 1e-9);
-            }
-            // מוצר גם לפי יחידות וגם לפי משקל: ברכישה לפי משקל בלבד אין להציג ~משקל יחידה ממטא המוצר (כמו floating-mini-cart.php).
-            $ocwsu_skip_unit_weight_meta_fallback = ( $sold_by_units && $sold_by_weight && $quantity_in_units <= 0 );
-            if ( ! $ocwsu_skip_unit_weight_meta_fallback && $ocwsu_one_item_kg <= 0 && ( $sold_by_units || $sold_by_weight ) ) {
-              $unit_w_meta = get_post_meta($product_id, '_ocwsu_unit_weight', true);
-              $unit_w_raw = ($unit_w_meta !== '' && is_numeric($unit_w_meta)) ? floatval($unit_w_meta) : 0.0;
-              if ($unit_w_raw > 0) {
-                $ocwsu_one_item_kg = deliz_short_ocwsu_meta_weight_to_grams($unit_w_raw, $product_weight_units) / 1000;
+            // גם יחידות וגם משקל במוצר: לא להציג שורת ~משקל יחידה (כמו floating-mini-cart.php)
+            $ocwsu_skip_tilde_unit_line = ( $sold_by_units && $sold_by_weight );
+
+            if ( ! $ocwsu_skip_tilde_unit_line && $unit_weight_type_oc === 'fixed' && $sold_by_units && function_exists( 'deliz_short_ocwsu_format_fixed_unit_weight_display' ) ) {
+              $unit_w_meta_fixed = get_post_meta( $product_id, '_ocwsu_unit_weight', true );
+              if ( $unit_w_meta_fixed !== '' && is_numeric( $unit_w_meta_fixed ) ) {
+                $ocwsu_display = deliz_short_ocwsu_format_fixed_unit_weight_display( (float) $unit_w_meta_fixed, $product_weight_units );
               }
-            }
-            if ($ocwsu_one_item_kg > 0) {
-              if ($ocwsu_one_item_kg < 1) {
-                $uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_one_item_kg * 1000, true);
-                $ocwsu_display = sprintf('%s %s', $uv, __( 'גרם', 'deliz-short' ));
-              } else {
-                $uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_one_item_kg, false);
-                $ocwsu_display = sprintf('%s %s', $uv, __( 'ק"ג', 'deliz-short' ));
+            } elseif ( ! $ocwsu_skip_tilde_unit_line ) {
+              $ocwsu_one_item_kg = 0.0;
+              if ($sold_by_units && $quantity_in_units > 0) {
+                $ocwsu_one_item_kg = $qty_raw / max($quantity_in_units, 1e-9);
+              }
+              $ocwsu_skip_unit_weight_meta_fallback = ( $sold_by_units && $sold_by_weight && $quantity_in_units <= 0 );
+              if ( ! $ocwsu_skip_unit_weight_meta_fallback && $ocwsu_one_item_kg <= 0 && ( $sold_by_units || $sold_by_weight ) ) {
+                $unit_w_meta = get_post_meta($product_id, '_ocwsu_unit_weight', true);
+                $unit_w_raw = ($unit_w_meta !== '' && is_numeric($unit_w_meta)) ? floatval($unit_w_meta) : 0.0;
+                if ($unit_w_raw > 0) {
+                  $ocwsu_one_item_kg = deliz_short_ocwsu_meta_weight_to_grams($unit_w_raw, $product_weight_units) / 1000;
+                }
+              }
+              if ($ocwsu_one_item_kg > 0) {
+                if ($ocwsu_one_item_kg < 1) {
+                  $uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_one_item_kg * 1000, true);
+                  $ocwsu_display = sprintf('%s %s', $uv, __( 'גרם', 'deliz-short' ));
+                } else {
+                  $uv = deliz_short_format_ocwsu_cart_weight_display_value($ocwsu_one_item_kg, false);
+                  $ocwsu_display = sprintf('%s %s', $uv, __( 'ק"ג', 'deliz-short' ));
+                }
               }
             }
           }
@@ -744,9 +784,13 @@ class ED_Product_Popup {
 
     // Calculate average weight if sold by units
     if ($weighable && $sold_by_units) {
-      if ($unit_weight_type === 'fixed' && $unit_weight) {
-        $data['ocwsu']['average_weight'] = (float) $unit_weight;
-        $data['ocwsu']['average_weight_label'] = $product_weight_units === 'kg' ? __( 'ק"ג', 'deliz-short' ) : __( 'גרם', 'deliz-short' );
+      if ($unit_weight_type === 'fixed' && $unit_weight && ! $sold_by_weight) {
+        // תצוגה אחידה: ~700 גרם / 2.5 ק"ג (לא 0.7 ק"ג גולמי). לא כשגם "נמכר לפי משקל" מסומן.
+        $data['ocwsu']['average_weight'] = null;
+        $data['ocwsu']['average_weight_label'] = null;
+        $data['ocwsu']['average_weight_display'] = function_exists('deliz_short_ocwsu_format_fixed_unit_weight_display')
+          ? deliz_short_ocwsu_format_fixed_unit_weight_display((float) $unit_weight, $product_weight_units ?: 'kg')
+          : '';
       } elseif ($unit_weight_type === 'variable' && !empty($final_unit_weight_options)) {
         $avg = array_sum($final_unit_weight_options) / count($final_unit_weight_options);
         $data['ocwsu']['average_weight'] = $avg;
