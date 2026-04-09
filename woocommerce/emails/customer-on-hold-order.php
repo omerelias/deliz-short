@@ -103,36 +103,36 @@ if (function_exists('ocws_render_shipping_date_info')) {
 
 			<address class="address" style="padding: 20px;">
 				<div style="display: inline-block; vertical-align: top;">
-					<h3 style="font-size: 21px !important; margin-top: unset !important;"><?php _e('Costumer details:', 'oc_transalte'); ?></h3>
+					<h3 style="font-size: 21px !important; margin-top: unset !important;"><?php _e('Costumer details:', 'deliz-short'); ?></h3>
 					<ul style="padding: 0; margin: 0; list-style-type: none; font-size:18px;">
 						<li><?php echo "<b>" . __('Name', 'woocommerce') . '</b>: ' . $order->get_billing_first_name() .' '. $order->get_billing_last_name(); ?></li>
 						<li><?php echo "<b>" . __('Phone', 'woocommerce') .'</b>: ' . $order->get_billing_phone(); ?></li>
 						<li><?php echo "<b>" . __('Email', 'woocommerce') .'</b>: ' . $order->get_billing_email(); ?></li>
-						<?php if($company_name){ echo "<li><b>" . __('Company name.', 'oc_transalte') .'</b>: ' . $company_name . '</li>'; }?>
-						<?php if($company_num){ echo "<li><b>" . __('Company number', 'oc_transalte') .'</b>: ' . $company_num . '</li>'; }?>
+						<?php if($company_name){ echo "<li><b>" . __('Company name.', 'deliz-short') .'</b>: ' . $company_name . '</li>'; }?>
+						<?php if($company_num){ echo "<li><b>" . __('Company number', 'deliz-short') .'</b>: ' . $company_num . '</li>'; }?>
 					</ul>
 				</div>
 				<div style="display: inline-block; vertical-align: top;">
-					<h3 style="font-size: 21px !important; margin-top: unset !important;"><?php _e('Delivery / Pickup details:', 'oc_transalte'); ?></h3>
+					<h3 style="font-size: 21px !important; margin-top: unset !important;"><?php _e('Delivery / Pickup details:', 'deliz-short'); ?></h3>
 					<ul style="padding: 0; margin: 0; list-style-type: none; font-size:18px;">
 					
 					<?php if( $shipping_method_name == "איסוף עצמי"){ ?>
 						<li><?php echo do_shortcode("[ocws_render_shipping_info order_id='{$order->get_id()}']"); ?></li>
 						<?php if($order->get_customer_note()){ ?><li><b><?php echo __('Customer note', 'woocommerce') . ':</b> ' . $order->get_customer_note(); ?></li><?php } ?>
-						<?php if($billing_notes){ echo '<li><b>'.__('Order notes', 'oc_transalte') .':</b> ' . $billing_notes . '</li>'; }?>
+						<?php if($billing_notes){ echo '<li><b>'.__('Order notes', 'deliz-short') .':</b> ' . $billing_notes . '</li>'; }?>
 						<?php
 					}else{ ?>
 						<?php
 						 $billing_city_title = apply_filters( 'ocws_get_city_title', $order->get_billing_city() );
 						?>
-						<?php if($ocws_recipient_firstname){ echo '<li><b>' . __('Recipient name:', 'oc_transalte') . '</b> ' . $ocws_recipient_firstname . ' ' . $ocws_recipient_lastname . '</li>'; }?>
-						<?php if($ocws_recipient_phone){ echo '<li><b>' . __('Recipient phone:', 'oc_transalte') . '</b> ' . $ocws_recipient_phone . '</li>'; }?>
-						<?php if($ocws_recipient_greeting){ echo '<li><b>' . __('Recipient greeting:', 'oc_transalte') . '</b> ' . $ocws_recipient_greeting . '</li>'; }?>
+						<?php if($ocws_recipient_firstname){ echo '<li><b>' . __('Recipient name:', 'deliz-short') . '</b> ' . $ocws_recipient_firstname . ' ' . $ocws_recipient_lastname . '</li>'; }?>
+						<?php if($ocws_recipient_phone){ echo '<li><b>' . __('Recipient phone:', 'deliz-short') . '</b> ' . $ocws_recipient_phone . '</li>'; }?>
+						<?php if($ocws_recipient_greeting){ echo '<li><b>' . __('Recipient greeting:', 'deliz-short') . '</b> ' . $ocws_recipient_greeting . '</li>'; }?>
 						<?php //if($shipping_date_info){ echo '<li>' . $shipping_date_info . '</li>'; }?>
 						<?php echo '<li>'.do_shortcode("[ocws_render_shipping_info order_id='{$order->get_id()}']").'</li>'; ?>
-						<span><?php echo '<b>' . __('Address:', 'woocommerce') . '</b> <span style="display: inline-block;">' . $order->get_billing_city() .', '. $order->get_billing_address_1() .'</span><br> <b>' . __('Apartment:', 'oc_transalte') . '</b> <span style="display: inline-block;">'. $billing_apartment .'</span> <b>' . __('Floor:', 'oc_transalte') . '</b> <span style="display: inline-block;"> '. $billing_floor .'</span>'; ?><?php if($billing_enter_code): ?> <b> <?php echo __('Enter code:', 'oc_transalte'); ?></b><span style="display: inline-block;"> <?php echo $billing_enter_code; ?></span><?php endif; ?></li>
+						<span><?php echo '<b>' . __('Address:', 'woocommerce') . '</b> <span style="display: inline-block;">' . $order->get_billing_city() .', '. $order->get_billing_address_1() .'</span><br> <b>' . __('Apartment:', 'deliz-short') . '</b> <span style="display: inline-block;">'. $billing_apartment .'</span> <b>' . __('Floor:', 'deliz-short') . '</b> <span style="display: inline-block;"> '. $billing_floor .'</span>'; ?><?php if($billing_enter_code): ?> <b> <?php echo __('Enter code:', 'deliz-short'); ?></b><span style="display: inline-block;"> <?php echo $billing_enter_code; ?></span><?php endif; ?></li>
 						<?php if($order->get_customer_note()){ ?><li><?php echo '<b>' . __('Customer note:', 'woocommerce') . '</b>: ' . $order->get_customer_note(); ?></li><?php } ?>
-						<?php if($billing_notes){ echo '<li><b>' . __('Order notes:', 'oc_transalte') . '</b> ' . $billing_notes . '</li>'; }?>
+						<?php if($billing_notes){ echo '<li><b>' . __('Order notes:', 'deliz-short') . '</b> ' . $billing_notes . '</li>'; }?>
 					<?php } ?>
 					</ul>
 				</div>
@@ -154,8 +154,8 @@ if (function_exists('ocws_render_shipping_date_info')) {
 	<table class="td" cellspacing="0" cellpadding="6" style="width: 100%; font-family: 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif;" border="1">
 		<thead>
 			<tr>
-				<th class="td" scope="col" style="text-align:<?php echo esc_attr( $text_align ); ?>;"><?php esc_html_e( 'Ordered products', 'oc_transalte' ); ?></th>
-				<th class="td" scope="col" style="text-align:<?php echo esc_attr( $text_align ); ?>;"><?php esc_html_e( 'Pcs / kg', 'oc_transalte' ); ?></th>
+				<th class="td" scope="col" style="text-align:<?php echo esc_attr( $text_align ); ?>;"><?php esc_html_e( 'Ordered products', 'deliz-short' ); ?></th>
+				<th class="td" scope="col" style="text-align:<?php echo esc_attr( $text_align ); ?>;"><?php esc_html_e( 'Pcs / kg', 'deliz-short' ); ?></th>
 				<th class="td" scope="col" style="text-align:<?php echo esc_attr( $text_align ); ?>;"><?php esc_html_e( 'Price', 'woocommerce' ); ?></th>
 			</tr>
 		</thead>

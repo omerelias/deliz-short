@@ -520,18 +520,13 @@ flex: 0 0 435px;
 }
 
 .woocommerce ul.products li.product .ed-loop-product-ocwsu-unit{
-    color: #989898;
-    font-size: 14px;
+    color: #4D4D4D;
+    font-size: 11px;
     line-height: 1.3;
-    margin-block-start: 4px;
-}
-
-.woocommerce ul.products li.product .ed-loop-product-ocwsu-unit{
-    color: #989898;
-    font-size: 14px;
-    line-height: 1.3;
-    margin-block-start: 4px;
+    margin-block-start: 10px;
     text-align: right;
+    font-weight: 300;
+    padding-block-end: 10px;
 }
 
 .center-column .ed-mp-products-wrap .ed-mp__products ul.products:before,
@@ -617,8 +612,8 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
 .ed-float-cart__items .ed-float-cart__item{
     position: relative;
     border-bottom: 1px solid #e9ebee;
-    padding-block-end: 25px;
-    margin-block-end: 25px;
+    padding-block-end: 35px;
+    margin-block-end: 35px;
 }
 
 /* אישור הסרת מוצר: שכבה חצי-שקופה + fade כמו .ed-product-popup (product-popup.css) */
@@ -773,13 +768,14 @@ body.square_images .ed-float-cart__items .ed-float-cart__item .ed-float-cart__th
     border-radius: var(--radius);
     cursor: pointer;
     font-size: 12px;
-    margin-block-start: 10px;
+    margin-block-start: 0;
     display: none;
     margin-inline: auto;
     position: absolute;
     left: auto;
     right: 85px;
     width: 85px;
+    bottom: 8px;
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__actions-row .ed-float-cart__edit-btn:hover{
