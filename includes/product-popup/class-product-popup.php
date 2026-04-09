@@ -314,7 +314,9 @@ class ED_Product_Popup {
             if ($sold_by_units && $quantity_in_units > 0) {
               $ocwsu_one_item_kg = $qty_raw / max($quantity_in_units, 1e-9);
             }
-            if ($ocwsu_one_item_kg <= 0 && ($sold_by_units || $sold_by_weight)) {
+            // מוצר גם לפי יחידות וגם לפי משקל: ברכישה לפי משקל בלבד אין להציג ~משקל יחידה ממטא המוצר (כמו floating-mini-cart.php).
+            $ocwsu_skip_unit_weight_meta_fallback = ( $sold_by_units && $sold_by_weight && $quantity_in_units <= 0 );
+            if ( ! $ocwsu_skip_unit_weight_meta_fallback && $ocwsu_one_item_kg <= 0 && ( $sold_by_units || $sold_by_weight ) ) {
               $unit_w_meta = get_post_meta($product_id, '_ocwsu_unit_weight', true);
               $unit_w_raw = ($unit_w_meta !== '' && is_numeric($unit_w_meta)) ? floatval($unit_w_meta) : 0.0;
               if ($unit_w_raw > 0) {

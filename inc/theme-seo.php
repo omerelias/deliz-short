@@ -27,7 +27,7 @@ function ed_get_cat_canonical_url() {
 
 /**
  * קטגוריית מוצר “ראשית” למוצר (Yoast / Rank Math / קטגוריה ראשונה לפי מזהה).
- * 
+ *
  * @param int $product_id מזהה פוסט מוצר.
  * @return WP_Term|null
  */
