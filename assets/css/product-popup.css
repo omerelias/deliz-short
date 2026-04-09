@@ -325,6 +325,7 @@ body.ed-checkout-upsells-popup-open .ed-product-popup {
   font-size: 0.9rem;
 
   color: var(--item-price-color, var(--color-primary, #000));
+  margin-block-end: 5px;
 
 }
 

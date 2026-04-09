@@ -440,6 +440,22 @@ add_action( 'woocommerce_after_shop_loop_item_title', function () {
 
 }, 15 );
 
+add_action( 'woocommerce_after_shop_loop_item_title', function () {
+	global $product;
+	$show_as_ml = get_field( 'show_as_ml', $product->get_id() );
+	if($show_as_ml){
+		$label = __( 'ml', 'deliz-short' );
+	}else{
+		$label = __( 'Gram', 'deliz-short' );
+	}
+	$product_weight = $product->get_weight();
+	if($product_weight && $product_weight > 0){
+		$weight = ( $product_weight * 1000 )/100;
+		$price_per_gram = ($product->get_price()/$weight);
+		echo '<div class="price_per">'.round($price_per_gram,2).' ₪ / 100 '.$label.'</div>';
+	}
+}, 15 );
+
 
 
 // סוגר wrapper אחרי התמונה (ה-thumbnail מודפס ב-10)
