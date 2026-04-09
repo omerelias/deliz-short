@@ -91,7 +91,17 @@ $options = $product_data['options'] ?? [];
 
         <div class="ed-product-popup__price">
 
-          <?php if (!empty($ocwsu['average_weight']) && !empty($ocwsu['average_weight_label'])): ?>
+          <?php if (!empty($ocwsu['average_weight_display'])): ?>
+
+            <span class="ed-product-popup__price-label">
+
+              <?php echo esc_html( sprintf( __( 'משקל ממוצע: ~%s', 'deliz-short' ), $ocwsu['average_weight_display'] ) ); ?>
+
+            </span>
+
+            <span class="ed-product-popup__price-sep">-</span>
+
+          <?php elseif (!empty($ocwsu['average_weight']) && !empty($ocwsu['average_weight_label'])): ?>
 
             <span class="ed-product-popup__price-label">
 

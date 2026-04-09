@@ -374,6 +374,74 @@ add_action('woocommerce_shop_loop_item_title', function () {
 
 
 
+// OCWSU: משקל יחידה קבועה (~700 גרם / 2.5 ק"ג) — בכרטיס קטגוריה 
+
+add_action( 'woocommerce_after_shop_loop_item_title', function () {
+
+  global $product;
+
+  if ( ! $product instanceof WC_Product ) {
+
+    return;
+
+  }
+
+  $pid = $product->get_id();
+
+  if ( get_post_meta( $pid, '_ocwsu_weighable', true ) !== 'yes' ) {
+
+    return;
+
+  }
+
+  if ( get_post_meta( $pid, '_ocwsu_sold_by_units', true ) !== 'yes' ) {
+
+    return;
+
+  }
+
+  if ( get_post_meta( $pid, '_ocwsu_sold_by_weight', true ) === 'yes' ) {
+
+    return;
+
+  }
+
+  if ( get_post_meta( $pid, '_ocwsu_unit_weight_type', true ) !== 'fixed' ) {
+
+    return;
+
+  }
+
+  $uw = get_post_meta( $pid, '_ocwsu_unit_weight', true );
+
+  if ( $uw === '' || ! is_numeric( $uw ) ) {
+
+    return;
+
+  }
+
+  $pwu = get_post_meta( $pid, '_ocwsu_product_weight_units', true );
+
+  if ( ! function_exists( 'deliz_short_ocwsu_format_fixed_unit_weight_display' ) ) {
+
+    return;
+
+  }
+
+  $line = deliz_short_ocwsu_format_fixed_unit_weight_display( (float) $uw, $pwu );
+
+  if ( $line === '' ) {
+
+    return;
+
+  }
+
+  echo '<div class="ed-loop-product-ocwsu-unit">~' . esc_html( $line ) . '</div>';
+
+}, 15 );
+
+
+
 // סוגר wrapper אחרי התמונה (ה-thumbnail מודפס ב-10)
 
 add_action('woocommerce_after_shop_loop_item', function () {
