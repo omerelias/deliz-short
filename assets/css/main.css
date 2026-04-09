@@ -2580,6 +2580,14 @@ body p.other-recipient-field label{
     font-size: 14px;
 }
 
+/* Fee row: price + StoreOS tooltip icon — flex so order matches checkout */
+.ed-float-cart__totals .ed-float-cart__row--fee strong {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 6px;
+}
+
 .ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner{
     display: flex;
     width: 100%;

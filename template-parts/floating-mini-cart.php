@@ -519,15 +519,18 @@ if (
 
 					if (!empty($fees)) :
 						foreach ($fees as $fee) :
-							if ((float) $fee->amount < 0) :
-								$running_total += (float) $fee->amount;
-								?>
-								<div class="ed-float-cart__row ed-float-cart__row--promotion">
-									<span><?php echo esc_html($fee->name); ?></span>
-									<strong><?php echo wp_kses_post(wc_cart_totals_fee_html($fee)); ?></strong>
-								</div>
-								<?php
-							endif;
+							$fee_amount = (float) $fee->amount;
+							$running_total += $fee_amount;
+							$fee_row_class = 'ed-float-cart__row ed-float-cart__row--fee';
+							if ($fee_amount < 0) {
+								$fee_row_class .= ' ed-float-cart__row--promotion';
+							}
+							?>
+							<div class="<?php echo esc_attr($fee_row_class); ?>">
+								<span><?php echo esc_html($fee->name); ?></span>
+								<strong><?php echo wp_kses_post(wc_cart_totals_fee_html($fee)); ?></strong>
+							</div>
+							<?php
 						endforeach;
 					endif;
 					?>
