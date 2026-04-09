@@ -354,7 +354,7 @@ jQuery(function($) {
                             // Remove English city names from address_1
                             if (address1 && typeof address1 === 'string') {
                                 const englishCities = ['Rishon LeZion', 'Rishon LeZiyyon', 'Tel Aviv', 'Jerusalem', 'Haifa'];
-                                englishCities.forEach(function(engCity) { 
+                                englishCities.forEach(function(engCity) {
                                     address1 = address1.replace(new RegExp(engCity, 'gi'), '').trim();
                                 });
                             }

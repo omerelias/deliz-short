@@ -26,6 +26,89 @@ function ed_get_cat_canonical_url() {
 }
 
 /**
+ * קטגוריית מוצר “ראשית” למוצר (Yoast / Rank Math / קטגוריה ראשונה לפי מזהה).
+ * 
+ * @param int $product_id מזהה פוסט מוצר.
+ * @return WP_Term|null
+ */
+function ed_get_primary_product_category_term( $product_id ) {
+  $product_id = (int) $product_id;
+  if ( $product_id <= 0 ) {
+    return null;
+  }
+
+  $primary = (int) get_post_meta( $product_id, '_yoast_wpseo_primary_product_cat', true );
+  if ( $primary ) {
+    $t = get_term( $primary, 'product_cat' );
+    if ( $t && ! is_wp_error( $t ) ) {
+      return $t;
+    }
+  }
+
+  $primary = (int) get_post_meta( $product_id, 'rank_math_primary_product_cat', true );
+  if ( $primary ) {
+    $t = get_term( $primary, 'product_cat' );
+    if ( $t && ! is_wp_error( $t ) ) {
+      return $t;
+    }
+  }
+
+  if ( function_exists( 'wc_get_product_term_ids' ) ) {
+    $ids = wc_get_product_term_ids( $product_id, 'product_cat' );
+  } else {
+    $ids = wp_get_post_terms( $product_id, 'product_cat', array( 'fields' => 'ids' ) );
+    if ( is_wp_error( $ids ) ) {
+      $ids = array();
+    }
+  }
+
+  if ( empty( $ids ) ) {
+    return null;
+  }
+
+  sort( $ids, SORT_NUMERIC );
+  $t = get_term( (int) $ids[0], 'product_cat' );
+  if ( $t && ! is_wp_error( $t ) ) {
+    return $t;
+  }
+
+  return null;
+}
+
+/**
+ * Canonical לנתיבי WooCommerce הסטנדרטיים (‎/product/…‎, ‎/product-category/…‎) — מצביע על ‎/cat/…‎.
+ *
+ * @return string URL מלא או מחרוזת ריקה.
+ */
+function ed_get_wc_native_canonical_url() {
+  if ( is_tax( 'product_cat' ) ) {
+    $term = get_queried_object();
+    if ( ! $term instanceof WP_Term || $term->taxonomy !== 'product_cat' ) {
+      return '';
+    }
+
+    return home_url( '/cat/' . $term->slug . '/' );
+  }
+
+  if ( is_singular( 'product' ) ) {
+    $product_id = (int) get_queried_object_id();
+    $slug       = (string) get_post_field( 'post_name', $product_id );
+    if ( $slug === '' ) {
+      return '';
+    }
+
+    $term = ed_get_primary_product_category_term( $product_id );
+    if ( ! $term ) {
+      return '';
+    }
+
+    return home_url( '/cat/' . $term->slug . '/product/' . $slug . '/' );
+  }
+
+  return '';
+}
+
+/**
  * קטגוריית מוצר תקפה לפי ‎mp_cat‎ (לכותרת ומטא).
  *
  * @return WP_Term|null
@@ -199,7 +282,13 @@ add_action(
 add_action(
   'wp_head',
   function () {
+    if ( defined( 'WPSEO_VERSION' ) || defined( 'RANK_MATH_VERSION' ) ) {
+      return;
+    }
     $canon = ed_get_cat_canonical_url();
+    if ( ! $canon ) {
+      $canon = ed_get_wc_native_canonical_url();
+    }
     if ( ! $canon ) {
       return;
     }
@@ -213,6 +302,10 @@ add_filter(
   'wpseo_canonical',
   function ( $canonical ) {
     $canon = ed_get_cat_canonical_url();
+    if ( $canon ) {
+      return $canon;
+    }
+    $canon = ed_get_wc_native_canonical_url();
 
     return $canon ? $canon : $canonical;
   }
@@ -222,6 +315,10 @@ add_filter(
   'rank_math/frontend/canonical',
   function ( $canonical ) {
     $canon = ed_get_cat_canonical_url();
+    if ( $canon ) {
+      return $canon;
+    }
+    $canon = ed_get_wc_native_canonical_url();
 
     return $canon ? $canon : $canonical;
   }
@@ -321,4 +418,50 @@ add_filter(
   },
   10,
   2
+);
+
+/**
+ * הפניה 301 מעמודי WC הסטנדרטיים (‎/product/…‎, ‎/product-category/…‎) לנתיבי ‎/cat/…‎ לפני רינדור — בלי הבזק של תבנית מוצר.
+ */
+add_action(
+  'template_redirect',
+  function () {
+    if ( ! apply_filters( 'ed_should_redirect_wc_to_virtual_shop', true ) ) {
+      return;
+    }
+    if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || is_feed() ) {
+      return;
+    }
+    if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+      return;
+    }
+    if ( is_preview() || is_customize_preview() ) {
+      return;
+    }
+
+    $target = ed_get_wc_native_canonical_url();
+    if ( $target === '' ) {
+      return;
+    }
+
+    $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '/';
+    $req_path    = wp_parse_url( $request_uri, PHP_URL_PATH );
+    if ( ! is_string( $req_path ) ) {
+      $req_path = '/';
+    }
+    $tgt_path = wp_parse_url( $target, PHP_URL_PATH );
+    if ( ! is_string( $tgt_path ) ) {
+      return;
+    }
+
+    $a = rawurldecode( untrailingslashit( $req_path ) );
+    $b = rawurldecode( untrailingslashit( $tgt_path ) );
+    if ( $a === $b ) {
+      return;
+    }
+
+    wp_safe_redirect( $target, 301 );
+    exit;
+  },
+  0
 );

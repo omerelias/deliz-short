@@ -186,3 +186,16 @@ add_filter(
   10,
   2
 );
+
+// מזהה JS: נתיבי ‎/cat/…‎ עם דף הבית — לא תבנית מוצר WC.
+add_filter(
+  'body_class',
+  function ( $classes ) {
+    if ( get_query_var( 'mp_cat' ) || get_query_var( 'mp_product' ) ) {
+      $classes[] = 'ed-virtual-shop-app';
+    }
+
+    return $classes;
+  },
+  20
+);
