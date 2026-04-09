@@ -1222,9 +1222,8 @@ font-size: 14px;
 
     padding: 0;
 
-    background: var(--popup-primary);
-
-    color: #ffffff;
+  background: var(--popup-primary);
+    color: var(--main-text-color-hover);
 
     border: none;
 
@@ -1256,7 +1255,8 @@ font-size: 14px;
 
 .ed-product-popup__add-btn:hover:not(:disabled) {
 
-  background: var(--popup-primary-hover);
+    background: var(--popup-primary-hover);
+    color: var(--main-text-color);
 
   transform: translateY(-2px);
 

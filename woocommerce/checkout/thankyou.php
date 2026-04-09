@@ -1,63 +1,20 @@
 <?php
-/**
- * Thankyou page
- *
- * This template can be overridden by copying it to yourtheme/woocommerce/checkout/thankyou.php.
- *
- * HOWEVER, on occasion WooCommerce will need to update template files and you
- * (the theme developer) will need to copy the new files to your theme to
- * maintain compatibility. We try to do this as little as possible, but it does
- * happen. When this occurs the version of the template file will be bumped and
- * the readme will list any important changes.
- *
- * @see https://docs.woocommerce.com/document/template-structure/
- * @package WooCommerce\Templates
- * @version 8.1.0
- *
- * @var WC_Order $order
- */
-
-defined( 'ABSPATH' ) || exit;
+if (!defined( 'ABSPATH' )) exit;
 ?>
-
 <div class="woocommerce-order">
-	<div class="thankyou-inner">
-	<?php
-	if ( $order ) :
-
-		do_action( 'woocommerce_before_thankyou', $order->get_id() );
-		?>
-
-		<?php if ( $order->has_status( 'failed' ) ) : ?>
-
-			<p class="woocommerce-notice woocommerce-notice--error woocommerce-thankyou-order-failed"><?php esc_html_e( 'Unfortunately your order cannot be processed as the originating bank/merchant has declined your transaction. Please attempt your purchase again.', 'woocommerce' ); ?></p>
-
-			<p class="woocommerce-notice woocommerce-notice--error woocommerce-thankyou-order-failed-actions">
-				<a href="<?php echo esc_url( $order->get_checkout_payment_url() ); ?>" class="button pay"><?php esc_html_e( 'Pay', 'woocommerce' ); ?></a>
-				<?php if ( is_user_logged_in() ) : ?>
-					<a href="<?php echo esc_url( wc_get_page_permalink( 'myaccount' ) ); ?>" class="button pay"><?php esc_html_e( 'My account', 'woocommerce' ); ?></a>
-				<?php endif; ?>
-			</p>
-
-		<?php else : ?>
-			
-			<?php //wc_get_template( 'checkout/order-received.php', array( 'order' => $order ) ); ?>
-			<div class="thankyou-content">
-				<h1><?php esc_html_e( 'THANK YOU', 'deliz-short' ); ?></h1>
-				<div class="thanks"><?php esc_html_e( 'הזמנתכם התקבלה. תודה שרכשתם אצלנו!', 'deliz-short' ); ?></div>
-				<div class="order-num"><?php esc_html_e( 'מספר הזמנתכם הינו:', 'deliz-short' ); ?> <b><?php echo esc_html( $order->get_order_number() ); ?></b><br/><?php esc_html_e( 'אישור ופרטי ההזמנה נשלחו אליכם במייל.', 'deliz-short' ); ?></div>
-
-			</div>
-        <?php
-        // Add the missing action here
-        do_action( 'woocommerce_thankyou', $order->get_id() );
-        ?>
-		<?php endif; ?>
-
+	<?php if ( $order ) : ?>
+		<div class="thank-you-order">
+			<h1><?php _e('Thank you for your order', 'woocommerce'); ?> <?php echo $order->get_billing_first_name(); ?></h1>
+			<div id="order-num"><?php _e('Order Number', 'woocommerce'); ?> : <?php echo $order->get_order_number(); ?></div>
+			<div id="order-email"><?php the_field('thank_you_text', 'options'); ?></div>
+			<?php if(is_user_logged_in()){ ?>
+				<a href="/my-account/view-order/<?php echo $order->get_order_number(); ?>"><?php _e('View your order', 'deliz-short'); ?></a>
+			<?php }else{ ?>
+				<a href="/"><?php _e('To home page', 'deliz-short'); ?></a>
+			<?php } ?>
+		</div>
 	<?php else : ?>
-
-		<?php wc_get_template( 'checkout/order-received.php', array( 'order' => false ) ); ?>
-
+		<p class="woocommerce-notice woocommerce-notice--success woocommerce-thankyou-order-received"><?php echo apply_filters( 'woocommerce_thankyou_order_received_text', __( 'Thank you. Your order has been received.', 'woocommerce' ), null ); ?></p>
 	<?php endif; ?>
-	</div>
 </div>
+<?php get_footer(); ?>
