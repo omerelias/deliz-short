@@ -763,28 +763,29 @@ body.square_images .ed-float-cart__items .ed-float-cart__item .ed-float-cart__th
     width: 95px;
     min-width: 95px;
     padding: 0 13px;
-    position: relative;
+    position: static;
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__actions-row .ed-float-cart__edit-btn{
-    background-color: var(--color-primary);
-    color: var(--main-text-color);
+    border: 1px solid var(--color-primary);
+    background-color: transparent;
+    color: var(--color-primary);
     border-radius: var(--radius);
     cursor: pointer;
     font-size: 12px;
-    margin-block-start: 5px;
-    display:none;
+    margin-block-start: 10px;
+    display: none;
     margin-inline: auto;
     position: absolute;
-    left: 0;
-    right: 0;
-    max-width: 75px;
-        border: none;
+    left: auto;
+    right: 85px;
+    width: 85px;
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__actions-row .ed-float-cart__edit-btn:hover{
     background-color: var(--color-primary-hover);
     color: var(--main-text-color-hover);
+    border-color:transparent
 }
 
 .ed-promotion-cart-message.ed-promotion-fulfilled{
@@ -1082,6 +1083,11 @@ body.square_images .woocommerce ul.products li.product a img{
 }
 
 @media (max-width: 991px) {
+    .ed-float-cart__items .ed-float-cart__item .ed-float-cart__actions-row .ed-float-cart__quantity-controls button,
+    .ed-float-cart__items .ed-float-cart__item .ed-float-cart__actions-row .ed-float-cart__edit-btn{
+        display: block;
+    }
+
     .main-content{
         flex-direction: column;
         margin-block-start: 0;
@@ -2272,6 +2278,8 @@ body .woocommerce table.my_account_orders .button {
     height: 40px;
     line-height: 37px;
     font-weight: normal;
+    margin-left: 5px;
+    margin-bottom: 5px;
 }
 
 .woocommerce table.my_account_orders td, .woocommerce table.my_account_orders th{

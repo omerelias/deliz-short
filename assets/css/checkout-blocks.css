@@ -388,7 +388,7 @@
 
     width: 100%;
 
-    max-width: 515px;
+    max-width: 750px;
 
     max-height: 90vh;
 
@@ -398,7 +398,7 @@
 
     background: #fff;
 
-    border-radius: 12px;
+    border-radius: 4px;
 
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 
@@ -457,6 +457,7 @@
     margin: 0 0 20px;
 
     color: #333;
+    display: none;
 
 }
 
@@ -823,7 +824,7 @@ form.woocommerce-checkout .col2-set .col-2,
 
 .checkout-block-popup__container--order {
 
-    max-width: 520px;
+    /*max-width: 520px;*/
 
 }
 
