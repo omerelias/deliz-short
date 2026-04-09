@@ -1185,11 +1185,57 @@ body.square_images .woocommerce ul.products li.product a img{
         margin-inline-end: 10px;
     }
 
+    .center-column .ed-mp-products-wrap .ed-mp__subcats{
+         padding: 0;
+        list-style: none;
+        -webkit-overflow-scrolling: touch;
+        overflow-scrolling: touch;
+        overflow: hidden;
+        overflow-x: auto;
+        white-space: nowrap;
+        display: block;
+        opacity: 1;
+        top: 210px;
+        width: fit-content;
+        max-width: 100%;
+        scroll-behavior: smooth;
+        height: auto;
+        line-height: normal;
+        padding: 0;
+        background: #fff;
+        z-index: 19;
+        margin-bottom: 0;
+        margin-top: 20px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-block-end: 15px;       
+    }
+
+    .center-column .ed-mp-products-wrap .ed-mp__subcats .ed-mp__subcat-link{
+        font-size: 14px;
+        margin: 0;
+        border-bottom: none;
+        display: inline-block;
+        width: auto !important;
+        text-align: center;
+        vertical-align: top;
+        cursor: pointer;
+        position: relative;
+        top: 0;
+        line-height: normal;
+        height: auto;
+        margin-inline-end: 10px;
+    }
+
     .main-content .menu-block ul.ed-mp__menu li.ed-mp__item a{
         color: var(--mobile-menu-text-color);
         background-color: var(--mobile-menu-bg);
         border-radius: var(--radius);
         padding: 5px 10px;
+    }
+
+    .center-column .ed-mp-products-wrap .ed-mp__products ul.products li .loop-bottom-wrap{
+        padding-inline: 5px;
     }
 
     .main-content .menu-block ul.ed-mp__menu a.ed-mp__link:hover, .main-content .menu-block ul.ed-mp__menu a.ed-mp__link.is-active{
