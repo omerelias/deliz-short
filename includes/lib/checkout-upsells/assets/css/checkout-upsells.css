@@ -532,10 +532,21 @@ body.ed-checkout-upsells-popup-open {
 }
 
 .ed-checkout-upsells-popup__products .woocommerce ul.products li.product {
-      flex: 0 0 calc((100% - 2 * 16px) / 3);
-      width: auto;
+  flex: 0 0 calc((100% - 2 * 16px) / 3);
+  width: auto;
     margin: 0;
     margin-block-end: 10px;
+        box-shadow: 0px 4px 47.8px 0px #00000017;
+    border-radius: 0 0 8px 8px;
+}
+
+.ed-checkout-upsells-popup__products .woocommerce ul.products li.product .loop-bottom-wrap{
+  text-align: center;
+    padding-block-end: 10px;
+}
+
+.ed-checkout-upsells-popup__products .woocommerce ul.products li.product .loop-bottom-wrap .ed-loop-product-ocwsu-unit{
+  padding-inline-start: 15px;
 }
 
 .ed-checkout-upsells-popup__products .woocommerce ul.products:before,
