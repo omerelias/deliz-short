@@ -1976,8 +1976,9 @@ form#choose-shipping input.green{
     height: 34px;
     border-radius: 50%;
     background-size: 11px;
-    right: 25px;
+left: 25px;
     top: 25px;
+    right: auto;
 }
 
 .choose-shipping-popup .inner-wrapper .pop-close img{
@@ -2280,7 +2281,7 @@ form.woocommerce-checkout .ocws-days-with-slots-list-label{
     }
 
     .choose-shipping-popup .inner-wrapper .pop-close{
-        right: 10px;
+        left: 10px;
     top: 10px;
     }
 
@@ -2874,6 +2875,10 @@ body p.other-recipient-field label{
  .woocommerce table.shop_table.woocommerce-checkout-review-order-table{
     border: none;
     margin: 0;
+ }
+
+ .woocommerce table.shop_table.woocommerce-checkout-review-order-table tr.order-items-toggle{
+    display: none;
  }
 
   .woocommerce table.shop_table.woocommerce-checkout-review-order-table .coupon-form td{

@@ -354,14 +354,6 @@ body.woocommerce-checkout h1.entry-title{
 
 
 
-/* WooCommerce shipping fields kept in form for fragments/submit — UI is .choose-shipping-popup (OCWS) */
-
-.deliz-checkout-shipping-native-fields {
-
-    display: none !important;
-
-}
-
 /* Checkout block popup (billing, shipping, notes) */
 
 .checkout-block-popup {
