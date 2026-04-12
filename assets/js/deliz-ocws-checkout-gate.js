@@ -47,6 +47,14 @@
         if (!cfg.ocwsActive) {
             return;
         }
+        // Non-empty cart on page load: open choose-shipping (after theme hide-on-load runs).
+        if (cfg.autoOpenShippingOnLoad && !$('body').hasClass('ocws-deli-style')) {
+            setTimeout(function () {
+                if (typeof window.delizOpenOcwsDeliveryPopup === 'function') {
+                    window.delizOpenOcwsDeliveryPopup();
+                }
+            }, 200);
+        }
         // checkout-upsells.js handles this path when enabled (ED_CHECKOUT_UPSELLS is defined).
         if (typeof window.ED_CHECKOUT_UPSELLS !== 'undefined' && window.ED_CHECKOUT_UPSELLS.ajaxUrl) {
             return;

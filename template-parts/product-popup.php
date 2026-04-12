@@ -374,7 +374,7 @@ $options = $product_data['options'] ?? [];
 
           <label class="ed-product-popup__baker-note-label" for="popup-product-note"><?php echo esc_html( $ed_product_note_label ); ?></label>
 
-          <textarea id="popup-product-note" name="product_note" class="ed-product-popup__baker-note-textarea" rows="2" autocomplete="off"></textarea>
+          <input type="text" id="popup-product-note" name="product_note" class="ed-product-popup__baker-note-input" value="" autocomplete="off" />
 
         </div>
         <?php endif; ?>

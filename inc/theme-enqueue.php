@@ -102,6 +102,13 @@ add_action(
     if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
       return;
     }
+    $auto_open_shipping = false;
+    if ( class_exists( 'OCWS_Popup', false ) && ! WC()->cart->is_empty() ) {
+      if ( ( ! function_exists( 'is_checkout' ) || ! is_checkout() )
+        && ( ! function_exists( 'is_order_received_page' ) || ! is_order_received_page() ) ) {
+        $auto_open_shipping = true;
+      }
+    }
     wp_register_script(
       'deliz-ocws-checkout-gate',
       get_template_directory_uri() . '/assets/js/deliz-ocws-checkout-gate.js',
@@ -114,8 +121,9 @@ add_action(
       'deliz-ocws-checkout-gate',
       'delizOcwsCheckoutGate',
       array(
-        'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-        'ocwsActive' => class_exists( 'OCWS_Popup', false ),
+        'ajaxUrl'                 => admin_url( 'admin-ajax.php' ),
+        'ocwsActive'              => class_exists( 'OCWS_Popup', false ),
+        'autoOpenShippingOnLoad'  => $auto_open_shipping,
       )
     );
   },

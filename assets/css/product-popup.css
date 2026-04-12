@@ -1260,13 +1260,11 @@ font-size: 14px;
 
 }
 
-.ed-product-popup__baker-note-textarea {
+.ed-product-popup__baker-note-input {
 
   width: 100%;
 
-  min-height: 3.25rem;
-
-  padding: 0.75rem;
+  padding: 0.65rem 0.75rem;
 
   border: 1px solid var(--popup-border, #e6e6e6);
 
@@ -1278,8 +1276,6 @@ font-size: 14px;
 
   line-height: 1.35;
 
-  resize: vertical;
-
   text-align: right;
 
   color: #333;
@@ -1290,7 +1286,7 @@ font-size: 14px;
 
 }
 
-.ed-product-popup__baker-note-textarea:focus {
+.ed-product-popup__baker-note-input:focus {
 
   outline: none;
 

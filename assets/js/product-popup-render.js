@@ -268,10 +268,10 @@
         const adminEditHTML = adminEditUrl
             ? `<a class="ed-product-popup__admin-edit" href="${escapeHtml(adminEditUrl)}" target="_blank" rel="noopener noreferrer" aria-label="עריכת מוצר בלוח הבקרה" title="עריכת מוצר בלוח הבקרה"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" fill="currentColor"/></svg></a>`
             : '';
-        const noteHTML = showProductNote ? `
+        const noteHTML = showProductNote ? ` 
       <div class="ed-product-popup__baker-note">
         <label class="ed-product-popup__baker-note-label" for="popup-product-note">${noteLabelHtml}</label>
-        <textarea id="popup-product-note" name="product_note" class="ed-product-popup__baker-note-textarea" rows="2" autocomplete="off"></textarea>
+        <input type="text" id="popup-product-note" name="product_note" class="ed-product-popup__baker-note-input" value="" autocomplete="off" />
       </div>
     ` : '';
 

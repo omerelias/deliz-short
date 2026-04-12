@@ -1486,11 +1486,11 @@ class ED_Product_Popup {
     }
 
     if (!deliz_short_product_show_product_note((int) $product_id)) {
-      return $cart_item_data;
+      return $cart_item_data; 
     }
     
     if (isset($_POST['product_note']) && !empty(trim($_POST['product_note']))) {
-      $product_note = sanitize_textarea_field($_POST['product_note']);
+      $product_note = sanitize_text_field(wp_unslash($_POST['product_note']));
       $cart_item_data['product_note'] = $product_note;
       error_log("✅ Product note added to cart item data: {$product_note}");
     } else {
