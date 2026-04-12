@@ -763,7 +763,8 @@ body.square_images .ed-float-cart__items .ed-float-cart__item .ed-float-cart__th
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__details .ed-float-cart__ocwsu-qty,
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__details .ed-float-cart__variation{
         color: #989898;
-    font-size: 14px;
+font-size: 12px;
+    font-weight: 500;
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__actions-row{
@@ -841,11 +842,13 @@ border: 1px solid var(--color-primary);
     text-align: center;
     border: none;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__actions-row .ed-float-cart__qty-field .ed-float-cart__qty-units-label{
     color: #989898;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__price{
@@ -2134,6 +2137,11 @@ body.woocommerce-edit-address.woocommerce-page form p.form-row {
     box-sizing: border-box;
     border: none;
     padding-bottom: 0;
+    margin-bottom: -5px;
+}
+
+span.woocommerce-terms-and-conditions-checkbox-text{
+    font-size: 13px;
 }
 
 #oc-woo-pickup-additional .slot-list-container a.slot.selected,
