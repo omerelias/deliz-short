@@ -210,8 +210,17 @@ $local_pickup_chosen = $chosen_shipping && (
 			<?php endif;?>
 			
 			<!-- Shipping methods display -->
-			<?php if ( WC()->cart->needs_shipping() && WC()->cart->show_shipping() ) : ?>
-				<?php wc_cart_totals_shipping_html(); ?>
+			<?php if ( WC()->cart->needs_shipping() && WC()->cart->show_shipping() ) : ?> 
+				<h2 class="entry-title crossed-title">
+					<label>
+						<span><?php esc_html_e( 'איך תרצו לקבל את ההזמנה?', 'deliz-short' ); ?></span>
+					</label>
+				</h2>
+				<table class="shop_table woocommerce-shipping-totals ship-method__table">
+					<tbody>
+						<?php wc_cart_totals_shipping_html(); ?>
+					</tbody>
+				</table>
 			<?php endif; ?>
 		</div>
 		
