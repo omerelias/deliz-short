@@ -357,6 +357,19 @@ if (
 								echo '<div class="ed-float-cart__ocwsu-qty ed-float-cart__variation">' . wp_kses_post($float_cart_variation_html) . '</div>';
 							}
 							?>
+								<button type="button"
+										class="ed-float-cart__edit-btn"
+										data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+										data-product-id="<?php echo esc_attr($product_id); ?>"
+										data-variation-id="<?php echo esc_attr($variation_id); ?>"
+										data-quantity="<?php echo esc_attr($quantity); ?>"
+										data-variation="<?php echo $variation_attrs_json; ?>"
+										data-product-note="<?php echo esc_attr($product_note); ?>"
+										data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>"
+										data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>"
+										aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>">
+									<?php esc_html_e('עריכה', 'deliz-short'); ?>
+								</button>							
 						</div>
  							<div class="ed-float-cart__actions-row">
 								<div class="ed-float-cart__quantity-controls">
@@ -413,20 +426,6 @@ if (
 											aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+
 									</button>
 								</div>
-
-								<button type="button"
-										class="ed-float-cart__edit-btn"
-										data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
-										data-product-id="<?php echo esc_attr($product_id); ?>"
-										data-variation-id="<?php echo esc_attr($variation_id); ?>"
-										data-quantity="<?php echo esc_attr($quantity); ?>"
-										data-variation="<?php echo $variation_attrs_json; ?>"
-										data-product-note="<?php echo esc_attr($product_note); ?>"
-										data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>"
-										data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>"
-										aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>">
-									<?php esc_html_e('עריכה', 'deliz-short'); ?>
-								</button>
 							</div>                       
 						<div class="ed-float-cart__price">
 							<span class="ed-float-cart__subtotal"><?php echo apply_filters( 'woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal( $product, $cart_item['quantity'] ), $cart_item, $cart_item_key ); ?></span>
