@@ -46,6 +46,13 @@ function oc_compat_add_checkout_fragments( $fragments ) {
 
     ob_start();
 
+    $chosen_methods      = WC()->session->get( 'chosen_shipping_methods' );
+    $chosen_shipping     = isset( $chosen_methods[0] ) ? $chosen_methods[0] : '';
+    $local_pickup_chosen = $chosen_shipping && (
+        strpos( $chosen_shipping, 'local_pickup' ) !== false
+        || strpos( $chosen_shipping, 'oc_woo_local_pickup_method' ) !== false
+    );
+
     $ar_billing_fields_first = array(
 
         'billing_google_autocomplete',
@@ -78,7 +85,7 @@ function oc_compat_add_checkout_fragments( $fragments ) {
 
     ?>
 
-    <div class="woocommerce-billing-fields__field-wrapper woocommerce-billing-fields-part-2 billing-fields-shipping-data-1 <?php if ( $local_pickup_chosen == 1  ){ echo 'hidden'; } ?>">
+    <div class="woocommerce-billing-fields__field-wrapper woocommerce-billing-fields-part-2 billing-fields-shipping-data-1 <?php echo $local_pickup_chosen ? 'hidden' : ''; ?>">
 
         <?php
 

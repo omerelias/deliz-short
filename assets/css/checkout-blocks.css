@@ -525,7 +525,9 @@ body.woocommerce-checkout h1.entry-title{
 
 }
 
-.checkout-block__content--in-popup {
+/* Only inside modal popups (billing/notes). Unscoped display:block !important would override
+   .checkout-block--shipping .checkout-block__content { display: none } in col-1. */
+.checkout-block-popup .checkout-block__content--in-popup {
 
     max-height: none !important;
 
@@ -1081,6 +1083,13 @@ color: #ADADAD;
     margin: 0;
 
     padding: 0;
+
+}
+
+/* PHP adds class "hidden" for local pickup — hide block from layout */
+.checkout-block.hidden { 
+
+    display: none !important;
 
 }
 
