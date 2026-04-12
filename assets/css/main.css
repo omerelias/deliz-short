@@ -2011,10 +2011,16 @@ form#choose-shipping #popup-form-messages .error, form#choose-shipping #popup-sh
     font-size: 24px;
 }
 
-.shipping-settings-title, .ocws-days-with-slots-list-label {
+.shipping-settings-title, .ocws-days-with-slots-list-label,
+#ocws_lp_pickup_aff_id_field label {
     font-size: 24px !important;
     font-weight: 500 !important;
     margin: 40px 0 20px !important;
+    text-align: center !important;
+}
+
+#ocws_lp_pickup_aff_id_field label{
+    margin: 0 !important;
 }
 
 .shipping-settings-title{
@@ -3129,6 +3135,10 @@ body p.other-recipient-field label{
 @media (max-width: 767px) {
     .ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner button{
         font-size: 14px;
+    }
+
+    .checkout-block-popup__inner{
+        padding: 48px 15px 24px;
     }
 }
 
