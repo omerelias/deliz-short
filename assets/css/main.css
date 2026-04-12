@@ -1798,6 +1798,8 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
 
 .choose-shipping-popup .inner-wrapper, .redirect-dialog-popup .inner-wrapper{
     border-radius: 20px;
+    overflow: auto;
+   
 }
 
 #choose-shipping .loading{
@@ -1849,6 +1851,7 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
     background-color: var(--color-primary-hover);
     border-radius: 100px;
     padding: 5px;
+    box-sizing: border-box;
 }
 
 .choose-shipping .ship-choose .shipping-method-wraper[class*="shipping_method"] label span.label,
@@ -1908,10 +1911,15 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
 
 /* pickup_method - active: צבע קשיח */
 .choose-shipping .ship-choose .shipping-method-wraper[class*="pickup_method"] label.active span.label::before{
-    background-color: transparent;
-    -webkit-mask-image: none;
-    mask-image: none;
-    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.48192 1.5C3.15059 1.5 2.83259 1.632 2.59859 1.86667L1.73192 2.732C1.28408 3.17902 1.0224 3.77923 0.999662 4.41159C0.976928 5.04394 1.19483 5.6614 1.60942 6.13942C2.02401 6.61745 2.60445 6.92047 3.23367 6.98739C3.86288 7.05431 4.49407 6.88014 4.99992 6.5C5.41792 6.81333 5.93726 7 6.49992 7C7.06259 7 7.58259 6.81333 7.99992 6.5C8.41726 6.81333 8.93726 7 9.49992 7C10.0626 7 10.5819 6.81333 10.9999 6.5C11.5058 6.88014 12.137 7.05431 12.7662 6.98739C13.3954 6.92047 13.9758 6.61745 14.3904 6.13942C14.805 5.6614 15.0229 5.04394 15.0002 4.41159C14.9775 3.77923 14.7158 3.17902 14.2679 2.732L13.4013 1.866C13.167 1.63176 12.8492 1.50011 12.5179 1.5H3.48192Z' fill='%23BB3636'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M2 13.4999V7.66326C2.94667 8.1126 4.05333 8.11193 5 7.66326C5.46875 7.8856 5.98119 8.00062 6.5 7.99993C7.036 7.99993 7.54533 7.8786 8 7.6626C8.4687 7.88517 8.98114 8.00041 9.5 7.99993C10.036 7.99993 10.5447 7.8786 11 7.6626C11.9467 8.11193 13.0533 8.1126 14 7.66326V13.4999H14.5C14.6326 13.4999 14.7598 13.5526 14.8536 13.6464C14.9473 13.7401 15 13.8673 15 13.9999C15 14.1325 14.9473 14.2597 14.8536 14.3535C14.7598 14.4473 14.6326 14.4999 14.5 14.4999H1.5C1.36739 14.4999 1.24021 14.4473 1.14645 14.3535C1.05268 14.2597 1 14.1325 1 13.9999C1 13.8673 1.05268 13.7401 1.14645 13.6464C1.24021 13.5526 1.36739 13.4999 1.5 13.4999H2ZM4 9.49993C4 9.36732 4.05268 9.24015 4.14645 9.14638C4.24021 9.05261 4.36739 8.99993 4.5 8.99993H6.5C6.63261 8.99993 6.75979 9.05261 6.85355 9.14638C6.94732 9.24015 7 9.36732 7 9.49993V11.4999C7 11.6325 6.94732 11.7597 6.85355 11.8535C6.75979 11.9473 6.63261 11.9999 6.5 11.9999H4.5C4.36739 11.9999 4.24021 11.9473 4.14645 11.8535C4.05268 11.7597 4 11.6325 4 11.4999V9.49993ZM9.5 8.99993C9.36739 8.99993 9.24022 9.05261 9.14645 9.14638C9.05268 9.24015 9 9.36732 9 9.49993V12.9999C9 13.2759 9.224 13.4999 9.5 13.4999H11.5C11.6326 13.4999 11.7598 13.4473 11.8536 13.3535C11.9473 13.2597 12 13.1325 12 12.9999V9.49993C12 9.36732 11.9473 9.24015 11.8536 9.14638C11.7598 9.05261 11.6326 8.99993 11.5 8.99993H9.5Z' fill='%23BB3636'/%3E%3C/svg%3E");
+    background-color: var(--main-text-color);
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: 16px 16px;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: 16px 16px;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.48192 1.5C3.15059 1.5 2.83259 1.632 2.59859 1.86667L1.73192 2.732C1.28408 3.17902 1.0224 3.77923 0.999662 4.41159C0.976928 5.04394 1.19483 5.6614 1.60942 6.13942C2.02401 6.61745 2.60445 6.92047 3.23367 6.98739C3.86288 7.05431 4.49407 6.88014 4.99992 6.5C5.41792 6.81333 5.93726 7 6.49992 7C7.06259 7 7.58259 6.81333 7.99992 6.5C8.41726 6.81333 8.93726 7 9.49992 7C10.0626 7 10.5819 6.81333 10.9999 6.5C11.5058 6.88014 12.137 7.05431 12.7662 6.98739C13.3954 6.92047 13.9758 6.61745 14.3904 6.13942C14.805 5.6614 15.0229 5.04394 15.0002 4.41159C14.9775 3.77923 14.7158 3.17902 14.2679 2.732L13.4013 1.866C13.167 1.63176 12.8492 1.50011 12.5179 1.5H3.48192Z' fill='black'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M2 13.4999V7.66326C2.94667 8.1126 4.05333 8.11193 5 7.66326C5.46875 7.8856 5.98119 8.00062 6.5 7.99993C7.036 7.99993 7.54533 7.8786 8 7.6626C8.4687 7.88517 8.98114 8.00041 9.5 7.99993C10.036 7.99993 10.5447 7.8786 11 7.6626C11.9467 8.11193 13.0533 8.1126 14 7.66326V13.4999H14.5C14.6326 13.4999 14.7598 13.5526 14.8536 13.6464C14.9473 13.7401 15 13.8673 15 13.9999C15 14.1325 14.9473 14.2597 14.8536 14.3535C14.7598 14.4473 14.6326 14.4999 14.5 14.4999H1.5C1.36739 14.4999 1.24021 14.4473 1.14645 14.3535C1.05268 14.2597 1 14.1325 1 13.9999C1 13.8673 1.05268 13.7401 1.14645 13.6464C1.24021 13.5526 1.36739 13.4999 1.5 13.4999H2ZM4 9.49993C4 9.36732 4.05268 9.24015 4.14645 9.14638C4.24021 9.05261 4.36739 8.99993 4.5 8.99993H6.5C6.63261 8.99993 6.75979 9.05261 6.85355 9.14638C6.94732 9.24015 7 9.36732 7 9.49993V11.4999C7 11.6325 6.94732 11.7597 6.85355 11.8535C6.75979 11.9473 6.63261 11.9999 6.5 11.9999H4.5C4.36739 11.9999 4.24021 11.9473 4.14645 11.8535C4.05268 11.7597 4 11.6325 4 11.4999V9.49993ZM9.5 8.99993C9.36739 8.99993 9.24022 9.05261 9.14645 9.14638C9.05268 9.24015 9 9.36732 9 9.49993V12.9999C9 13.2759 9.224 13.4999 9.5 13.4999H11.5C11.6326 13.4999 11.7598 13.4473 11.8536 13.3535C11.9473 13.2597 12 13.1325 12 12.9999V9.49993C12 9.36732 11.9473 9.24015 11.8536 9.14638C11.7598 9.05261 11.6326 8.99993 11.5 8.99993H9.5Z' fill='black'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.48192 1.5C3.15059 1.5 2.83259 1.632 2.59859 1.86667L1.73192 2.732C1.28408 3.17902 1.0224 3.77923 0.999662 4.41159C0.976928 5.04394 1.19483 5.6614 1.60942 6.13942C2.02401 6.61745 2.60445 6.92047 3.23367 6.98739C3.86288 7.05431 4.49407 6.88014 4.99992 6.5C5.41792 6.81333 5.93726 7 6.49992 7C7.06259 7 7.58259 6.81333 7.99992 6.5C8.41726 6.81333 8.93726 7 9.49992 7C10.0626 7 10.5819 6.81333 10.9999 6.5C11.5058 6.88014 12.137 7.05431 12.7662 6.98739C13.3954 6.92047 13.9758 6.61745 14.3904 6.13942C14.805 5.6614 15.0229 5.04394 15.0002 4.41159C14.9775 3.77923 14.7158 3.17902 14.2679 2.732L13.4013 1.866C13.167 1.63176 12.8492 1.50011 12.5179 1.5H3.48192Z' fill='black'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M2 13.4999V7.66326C2.94667 8.1126 4.05333 8.11193 5 7.66326C5.46875 7.8856 5.98119 8.00062 6.5 7.99993C7.036 7.99993 7.54533 7.8786 8 7.6626C8.4687 7.88517 8.98114 8.00041 9.5 7.99993C10.036 7.99993 10.5447 7.8786 11 7.6626C11.9467 8.11193 13.0533 8.1126 14 7.66326V13.4999H14.5C14.6326 13.4999 14.7598 13.5526 14.8536 13.6464C14.9473 13.7401 15 13.8673 15 13.9999C15 14.1325 14.9473 14.2597 14.8536 14.3535C14.7598 14.4473 14.6326 14.4999 14.5 14.4999H1.5C1.36739 14.4999 1.24021 14.4473 1.14645 14.3535C1.05268 14.2597 1 14.1325 1 13.9999C1 13.8673 1.05268 13.7401 1.14645 13.6464C1.24021 13.5526 1.36739 13.4999 1.5 13.4999H2ZM4 9.49993C4 9.36732 4.05268 9.24015 4.14645 9.14638C4.24021 9.05261 4.36739 8.99993 4.5 8.99993H6.5C6.63261 8.99993 6.75979 9.05261 6.85355 9.14638C6.94732 9.24015 7 9.36732 7 9.49993V11.4999C7 11.6325 6.94732 11.7597 6.85355 11.8535C6.75979 11.9473 6.63261 11.9999 6.5 11.9999H4.5C4.36739 11.9999 4.24021 11.9473 4.14645 11.8535C4.05268 11.7597 4 11.6325 4 11.4999V9.49993ZM9.5 8.99993C9.36739 8.99993 9.24022 9.05261 9.14645 9.14638C9.05268 9.24015 9 9.36732 9 9.49993V12.9999C9 13.2759 9.224 13.4999 9.5 13.4999H11.5C11.6326 13.4999 11.7598 13.4473 11.8536 13.3535C11.9473 13.2597 12 13.1325 12 12.9999V9.49993C12 9.36732 11.9473 9.24015 11.8536 9.14638C11.7598 9.05261 11.6326 8.99993 11.5 8.99993H9.5Z' fill='black'/%3E%3C/svg%3E");
 }
 
 #popup-shipping-options,
@@ -1947,18 +1955,46 @@ input,select{
 }
 
 form#choose-shipping input.green{
-background-color: var(--color-primary);
+    background-color: var(--color-primary);
     color: var(--main-text-color);
     display: inline-block;
-    height: 50px;
-    line-height: 45px;
+    height: 42px;
+    line-height: 38px;
     text-decoration: none;
     border-radius: var(--radius);
-    width: 150px;
-    font-size: 18px;
+    width: 132px;
+    font-size: 16px;
     padding: 0;
     margin-block-start: 15px;
     margin-block-end: 20px;
+}
+
+.choose-shipping-popup .inner-wrapper .pop-close{
+    display: block !important;
+    background:#E4E4E4 url(../images/pop-close.svg) center no-repeat;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-size: 11px;
+    right: 25px;
+    top: 25px;
+}
+
+.choose-shipping-popup .inner-wrapper .pop-close img{
+    display:none
+}
+
+#oc-woo-shipping-additional .slot-list-container a.slot span.slot-range,
+#oc-woo-pickup-additional .slot-list-container a.slot span.slot-range{
+    max-width: 85%;
+    margin: auto !important;
+    border-bottom: 1px solid #F0F0F0;
+    padding-bottom: 10px;
+}
+
+#oc-woo-shipping-additional .slot-list-container a.slot:last-child span.slot-range,
+#oc-woo-pickup-additional .slot-list-container a.slot:last-child span.slot-range{
+    border-bottom: none;
 }
 
 .choose-shipping #oc-woo-pickup-additional #ocws_lp_pickup_aff_id_field label{
@@ -1966,15 +2002,22 @@ background-color: var(--color-primary);
     font-size: 24px;
 }
 
+form#choose-shipping #popup-form-messages .error, form#choose-shipping #popup-shipping-form-messages .error, form#choose-shipping #popup-pickup-form-messages .error{
+        font-size: 16px;
+}
+
 #popup-shipping-options .shipping-description div{
     font-size: 24px;
 }
 
-}
 .shipping-settings-title, .ocws-days-with-slots-list-label {
     font-size: 24px !important;
     font-weight: 500 !important;
-    margin: 20px 0 !important;
+    margin: 40px 0 20px !important;
+}
+
+.shipping-settings-title{
+     margin: 20px 0!important;
 }
 
 .choose-shipping #oc-woo-pickup-additional #ocws_lp_pickup_aff_id_field select{
@@ -1999,6 +2042,10 @@ height: 100%;
 
 .rtl .woocommerce .col2-set .col-1, .rtl .woocommerce-page .col2-set .col-1 {
     float: right;
+}
+
+.choose-shipping-popup .slot-message{
+    font-size: 16px;
 }
 
 /*checkout*/
@@ -2073,27 +2120,56 @@ body.woocommerce-edit-address.woocommerce-page form p.form-row {
     padding: 0;
     padding-block: 10px;
     color: #000;
-padding-inline: 5px;
+    padding-inline: 5px;
     margin: 0;
     box-sizing: border-box;
+    border: none;
+    padding-bottom: 0;
+}
+
+#oc-woo-pickup-additional .slot-list-container a.slot.selected,
+#oc-woo-shipping-additional .slot-list-container a.slot.selected{
+    background-color: var(--color-primary);
+    color: var(--main-text-color)!important;
+}
+
+#oc-woo-pickup-additional .slot-list-container a.slot.selected:last-child,
+#oc-woo-shipping-additional .slot-list-container a.slot.selected:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+#oc-woo-pickup-additional .slot-list-container a.slot.selected:first-child,
+#oc-woo-shipping-additional .slot-list-container a.slot.selected:first-child{
+    border-radius: 8px 8px 0 0;
+}
+
+.ocws-day-cards-slider .day-card__slots {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+    flex: 0 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    background: #FFFFFF;
 }
 
 form.woocommerce-checkout button.owl-next,
 .choose-shipping-popup button.owl-next{
-    position: absolute;
-    left: -5px;
-    top: 0px;
-    font-size: 57px!important;
-    line-height: 38px!important;
+position: absolute;
+    left: -15px;
+    top: 40%;
+    font-size: 38px !important;
+    line-height: 38px !important;
 }
 
 form.woocommerce-checkout button.owl-prev,
 .choose-shipping-popup button.owl-prev{
-    position: absolute;
-    right: -5px;
-    top: 0px;
-    font-size: 57px!important;
-    line-height: 38px!important;
+position: absolute;
+    right: -15px;
+    top: 40%;
+    font-size: 38px !important;
+    line-height: 38px !important;;
 }
 
 form.woocommerce-checkout .ocws-days-with-slots-list-label{
@@ -2183,6 +2259,7 @@ form.woocommerce-checkout .ocws-days-with-slots-list-label{
 #oc-woo-pickup-additional .shipping-settings-title{
     font-size: 16px;
     margin-block-end: 15px;
+    display: none;
 }
 
 .ocws-days-with-slots-list-label{
@@ -2195,9 +2272,16 @@ form.woocommerce-checkout .ocws-days-with-slots-list-label{
 }
 
 @media screen and (max-width: 767px) {
-    .choose-shipping-popup header h2, #shipping-redirect-dialog h3{
-        font-size: 22px;
-        padding-top: 24px;
+    .choose-shipping-popup header h2, #shipping-redirect-dialog h3,
+    #popup-shipping-options .shipping-description div,
+    .shipping-settings-title, .ocws-days-with-slots-list-label,
+    .choose-shipping #oc-woo-pickup-additional #ocws_lp_pickup_aff_id_field label{
+        font-size: 22px!important;
+    }
+
+    .choose-shipping-popup .inner-wrapper .pop-close{
+        right: 10px;
+    top: 10px;
     }
 
     form#choose-shipping{
@@ -2205,11 +2289,19 @@ form.woocommerce-checkout .ocws-days-with-slots-list-label{
     }
 
     .choose-shipping .ship-choose .shipping-method-wraper label{
-        font-size: 16px;
+        font-size: 14px;
     }
 
     .woocommerce ul.products li.product.outofstock .loop-thumb-wrap .badge-oos{
         font-size: 15px;
+    }
+
+    form.woocommerce-checkout button.owl-prev, .choose-shipping-popup button.owl-prev{
+        right: -5px;
+    }
+
+    form.woocommerce-checkout button.owl-next, .choose-shipping-popup button.owl-next{
+        left: -5px;
     }
 }
 
@@ -2875,6 +2967,46 @@ body p.other-recipient-field label{
 .ed-float-cart__totals .ed-float-cart__row span.woocommerce-Price-amount{
     font-weight: 400;
     font-size: 14px;
+}
+
+.ocws-day-cards-slider .day-card{
+    border: none;
+    background: #F8F8F8;
+    border-radius: 8px;
+    padding-inline: 10px;
+    padding-block: 10px;
+}
+
+.ocws-day-cards-slider .day-card__slots .slot .slot-range{
+    font-size: 14px;
+}
+
+.slot-list-container a.day-first-column{
+        display: flex !important;
+    flex-direction: column-reverse;
+}
+
+.slot-list-container a.day-first-column span.slot-date{
+        color: #989898;
+    font-size: 12px;
+}
+
+.slot-list-container a.day-first-column span.slot-weekday{
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.ocws-day-cards-slider .day-card__slots {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+    flex: 0 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    background: #FFFFFF;
+    border-radius: 8px;
+    margin-top: 10px;
 }
 
 /* Fee row: price + StoreOS tooltip icon — flex so order matches checkout */
