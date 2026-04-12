@@ -84,7 +84,7 @@ add_action('wp_footer', function () {
   <script>
   (function(){
     function hideShippingPopupOnLoad() {
-      var popup = document.querySelector('.choose-shipping-popup.ocws-popup');
+      var popup = document.querySelector('.choose-shipping-popup');
       if (popup && popup.classList.contains('shown')) {
         popup.classList.remove('shown');
         document.body.style.overflow = '';
@@ -111,26 +111,16 @@ function overlay_bg(){
 }
 
 /**
- * OCWS: בדף צ'קאאוט הפלאגין לא מדפיס את choose-shipping-popup (add_shipping_popup יוצא מוקדם).
- * אותו תבנית כמו בחנות — public/popup.php — כדי שעריכת משלוח תפתח את אותו פופאפ.
+ * oc-woo-shipping: ממזג billing_floor / billing_apartment / billing_enter_code לקבוצת השדות `ocws`
+ * כדי להציגם שוב בתוך #oc-woo-shipping-additional — כפילות מול .woocommerce-billing-fields-part-2 ב-form-shipping.
+ * בלי המיזוג השדות נשארים רק בבלוק part-2 (מספיק לצ'קאאוט; הפופאפ משתמש ב-billing ישירות).
  */
-add_action(
-	'woocommerce_after_checkout_form',
-	function () {
-		if ( ! class_exists( 'OCWS_Popup', false ) ) {
-			return;
-		}
-		OCWS_Popup::output_shipping_popup();
-		if ( function_exists( 'wc_enqueue_js' ) ) {
-			wc_enqueue_js(
-				"jQuery( ':input.ocws-enhanced-select' ).filter( ':not(.enhanced)' ).each( function() {
-					var select2_args = { minimumResultsForSearch: 5 };
-					jQuery( this ).select2( select2_args ).addClass( 'enhanced' );
-				});"
-			);
-		}
+add_filter(
+	'ocws_merge_into_ocws_group_fields',
+	static function () {
+		return array();
 	},
-	5
+	999
 );
 
 // Checkout / header SMS popup (guests)

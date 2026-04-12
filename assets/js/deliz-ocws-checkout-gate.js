@@ -30,28 +30,12 @@
         }
         var $ = jQuery;
         var $chip = $('#ocws-delivery-data-chip .cds-button-change');
-        // כמו התוסף: בדלי הסניף לא פותחים דרך הצ'יפ — צריך את מסלול ה־AJAX המלא.
-        if ($chip.length && !$('body').hasClass('ocws-deli-style')) {
+        if ($chip.length) {
             $chip.trigger('click');
             return;
         }
-        // בדף צ'קאאוט אין צ'יפ — חייבים loadShippingPopupHtml (ממלא #choose-shipping) ואז shipping_popup_loaded לאוטוקומפליט.
-        if (typeof window.ocwsLoadShippingPopupHtml === 'function') {
-            window.ocwsLoadShippingPopupHtml();
-            if (typeof window.ocwsShowShippingDialog === 'function') {
-                window.ocwsShowShippingDialog();
-            } else {
-                $('.choose-shipping-popup.ocws-popup').addClass('shown');
-            }
-            $('body').css({ overflow: 'hidden' });
-            return;
-        }
-        $('.ocws-checkout-branch-list-popup, .ocws-checkout-city-list-popup, .ocws-checkout-choose-city-popup').removeClass('shown');
-        $('.choose-shipping-popup.ocws-popup').addClass('shown');
+        $('.choose-shipping-popup').addClass('shown');
         $('body').css({ overflow: 'hidden' });
-        setTimeout(function () {
-            $(document.body).trigger('shipping_popup_loaded');
-        }, 150);
     };
 
     if (typeof jQuery === 'undefined') {
@@ -63,18 +47,13 @@
         if (!cfg.ocwsActive) {
             return;
         }
-        // Non-empty cart on page load: open choose-shipping only if not already confirmed (do not reset session on refresh).
+        // Non-empty cart on page load: open choose-shipping (after theme hide-on-load runs).
         if (cfg.autoOpenShippingOnLoad && !$('body').hasClass('ocws-deli-style')) {
-            window.delizOcwsCheckoutGateRun(function (confirmed) {
-                if (confirmed) {
-                    return;
+            setTimeout(function () {
+                if (typeof window.delizOpenOcwsDeliveryPopup === 'function') {
+                    window.delizOpenOcwsDeliveryPopup();
                 }
-                setTimeout(function () {
-                    if (typeof window.delizOpenOcwsDeliveryPopup === 'function') {
-                        window.delizOpenOcwsDeliveryPopup();
-                    }
-                }, 200);
-            });
+            }, 200);
         }
         // checkout-upsells.js handles this path when enabled (ED_CHECKOUT_UPSELLS is defined).
         if (typeof window.ED_CHECKOUT_UPSELLS !== 'undefined' && window.ED_CHECKOUT_UPSELLS.ajaxUrl) {
