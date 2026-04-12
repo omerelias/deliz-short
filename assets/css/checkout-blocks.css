@@ -6,6 +6,10 @@ body.woocommerce-checkout .site-header .header-left{
     display: none;
 }
 
+body.woocommerce-checkout .site-header{
+    background-color: transparent;
+}
+
 body.woocommerce-checkout .site-header .container-header-inner{
     width: 100%;
     justify-content: center;
@@ -17,6 +21,7 @@ body.woocommerce-checkout .site-header .header-logo a{
 
 body.woocommerce-checkout h1.entry-title{
         text-align: center;
+        display: none;
 }
 
 .checkout-block {
