@@ -404,6 +404,9 @@ class ED_Product_Popup {
             $cart_item_for_item_data = $cart_item;
             $cart_item_for_item_data['variation'] = array();
           }
+          if ( isset( $cart_item_for_item_data['product_note'] ) ) {
+            unset( $cart_item_for_item_data['product_note'] );
+          }
           $item_data = wc_get_formatted_cart_item_data($cart_item_for_item_data, true);
           
           // Output the cart item HTML (keep in sync with template-parts/floating-mini-cart.php)
@@ -430,6 +433,17 @@ class ED_Product_Popup {
               <div class="ed-float-cart__thumb"><?php echo $thumbnail; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
               <div class="ed-float-cart__details">
                 <div class="ed-float-cart__name"><?php echo esc_html($float_cart_product_title); ?></div>
+                <button type="button"
+                        class="ed-float-cart__edit-btn"
+                        data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                        data-product-id="<?php echo esc_attr($product_id); ?>"
+                        data-variation-id="<?php echo esc_attr($variation_id); ?>"
+                        data-quantity="<?php echo esc_attr($quantity); ?>"
+                        data-variation="<?php echo $variation_attrs_json; ?>"
+                        data-product-note="<?php echo esc_attr($product_note); ?>"
+                        data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>"
+                        data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>"
+                        aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>"><?php esc_html_e('עריכה', 'deliz-short'); ?></button>
                 <?php if ($item_data) : ?>
                   <div class="ed-float-cart__meta2"><?php echo $item_data; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
                 <?php endif; ?>
@@ -438,6 +452,9 @@ class ED_Product_Popup {
                 <?php endif; ?>
                 <?php if ($float_cart_variation_html !== '') : ?>
                   <div class="ed-float-cart__ocwsu-qty ed-float-cart__variation"><?php echo wp_kses_post($float_cart_variation_html); ?></div>
+                <?php endif; ?>
+                <?php if ($product_note !== '') : ?>
+                  <div class="ed-float-cart__ocwsu-qty ed-float-cart__product-note"><?php echo wp_kses_post( $product_note ); ?></div>
                 <?php endif; ?>
               </div>
               <div class="ed-float-cart__actions-row">
@@ -490,17 +507,6 @@ class ED_Product_Popup {
                           data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
                           aria-label="<?php esc_attr_e('הוסף כמות', 'deliz-short'); ?>">+</button>
                 </div>
-                <button type="button"
-                        class="ed-float-cart__edit-btn"
-                        data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
-                        data-product-id="<?php echo esc_attr($product_id); ?>"
-                        data-variation-id="<?php echo esc_attr($variation_id); ?>"
-                        data-quantity="<?php echo esc_attr($quantity); ?>"
-                        data-variation="<?php echo $variation_attrs_json; ?>"
-                        data-product-note="<?php echo esc_attr($product_note); ?>"
-                        data-ocwsu-quantity-in-units="<?php echo esc_attr($ocwsu_quantity_in_units); ?>"
-                        data-ocwsu-quantity-in-weight-units="<?php echo esc_attr($ocwsu_quantity_in_weight_units); ?>"
-                        aria-label="<?php esc_attr_e('ערוך מוצר', 'deliz-short'); ?>"><?php esc_html_e('עריכה', 'deliz-short'); ?></button>
               </div>
               <div class="ed-float-cart__price">
                 <span class="ed-float-cart__subtotal"><?php echo wp_kses_post($subtotal); ?></span>
@@ -1011,7 +1017,7 @@ class ED_Product_Popup {
     // 6. Events (depends on state)
     wp_enqueue_script(
       'deliz-short-product-popup-events',
-      $base_path . 'product-popup-events.js',
+      $base_path . 'product-popup-events.js', 
       ['deliz-short-product-popup-state'],
       $version,
       true
