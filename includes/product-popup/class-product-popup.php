@@ -582,7 +582,7 @@ class ED_Product_Popup {
             }
             ?>
           <div class="<?php echo esc_attr( $fee_row_class ); ?>">
-            <span><?php echo esc_html( $fee->name ); ?></span>
+            <span><?php echo esc_html( $fee->name ); ?><?php echo function_exists( 'oc_storeos_get_weight_fee_tooltip_icon_html' ) ? oc_storeos_get_weight_fee_tooltip_icon_html( $fee ) : ''; ?></span>
             <strong><?php echo wp_kses_post( wc_cart_totals_fee_html( $fee ) ); ?></strong>
           </div>
             <?php
@@ -800,45 +800,11 @@ class ED_Product_Popup {
         $data['ocwsu']['average_weight_label'] = null;
         $data['ocwsu']['average_weight_display'] = function_exists('deliz_short_ocwsu_format_fixed_unit_weight_display')
           ? deliz_short_ocwsu_format_fixed_unit_weight_display((float) $unit_weight, $product_weight_units ?: 'kg')
-          : ''; 
+          : '';
       } elseif ($unit_weight_type === 'variable' && !empty($final_unit_weight_options)) {
         $avg = array_sum($final_unit_weight_options) / count($final_unit_weight_options);
         $data['ocwsu']['average_weight'] = $avg;
         $data['ocwsu']['average_weight_label'] = $product_weight_units === 'kg' ? __( 'ק"ג', 'deliz-short' ) : __( 'גרם', 'deliz-short' );
-      }
-    }
- 
-    // Mirror shop archive: woocommerce_after_shop_loop_item_title (theme-woocommerce-extra.php).
-    $data['shop_loop_after_title'] = [
-      'fixed_unit_html' => '',
-      'price_per_html' => '',
-    ];
-    if ( function_exists( 'deliz_short_ocwsu_format_fixed_unit_weight_display' ) ) {
-      if (
-        get_post_meta( $product_id, '_ocwsu_weighable', true ) === 'yes'
-        && get_post_meta( $product_id, '_ocwsu_sold_by_units', true ) === 'yes'
-        && get_post_meta( $product_id, '_ocwsu_sold_by_weight', true ) !== 'yes'
-        && get_post_meta( $product_id, '_ocwsu_unit_weight_type', true ) === 'fixed'
-      ) {
-        $uw_loop = get_post_meta( $product_id, '_ocwsu_unit_weight', true );
-        $pwu_loop = get_post_meta( $product_id, '_ocwsu_product_weight_units', true );
-        if ( $uw_loop !== '' && is_numeric( $uw_loop ) ) {
-          $line_loop = deliz_short_ocwsu_format_fixed_unit_weight_display( (float) $uw_loop, $pwu_loop );
-          if ( $line_loop !== '' ) {
-            $data['shop_loop_after_title']['fixed_unit_html'] = '<div class="ed-loop-product-ocwsu-unit">~' . esc_html( $line_loop ) . '</div>';
-          }
-        }
-      }
-    }
-    $show_as_ml_popup = function_exists( 'get_field' ) ? (bool) get_field( 'show_as_ml', $product_id ) : false;
-    $label_pp = $show_as_ml_popup ? __( 'ml', 'deliz-short' ) : __( 'Gram', 'deliz-short' );
-    $wc_weight_popup = $product->get_weight();
-    if ( $wc_weight_popup && floatval( $wc_weight_popup ) > 0 ) {
-      $weight_div_pp = ( floatval( $wc_weight_popup ) * 1000 ) / 100;
-      $price_raw_pp = $product->get_price();
-      if ( $price_raw_pp !== '' && is_numeric( $price_raw_pp ) && $weight_div_pp > 0 ) {
-        $price_per_100 = floatval( $price_raw_pp ) / $weight_div_pp;
-        $data['shop_loop_after_title']['price_per_html'] = '<div class="price_per">' . esc_html( (string) round( $price_per_100, 2 ) ) . ' ₪ / 100 ' . esc_html( $label_pp ) . '</div>';
       }
     }
 

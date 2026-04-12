@@ -547,9 +547,9 @@ if (
 							if ($fee_amount < 0) {
 								$fee_row_class .= ' ed-float-cart__row--promotion';
 							}
-							?>
+							?> 
 							<div class="<?php echo esc_attr($fee_row_class); ?>">
-								<span><?php echo esc_html($fee->name); ?></span>
+								<span><?php echo esc_html($fee->name); ?><?php echo function_exists('oc_storeos_get_weight_fee_tooltip_icon_html') ? oc_storeos_get_weight_fee_tooltip_icon_html($fee) : ''; ?></span>
 								<strong><?php echo wp_kses_post(wc_cart_totals_fee_html($fee)); ?></strong>
 							</div>
 							<?php
