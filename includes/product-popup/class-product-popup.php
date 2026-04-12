@@ -133,6 +133,22 @@ if (!function_exists('deliz_short_get_float_cart_shipping_label')) {
   }
 }
 
+if (!function_exists('deliz_short_float_cart_show_shipping_row')) {
+  /**
+   * Show shipping price row in floating mini-cart only after choose-shipping was submitted (OCWS session flag).
+   * WC may already assign a default chosen rate before that — we must not display it as if the user chose it.
+   */
+  function deliz_short_float_cart_show_shipping_row() {
+    if (!function_exists('WC') || !WC()->session) {
+      return true;
+    }
+    if (!class_exists('OCWS_Popup', false)) {
+      return true;
+    }
+    return (bool) WC()->session->get('ocws_shipping_popup_confirmed');
+  }
+}
+
 class ED_Product_Popup {
 
   /**
@@ -564,7 +580,7 @@ class ED_Product_Popup {
         <?php
         endforeach;
 
-        if ($cart->needs_shipping() && $cart->show_shipping()) :
+        if ($cart->needs_shipping() && $cart->show_shipping() && deliz_short_float_cart_show_shipping_row()) :
           ?>
           <div class="ed-float-cart__row ed-float-cart__row--shipping cart-shipping">
             <span><?php echo esc_html(deliz_short_get_float_cart_shipping_label()); ?></span>

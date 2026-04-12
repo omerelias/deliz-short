@@ -156,3 +156,51 @@ function print_menu_shortcode($atts, $content = null) {
     return wp_nav_menu( array( 'menu' => $name, 'echo' => false ) );
 }
 add_shortcode('oc_menu', 'print_menu_shortcode');
+
+/**
+ * OCWS: each full page view with a non-empty cart (except checkout / thank-you) clears popup confirmation
+ * so the customer must choose delivery/pickup again before totals / checkout reflect a method.
+ */
+add_action(
+	'template_redirect',
+	function () {
+		if ( wp_doing_ajax() || is_admin() ) {
+			return;
+		}
+		if ( ! function_exists( 'WC' ) || ! WC()->session || ! WC()->cart || WC()->cart->is_empty() ) {
+			return;
+		}
+		if ( ! class_exists( 'OCWS_Popup', false ) ) {
+			return;
+		}
+		if ( function_exists( 'is_checkout' ) && is_checkout() ) {
+			return;
+		}
+		if ( function_exists( 'is_order_received_page' ) && is_order_received_page() ) {
+			return;
+		}
+		WC()->session->set( 'ocws_shipping_popup_confirmed', false );
+	},
+	5
+);
+
+/**
+ * AJAX: current ocws_shipping_popup_confirmed for floating-cart checkout gate.
+ */
+function deliz_short_ajax_ocws_shipping_status() {
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		wp_send_json_success( array( 'confirmed' => true ) );
+		return;
+	}
+	if ( ! class_exists( 'OCWS_Popup', false ) ) {
+		wp_send_json_success( array( 'confirmed' => true ) );
+		return;
+	}
+	wp_send_json_success(
+		array(
+			'confirmed' => (bool) WC()->session->get( 'ocws_shipping_popup_confirmed' ),
+		)
+	);
+}
+add_action( 'wp_ajax_deliz_ocws_shipping_status', 'deliz_short_ajax_ocws_shipping_status' );
+add_action( 'wp_ajax_nopriv_deliz_ocws_shipping_status', 'deliz_short_ajax_ocws_shipping_status' );

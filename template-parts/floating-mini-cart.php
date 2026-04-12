@@ -529,7 +529,7 @@ if (
 						<?php
 					endforeach;
 
-					if ($cart->needs_shipping() && $cart->show_shipping()) :
+					if ($cart->needs_shipping() && $cart->show_shipping() && deliz_short_float_cart_show_shipping_row()) :
 						$running_total += (float) $cart->get_shipping_total();
 						?>
 						<div class="ed-float-cart__row ed-float-cart__row--shipping cart-shipping">
@@ -547,7 +547,7 @@ if (
 							if ($fee_amount < 0) {
 								$fee_row_class .= ' ed-float-cart__row--promotion';
 							}
-							?> 
+							?>
 							<div class="<?php echo esc_attr($fee_row_class); ?>">
 								<span><?php echo esc_html($fee->name); ?><?php echo function_exists('oc_storeos_get_weight_fee_tooltip_icon_html') ? oc_storeos_get_weight_fee_tooltip_icon_html($fee) : ''; ?></span>
 								<strong><?php echo wp_kses_post(wc_cart_totals_fee_html($fee)); ?></strong>
