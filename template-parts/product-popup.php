@@ -342,11 +342,12 @@ $options = $product_data['options'] ?? [];
             <?php esc_html_e( 'נא לבחור אפשרות', 'deliz-short' ); ?>
 
           </div>
-
+ 
         </div>
 
         <!-- Baker note (product_note) — same pattern as checkout order notes -->
 
+        <?php if ( function_exists( 'deliz_short_product_show_product_note' ) && deliz_short_product_show_product_note( (int) $product_id ) ) : ?>
         <div class="ed-product-popup__baker-note">
 
           <div class="checkout-summary-line checkout-summary-line--notes ed-product-popup__baker-note-line">
@@ -366,6 +367,7 @@ $options = $product_data['options'] ?? [];
           <textarea id="popup-product-note" class="ed-product-popup__product-note-hidden" name="product_note" rows="1" tabindex="-1" aria-hidden="true"></textarea>
 
         </div>
+        <?php endif; ?>
 
         <!-- Related Products -->
 

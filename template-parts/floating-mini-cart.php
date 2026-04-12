@@ -374,7 +374,7 @@ if (
 							if ($float_cart_variation_html !== '') {
 								echo '<div class="ed-float-cart__ocwsu-qty ed-float-cart__variation">' . wp_kses_post($float_cart_variation_html) . '</div>';
 							}
-							if ($product_note !== '') {
+							if ($product_note !== '' && function_exists('deliz_short_product_show_product_note_for_wc_product') && deliz_short_product_show_product_note_for_wc_product($product)) {
 								echo '<div class="ed-float-cart__ocwsu-qty ed-float-cart__product-note">' . wp_kses_post( $product_note ) . '</div>';
 							}
 							?>

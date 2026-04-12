@@ -248,7 +248,8 @@
 
         optionsHTML += '<div class="ed-product-popup__error" id="popup-option-error" style="display: none;">נא לבחור אפשרות</div></div>';
 
-        const noteHTML = `
+        const showProductNote = data.show_product_note !== false && data.show_product_note !== 'false' && data.show_product_note !== 0 && data.show_product_note !== '0';
+        const noteHTML = showProductNote ? `
       <div class="ed-product-popup__baker-note">
         <div class="checkout-summary-line checkout-summary-line--notes ed-product-popup__baker-note-line">
           <div class="checkout-summary-line__label"></div>
@@ -257,7 +258,7 @@
         </div>
         <textarea id="popup-product-note" name="product_note" class="ed-product-popup__product-note-hidden" rows="1" tabindex="-1" aria-hidden="true"></textarea>
       </div>
-    `;
+    ` : '';
 
         return `
       <div class="ed-product-popup" id="ed-product-popup" role="dialog" aria-modal="true">

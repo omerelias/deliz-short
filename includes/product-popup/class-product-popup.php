@@ -84,6 +84,47 @@ if (!function_exists('deliz_short_ocwsu_format_fixed_unit_weight_display')) {
   }
 }
 
+if (!function_exists('deliz_short_product_show_product_note')) {
+  /**
+   * Whether the baker / product note field is enabled for this product.
+   * Post meta `show_product_note` or `_show_product_note`: false, 'false', '0', 'no', 'off' hides it.
+   * Default when empty: show (true).
+   *
+   * @param int $product_id Parent product ID (for variations use parent).
+   */
+  function deliz_short_product_show_product_note($product_id) {
+    $product_id = absint($product_id);
+    if (!$product_id) {
+      return true;
+    }
+    $raw = get_post_meta($product_id, 'show_product_note', true);
+    if ($raw === '' || $raw === null) {
+      $raw = get_post_meta($product_id, '_show_product_note', true);
+    }
+    $raw = apply_filters('deliz_short_show_product_note_meta', $raw, $product_id);
+    if ($raw === '' || $raw === null) {
+      return true;
+    }
+    if ($raw === false || $raw === 'false' || $raw === '0' || $raw === 0 || $raw === 'no' || $raw === 'off') {
+      return false;
+    }
+    return true;
+  }
+}
+
+if (!function_exists('deliz_short_product_show_product_note_for_wc_product')) {
+  /**
+   * @param WC_Product|null $product Cart line product (variation or simple).
+   */
+  function deliz_short_product_show_product_note_for_wc_product($product) {
+    if (!$product || !is_a($product, 'WC_Product')) {
+      return true;
+    }
+    $pid = $product->is_type('variation') ? (int) $product->get_parent_id() : (int) $product->get_id();
+    return deliz_short_product_show_product_note($pid);
+  }
+}
+
 if (!function_exists('deliz_short_float_cart_line_title_variation')) {
   /**
    * Float mini-cart: parent product title + formatted variation (not appended to title with a dash).
@@ -453,7 +494,7 @@ class ED_Product_Popup {
                 <?php if ($float_cart_variation_html !== '') : ?>
                   <div class="ed-float-cart__ocwsu-qty ed-float-cart__variation"><?php echo wp_kses_post($float_cart_variation_html); ?></div>
                 <?php endif; ?>
-                <?php if ($product_note !== '') : ?>
+                <?php if ($product_note !== '' && function_exists('deliz_short_product_show_product_note_for_wc_product') && deliz_short_product_show_product_note_for_wc_product($product)) : ?>
                   <div class="ed-float-cart__ocwsu-qty ed-float-cart__product-note"><?php echo wp_kses_post( $product_note ); ?></div>
                 <?php endif; ?>
               </div>
@@ -946,6 +987,7 @@ class ED_Product_Popup {
     
     $data['attributes'] = $attributes;
     $data['variations'] = $variations;
+    $data['show_product_note'] = deliz_short_product_show_product_note($product_id);
 
     return new \WP_REST_Response($data, 200);
   }
@@ -1419,6 +1461,10 @@ class ED_Product_Popup {
     if (!is_array($cart_item_data)) {
       $cart_item_data = [];
     }
+
+    if (!deliz_short_product_show_product_note((int) $product_id)) {
+      return $cart_item_data;
+    }
     
     if (isset($_POST['product_note']) && !empty(trim($_POST['product_note']))) {
       $product_note = sanitize_textarea_field($_POST['product_note']);
@@ -1441,6 +1487,12 @@ class ED_Product_Popup {
    * Display product note in cart and mini cart
    */
   public static function display_product_note_in_cart($item_data, $cart_item) {
+    $pid = !empty($cart_item['variation_id'])
+      ? (int) wp_get_post_parent_id((int) $cart_item['variation_id'])
+      : (int) ($cart_item['product_id'] ?? 0);
+    if ($pid && !deliz_short_product_show_product_note($pid)) {
+      return $item_data;
+    }
     if (isset($cart_item['product_note']) && !empty($cart_item['product_note'])) {
       $item_data[] = [
         'key' => __('הערות לקצב', 'woocommerce'),
@@ -1458,6 +1510,12 @@ class ED_Product_Popup {
    * Add product note to order item meta
    */
   public static function add_product_note_to_order($item, $cart_item_key, $cart_item, $order) {
+    $pid = !empty($cart_item['variation_id'])
+      ? (int) wp_get_post_parent_id((int) $cart_item['variation_id'])
+      : (int) ($cart_item['product_id'] ?? 0);
+    if ($pid && !deliz_short_product_show_product_note($pid)) {
+      return;
+    }
     if (isset($cart_item['product_note']) && !empty($cart_item['product_note'])) {
       $item->add_meta_data(__('הערות לקצב', 'woocommerce'), wp_kses_post($cart_item['product_note']));
       error_log("✅ Product note added to order: " . $cart_item['product_note']);
