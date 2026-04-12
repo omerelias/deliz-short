@@ -84,7 +84,7 @@ add_action('wp_footer', function () {
   <script>
   (function(){
     function hideShippingPopupOnLoad() {
-      var popup = document.querySelector('.choose-shipping-popup');
+      var popup = document.querySelector('.choose-shipping-popup.ocws-popup');
       if (popup && popup.classList.contains('shown')) {
         popup.classList.remove('shown');
         document.body.style.overflow = '';
@@ -110,6 +110,29 @@ function overlay_bg(){
   echo '<div class="site-overlay"></div>';
 }
 
+/**
+ * OCWS: בדף צ'קאאוט הפלאגין לא מדפיס את choose-shipping-popup (add_shipping_popup יוצא מוקדם).
+ * אותו תבנית כמו בחנות — public/popup.php — כדי שעריכת משלוח תפתח את אותו פופאפ.
+ */
+add_action(
+	'woocommerce_after_checkout_form',
+	function () {
+		if ( ! class_exists( 'OCWS_Popup', false ) ) {
+			return;
+		}
+		OCWS_Popup::output_shipping_popup();
+		if ( function_exists( 'wc_enqueue_js' ) ) {
+			wc_enqueue_js(
+				"jQuery( ':input.ocws-enhanced-select' ).filter( ':not(.enhanced)' ).each( function() {
+					var select2_args = { minimumResultsForSearch: 5 };
+					jQuery( this ).select2( select2_args ).addClass( 'enhanced' );
+				});"
+			);
+		}
+	},
+	5
+);
+
 // Checkout / header SMS popup (guests)
 add_action(
 	'wp_footer',
@@ -127,33 +150,6 @@ function print_menu_shortcode($atts, $content = null) {
     return wp_nav_menu( array( 'menu' => $name, 'echo' => false ) );
 }
 add_shortcode('oc_menu', 'print_menu_shortcode');
-
-/**
- * OCWS: each full page view with a non-empty cart (except checkout / thank-you) clears popup confirmation
- * so the customer must choose delivery/pickup again before totals / checkout reflect a method.
- */
-add_action(
-	'template_redirect',
-	function () {
-		if ( wp_doing_ajax() || is_admin() ) {
-			return;
-		}
-		if ( ! function_exists( 'WC' ) || ! WC()->session || ! WC()->cart || WC()->cart->is_empty() ) {
-			return;
-		}
-		if ( ! class_exists( 'OCWS_Popup', false ) ) {
-			return;
-		}
-		if ( function_exists( 'is_checkout' ) && is_checkout() ) {
-			return;
-		}
-		if ( function_exists( 'is_order_received_page' ) && is_order_received_page() ) {
-			return;
-		}
-		WC()->session->set( 'ocws_shipping_popup_confirmed', false );
-	},
-	5
-);
 
 /**
  * AJAX: current ocws_shipping_popup_confirmed for floating-cart checkout gate.

@@ -19,12 +19,15 @@
 defined( 'ABSPATH' ) || exit;
 
 
-$chosen_methods 	= WC()->session->get( 'chosen_shipping_methods' );
-$chosen_shipping 	= $chosen_methods[0];
-$local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pickup'));
- 
+$chosen_methods   = WC()->session->get( 'chosen_shipping_methods' );
+$chosen_shipping  = isset( $chosen_methods[0] ) ? $chosen_methods[0] : '';
+$local_pickup_chosen = $chosen_shipping && (
+	strpos( $chosen_shipping, 'local_pickup' ) !== false
+	|| strpos( $chosen_shipping, 'oc_woo_local_pickup_method' ) !== false
+);
+
 ?>
-<div class="checkout-block checkout-block--shipping is-closed <?php if ( $local_pickup_chosen == 1  ){ echo 'hidden'; } ?>" data-block="shipping" aria-expanded="false" data-popup-id="checkout-block-popup--shipping">
+<div class="checkout-block checkout-block--shipping is-closed <?php echo $local_pickup_chosen ? 'hidden' : ''; ?>" data-block="shipping" aria-expanded="false">
 	<div class="checkout-block__summary-row">
 		<div class="checkout-block__summary">
 		<?php
@@ -172,15 +175,14 @@ $local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pick
 		</div>
 		<button type="button" class="checkout-block__edit"><?php esc_html_e( 'עריכה', 'deliz-short' ); ?></button>
 	</div>
-	<div class="checkout-block-popup" id="checkout-block-popup--shipping" aria-hidden="true">
-		<div class="checkout-block-popup__overlay"></div>
-		<div class="checkout-block-popup__container">
-			<button type="button" class="checkout-block-popup__close default-close-btn btn-empty" aria-label="<?php esc_attr_e( 'סגור', 'deliz-short' ); ?>">
-				<svg xmlns="http://www.w3.org/2000/svg" class="Icon Icon--close" viewBox="0 0 16 14"><path d="M15 0L1 14m14 0L1 0" stroke="currentColor" fill="none" fill-rule="evenodd"></path></svg>
-			</button>
-			<div class="checkout-block-popup__inner">
-				<h3 class="checkout-block-popup__title"><?php esc_html_e( 'משלוח', 'deliz-short' ); ?></h3>
-				<div class="checkout-block__content checkout-block__content--in-popup">
+	<?php
+	/**
+	 * משלוח בצ'קאאוט: אותו פופאפ כמו בחנות (choose-shipping-popup מתוך oc-woo-shipping).
+	 * השדות הבאים נשארים בטופס ל-WooCommerce / עדכון fragments — לא מוצגים (נשלטים דרך הפופאפ).
+	 */
+	?>
+	<div class="deliz-checkout-shipping-native-fields" aria-hidden="true">
+		<div class="checkout-block__content checkout-block__content--in-popup">
 		<!-- Shipping Methods -->
 		<div class="ship-method">
 			<?php if ( ! is_user_logged_in() && $checkout->is_registration_enabled() ) : ?>
@@ -220,7 +222,7 @@ $local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pick
 			$is_shipping_to_other_address = $_COOKIE['oc_shipping_to_other_address'];
 		}
 		?>
-		<div class="diff-address-shipping <?php if ( $local_pickup_chosen == 1  ){ echo 'hidden'; } ?>">
+		<div class="diff-address-shipping <?php echo $local_pickup_chosen ? 'hidden' : ''; ?>">
 			<h2 id="ship-to-different-address">
 				<span><?php esc_html_e( 'Ship to a different address?', 'deliz-short' ); ?></span>
 			</h2>
@@ -252,7 +254,7 @@ $local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pick
 			'billing_apartment',
 		);
 		?>
-		<div class="woocommerce-billing-fields__field-wrapper woocommerce-billing-fields-part-2 billing-fields-shipping-data-1 <?php if ( $local_pickup_chosen == 1  ){ echo 'hidden'; } ?>">
+		<div class="woocommerce-billing-fields__field-wrapper woocommerce-billing-fields-part-2 billing-fields-shipping-data-1 <?php echo $local_pickup_chosen ? 'hidden' : ''; ?>">
 			<?php
 			$fields = $checkout->get_checkout_fields( 'billing' );
 			foreach ( $fields as $key => $field ) {
@@ -300,11 +302,6 @@ $local_pickup_chosen = ($chosen_shipping && strstr($chosen_shipping, 'local_pick
 		// This includes #oc-woo-shipping-additional with slot-list-container
 		do_action( 'woocommerce_after_checkout_billing_form', $checkout ); 
 		?>
-				<p class="checkout-block-popup__actions">
-					<button type="button" class="checkout-block-popup__confirm button"><?php esc_html_e( 'אישור', 'deliz-short' ); ?></button>
-				</p>
-				</div>
-			</div>
 		</div>
 	</div>
 </div>

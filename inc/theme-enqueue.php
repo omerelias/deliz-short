@@ -109,10 +109,14 @@ add_action(
         $auto_open_shipping = true;
       }
     }
+    $deliz_ocws_gate_deps = array( 'jquery' );
+    if ( class_exists( 'OCWS_Popup', false ) ) {
+      $deliz_ocws_gate_deps[] = 'ocws';
+    }
     wp_register_script(
       'deliz-ocws-checkout-gate',
       get_template_directory_uri() . '/assets/js/deliz-ocws-checkout-gate.js',
-      array( 'jquery' ),
+      $deliz_ocws_gate_deps,
       defined( 'DELIZ_SHORT_VERSION' ) ? DELIZ_SHORT_VERSION : '1.0.0',
       true
     );

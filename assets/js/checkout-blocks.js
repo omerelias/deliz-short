@@ -32,6 +32,12 @@ jQuery(function($) {
             
             const $block = $(this).closest('.checkout-block');
             if ($block.hasClass('checkout-block--order')) return;
+
+            if ($block.hasClass('checkout-block--shipping')) {
+                e.preventDefault();
+                openBlockPopup($block);
+                return;
+            }
             
             const popupId = $block.data('popup-id');
             if (popupId) {
@@ -39,7 +45,7 @@ jQuery(function($) {
                 openBlockPopup($block);
             } else {
                 toggleBlock($block);
-            }
+            } 
         });
         
         // Edit button click - open popup or block
@@ -48,6 +54,10 @@ jQuery(function($) {
             e.stopPropagation();
             
             const $block = $(this).closest('.checkout-block');
+            if ($block.hasClass('checkout-block--shipping')) {
+                openBlockPopup($block);
+                return;
+            }
             const popupId = $block.data('popup-id');
             if (popupId) {
                 openBlockPopup($block);
@@ -109,6 +119,16 @@ jQuery(function($) {
     }
     
     function openBlockPopup($block) {
+        if ($block.hasClass('checkout-block--shipping')) {
+            if (typeof window.delizOpenOcwsDeliveryPopup === 'function') {
+                window.delizOpenOcwsDeliveryPopup();
+            } else if (typeof jQuery !== 'undefined') {
+                jQuery('.ocws-checkout-branch-list-popup, .ocws-checkout-city-list-popup, .ocws-checkout-choose-city-popup').removeClass('shown');
+                jQuery('.choose-shipping-popup.ocws-popup').addClass('shown');
+                jQuery('body').css({ overflow: 'hidden' });
+            }
+            return;
+        }
         const popupId = $block.data('popup-id');
         if (!popupId) return;
         const $popup = $('#' + popupId);
@@ -127,6 +147,10 @@ jQuery(function($) {
     }
     
     function openBlock($block) {
+        if ($block.hasClass('checkout-block--shipping')) {
+            openBlockPopup($block);
+            return;
+        }
         const popupId = $block.data('popup-id');
         if (popupId) {
             openBlockPopup($block);
