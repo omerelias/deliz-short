@@ -13,6 +13,14 @@
         return String(str).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     }
 
+    function escapeHtml(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
     /**
      * Fetch popup HTML from server
      */
@@ -190,7 +198,7 @@
               });
 
               return stockMap;
-          }      
+          }
 
         // WooCommerce Attributes (for variations or simple product attributes)
         const variationStockMap = buildVariationStockMap(variations);
@@ -249,14 +257,21 @@
         optionsHTML += '<div class="ed-product-popup__error" id="popup-option-error" style="display: none;">נא לבחור אפשרות</div></div>';
 
         const showProductNote = data.show_product_note !== false && data.show_product_note !== 'false' && data.show_product_note !== 0 && data.show_product_note !== '0';
+        const defaultNoteLabel = 'הערה לקצב';
+        const rawNoteLabel = (data.product_note_label && String(data.product_note_label).trim()) ? String(data.product_note_label).trim() : defaultNoteLabel;
+        const noteLabelHtml = escapeHtml(rawNoteLabel);
+        const cfg = typeof window !== 'undefined' ? window.ED_POPUP_CONFIG : null;
+        let adminEditUrl = data.admin_edit_url && String(data.admin_edit_url).trim() ? String(data.admin_edit_url).trim() : '';
+        if (!adminEditUrl && cfg && cfg.userCanEditProducts && cfg.adminEditProductUrlBase && data.id) {
+            adminEditUrl = String(cfg.adminEditProductUrlBase) + String(data.id);
+        }
+        const adminEditHTML = adminEditUrl
+            ? `<a class="ed-product-popup__admin-edit" href="${escapeHtml(adminEditUrl)}" target="_blank" rel="noopener noreferrer" aria-label="עריכת מוצר בלוח הבקרה" title="עריכת מוצר בלוח הבקרה"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" fill="currentColor"/></svg></a>`
+            : '';
         const noteHTML = showProductNote ? `
       <div class="ed-product-popup__baker-note">
-        <div class="checkout-summary-line checkout-summary-line--notes ed-product-popup__baker-note-line">
-          <div class="checkout-summary-line__label"></div>
-          <div class="checkout-summary-line__value js-popup-product-notes is-add-note" role="button" tabindex="0"></div>
-          <button type="button" class="checkout-summary-line__edit js-popup-product-notes-edit" hidden>שינוי</button>
-        </div>
-        <textarea id="popup-product-note" name="product_note" class="ed-product-popup__product-note-hidden" rows="1" tabindex="-1" aria-hidden="true"></textarea>
+        <label class="ed-product-popup__baker-note-label" for="popup-product-note">${noteLabelHtml}</label>
+        <textarea id="popup-product-note" name="product_note" class="ed-product-popup__baker-note-textarea" rows="2" autocomplete="off"></textarea>
       </div>
     ` : '';
 
@@ -269,6 +284,7 @@
               <path d="M15 0L1 14m14 0L1 0" stroke="currentColor" fill="none" fill-rule="evenodd"></path>
             </svg>
           </button>
+          ${adminEditHTML}
           <div class="ed-product-popup__content">
             <div class="ed-product-popup__image">
               <img src="${data.image.url}" alt="${data.image.alt}" id="popup-product-image" loading="lazy">

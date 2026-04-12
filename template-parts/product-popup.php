@@ -32,7 +32,7 @@ $options = $product_data['options'] ?? [];
 
   <div class="ed-product-popup__overlay"></div>
 
-  
+
 
   <div class="ed-product-popup__container">
 
@@ -46,7 +46,24 @@ $options = $product_data['options'] ?? [];
 
     </button>
 
-
+    <?php
+    $ed_popup_admin_edit = ! empty( $product_data['admin_edit_url'] ) ? $product_data['admin_edit_url'] : '';
+    if ( ! $ed_popup_admin_edit && is_user_logged_in() && current_user_can( 'edit_post', $product_id ) ) {
+      $ed_popup_admin_edit = get_edit_post_link( $product_id, 'raw' );
+    }
+    if ( $ed_popup_admin_edit ) :
+      ?>
+      <a class="ed-product-popup__admin-edit"
+         href="<?php echo esc_url( $ed_popup_admin_edit ); ?>"
+         target="_blank"
+         rel="noopener noreferrer"
+         aria-label="<?php esc_attr_e( 'עריכת מוצר בלוח הבקרה', 'deliz-short' ); ?>"
+         title="<?php esc_attr_e( 'עריכת מוצר בלוח הבקרה', 'deliz-short' ); ?>">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" fill="currentColor"/>
+        </svg>
+      </a>
+    <?php endif; ?>
 
     <div class="ed-product-popup__content">
 
@@ -209,9 +226,9 @@ $options = $product_data['options'] ?? [];
 
                   <label class="ed-product-popup__radio">
 
-                    <input type="radio" 
+                    <input type="radio"
 
-                           name="popup_unit_weight" 
+                           name="popup_unit_weight"
 
                            value="<?php echo esc_attr($weight); ?>"
 
@@ -251,9 +268,9 @@ $options = $product_data['options'] ?? [];
 
                     <label class="ed-product-popup__radio">
 
-                      <input type="radio" 
+                      <input type="radio"
 
-                             name="popup_cutting_shape" 
+                             name="popup_cutting_shape"
 
                              value="<?php echo esc_attr($shape['value'] ?? $shape['label']); ?>">
 
@@ -293,19 +310,19 @@ $options = $product_data['options'] ?? [];
 
               <div class="ed-product-popup__radio-group" data-option="butcher_note">
 
-                <?php 
+                <?php
 
                 $notes = is_array($options['notes_for_butcher']) ? $options['notes_for_butcher'] : [$options['notes_for_butcher']];
 
-                foreach ($notes as $note): 
+                foreach ($notes as $note):
 
                   if (is_array($note) && isset($note['label'])): ?>
 
                     <label class="ed-product-popup__radio">
 
-                      <input type="radio" 
+                      <input type="radio"
 
-                             name="popup_butcher_note" 
+                             name="popup_butcher_note"
 
                              value="<?php echo esc_attr($note['value'] ?? $note['label']); ?>">
 
@@ -348,23 +365,16 @@ $options = $product_data['options'] ?? [];
         <!-- Baker note (product_note) — same pattern as checkout order notes -->
 
         <?php if ( function_exists( 'deliz_short_product_show_product_note' ) && deliz_short_product_show_product_note( (int) $product_id ) ) : ?>
+          <?php
+          $ed_product_note_label = function_exists( 'deliz_short_get_product_note_label' )
+            ? deliz_short_get_product_note_label()
+            : __( 'הערה לקצב', 'deliz-short' );
+          ?>
         <div class="ed-product-popup__baker-note">
 
-          <div class="checkout-summary-line checkout-summary-line--notes ed-product-popup__baker-note-line">
+          <label class="ed-product-popup__baker-note-label" for="popup-product-note"><?php echo esc_html( $ed_product_note_label ); ?></label>
 
-            <div class="checkout-summary-line__label"></div>
-
-            <div class="checkout-summary-line__value js-popup-product-notes is-add-note" role="button" tabindex="0"></div>
-
-            <button type="button" class="checkout-summary-line__edit js-popup-product-notes-edit" hidden>
-
-              <?php esc_html_e( 'שינוי', 'deliz-short' ); ?>
-
-            </button>
-
-          </div>
-
-          <textarea id="popup-product-note" class="ed-product-popup__product-note-hidden" name="product_note" rows="1" tabindex="-1" aria-hidden="true"></textarea>
+          <textarea id="popup-product-note" name="product_note" class="ed-product-popup__baker-note-textarea" rows="2" autocomplete="off"></textarea>
 
         </div>
         <?php endif; ?>
@@ -428,9 +438,9 @@ $options = $product_data['options'] ?? [];
 
         <!-- Add to Cart Button -->
 
-        <button type="button" 
+        <button type="button"
 
-                class="ed-product-popup__add-btn" 
+                class="ed-product-popup__add-btn"
 
                 id="popup-add-to-cart"
 

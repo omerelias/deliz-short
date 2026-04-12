@@ -87,6 +87,7 @@ if (!function_exists('deliz_short_ocwsu_format_fixed_unit_weight_display')) {
 if (!function_exists('deliz_short_product_show_product_note')) {
   /**
    * Whether the baker / product note field is enabled for this product.
+   * Only for OCWSU weighable products (_ocwsu_weighable = yes).
    * Post meta `show_product_note` or `_show_product_note`: false, 'false', '0', 'no', 'off' hides it.
    * Default when empty: show (true).
    *
@@ -95,7 +96,10 @@ if (!function_exists('deliz_short_product_show_product_note')) {
   function deliz_short_product_show_product_note($product_id) {
     $product_id = absint($product_id);
     if (!$product_id) {
-      return true;
+      return true; 
+    }
+    if (get_post_meta($product_id, '_ocwsu_weighable', true) !== 'yes') {
+      return false;
     }
     $raw = get_post_meta($product_id, 'show_product_note', true);
     if ($raw === '' || $raw === null) {
@@ -122,6 +126,23 @@ if (!function_exists('deliz_short_product_show_product_note_for_wc_product')) {
     }
     $pid = $product->is_type('variation') ? (int) $product->get_parent_id() : (int) $product->get_id();
     return deliz_short_product_show_product_note($pid);
+  }
+}
+
+if (!function_exists('deliz_short_get_product_note_label')) {
+  /**
+   * Label for the product baker-note field (ACF Options: product_note_label).
+   * Falls back to "הערה לקצב" when empty or ACF missing.
+   */
+  function deliz_short_get_product_note_label() {
+    $default = __('הערה לקצב', 'deliz-short');
+    if (function_exists('get_field')) {
+      $v = get_field('product_note_label', 'option');
+      if (is_string($v) && trim($v) !== '') {
+        return sanitize_text_field($v);
+      }
+    }
+    return $default;
   }
 }
 
@@ -988,6 +1009,15 @@ class ED_Product_Popup {
     $data['attributes'] = $attributes;
     $data['variations'] = $variations;
     $data['show_product_note'] = deliz_short_product_show_product_note($product_id);
+    $data['product_note_label'] = deliz_short_get_product_note_label();
+
+    $data['admin_edit_url'] = '';
+    if ( is_user_logged_in() && current_user_can( 'edit_post', $product_id ) ) {
+      $edit_link = get_edit_post_link( $product_id, 'raw' );
+      if ( $edit_link ) {
+        $data['admin_edit_url'] = $edit_link;
+      }
+    }
 
     return new \WP_REST_Response($data, 200);
   }
@@ -1065,15 +1095,6 @@ class ED_Product_Popup {
       true
     );
 
-    // 6b. Baker note line (checkout-style; syncs hidden #popup-product-note)
-    wp_enqueue_script(
-      'deliz-short-product-popup-baker-note',
-      $base_path . 'product-popup-baker-note.js',
-      ['deliz-short-product-popup-state'],
-      $version,
-      true
-    );
-    
     // 7. Core functions (must load before cart and mini-cart)
     wp_enqueue_script(
       'deliz-short-product-popup-core',
@@ -1085,8 +1106,7 @@ class ED_Product_Popup {
         'deliz-short-product-popup-quantity',
         'deliz-short-product-popup-ocwsu',
         'deliz-short-product-popup-variations',
-        'deliz-short-product-popup-events',
-        'deliz-short-product-popup-baker-note'
+        'deliz-short-product-popup-events'
       ],
       $version,
       true
@@ -1119,6 +1139,9 @@ class ED_Product_Popup {
       'getCartItemUrl' => rest_url('ed/v1/cart-item'),
       'getCartItemAjaxUrl' => admin_url('admin-ajax.php'),
       'restNonce' => wp_create_nonce('wp_rest'),
+      /** Client fallback for admin edit link when REST runs without authenticated user context. */
+      'userCanEditProducts' => current_user_can( 'edit_products' ),
+      'adminEditProductUrlBase' => admin_url( 'post.php?action=edit&post=' ),
       'cartItemNonce' => wp_create_nonce('ed-cart-item-nonce'),
       'updateCartNonce' => wp_create_nonce('ed-update-cart-nonce'),
       /** When true (or localStorage edDebugCartQty=1), mini-cart qty logs to console. */

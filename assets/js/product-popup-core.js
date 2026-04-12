@@ -353,7 +353,12 @@
      */
     async function openPopup(productId, triggerElement) {
         try {
-            const response = await fetch(`${window.ED_POPUP_CONFIG?.endpoint || '/wp-json/ed/v1/product-popup'}?id=${productId}`);
+            const response = await fetch(`${window.ED_POPUP_CONFIG?.endpoint || '/wp-json/ed/v1/product-popup'}?id=${productId}`, {
+                credentials: 'same-origin',
+                headers: {
+                    'X-WP-Nonce': window.ED_POPUP_CONFIG?.restNonce || ''
+                }
+            });
             if (!response.ok) throw new Error('Failed to load product');
 
             state.popupData = await response.json();
@@ -380,8 +385,6 @@
 
             // Initialize quantity inputs
             window.EDProductPopupQuantity?.initQuantityInputs();
-
-            window.EDProductPopupBakerNote?.syncFromHidden(state.popupElement);
 
             // Initialize variation selection if variable product
             if (state.popupData.type === 'variable' && state.popupData.attributes.length > 0) {
