@@ -711,12 +711,58 @@ display: block;
     top: 50%;
     width: 14px;
     height: 14px;
-    border: 2px solid #bdbdbd;
+    border: 2px solid #000;
     border-radius: 50%;
     background: #fff;
     box-sizing: border-box;
     transform: translateY(-50%);
 }
+
+.woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods .woocommerce-SavedPaymentMethods-tokenInput{
+    display:none
+}
+
+.woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li label{
+    position: relative;
+        padding-inline-start: 20px;
+}
+
+.woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li label:before{
+        content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #000;
+    border-radius: 50%;
+    background: #fff;
+    box-sizing: border-box;
+    transform: translateY(-50%);
+}
+
+.woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li label:after{
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    transform: translateY(-50%) scale(0);
+    transform-origin: center;
+    transition: transform 0.2s ease;
+}
+
+.woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li input[type="radio"]:checked + label::before{
+     border-color: var(--color-primary);
+}
+
+.woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li input[type="radio"]:checked + label::after{
+        transform: translateY(-50%) scale(1);
+}
+
 
 .woocommerce-checkout #payment div.form-row{
     padding: 1em 0;
