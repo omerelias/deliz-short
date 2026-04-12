@@ -2283,8 +2283,9 @@ form.woocommerce-checkout .ocws-days-with-slots-list-label{
     .choose-shipping-popup header h2, #shipping-redirect-dialog h3,
     #popup-shipping-options .shipping-description div,
     .shipping-settings-title, .ocws-days-with-slots-list-label,
-    .choose-shipping #oc-woo-pickup-additional #ocws_lp_pickup_aff_id_field label{
-        font-size: 22px!important;
+    .choose-shipping #oc-woo-pickup-additional #ocws_lp_pickup_aff_id_field label,
+    .shipping-settings-title, .ocws-days-with-slots-list-label, #ocws_lp_pickup_aff_id_field label{
+        font-size: 17px!important;
     }
 
     .choose-shipping-popup .inner-wrapper .pop-close{
@@ -2294,6 +2295,10 @@ form.woocommerce-checkout .ocws-days-with-slots-list-label{
 
     form#choose-shipping{
         padding: 0 15px;
+    }
+
+    .checkout-summary-line__value{
+        flex: 1 1 auto;
     }
 
     .choose-shipping .ship-choose .shipping-method-wraper label{
@@ -2849,6 +2854,9 @@ background-color: var(--color-primary);
 
 .woocommerce form .form-row .input-checkbox{
     margin: -3px 0 0 3px;
+        width: 13px;
+    height: 13px;
+    border-radius: 0;
 }
 
 .woocommerce form.woocommerce-checkout .woocommerce-account-fields{
@@ -3135,10 +3143,6 @@ body p.other-recipient-field label{
 @media (max-width: 767px) {
     .ed-float-cart__coupon .coupon-form .checkout-coupon-form-inner button{
         font-size: 14px;
-    }
-
-    .checkout-block-popup__inner{
-        padding: 48px 15px 24px;
     }
 }
 
