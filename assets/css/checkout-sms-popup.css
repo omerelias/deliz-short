@@ -1,285 +1,291 @@
-/* Checkout SMS Popup Styles */
-.checkout-sms-popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999999999;
-    display: none;
-}
-
-.checkout-sms-popup__overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    cursor: pointer;
-}
-
-.checkout-sms-popup__container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    box-sizing: border-box;
-    pointer-events: none;
-}
-
-.checkout-sms-popup__content {
-    position: relative;
-    background: #fff;
-    border-radius: 12px;
-    padding: 40px 30px;
-    max-width: 450px;
-    width: 100%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    z-index: 5000000;
-    pointer-events: auto;
-}
-
-/* Override theme `button.default-close-btn` (15×15px + transparent) so the X is visible */
-.checkout-sms-popup button.checkout-sms-popup__close {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    right: auto;
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border: none;
-    background: rgba(0, 0, 0, 0.08);
-    background-color: rgba(0, 0, 0, 0.08);
-    border-radius: 50%;
-    padding: 0;
-    z-index: 20;
-    pointer-events: auto;
-    color: #333;
-    transition: background 0.2s, color 0.2s;
-}
-
-.checkout-sms-popup button.checkout-sms-popup__close:hover {
-    background: rgba(0, 0, 0, 0.15);
-    background-color: rgba(0, 0, 0, 0.15);
-    color: #000;
-}
-
-.checkout-sms-popup button.checkout-sms-popup__close svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-}
-
-.checkout-sms-popup__title {
-    font-size: 24px;
-    font-weight: 600;
-    margin: 0 0 30px;
-    text-align: center;
-    color: #333;
-}
-
-.checkout-sms-popup__subtitle {
-    font-size: 16px;
-    margin: 0 0 20px;
-    text-align: center;
-    color: #666;
-}
-
-.checkout-sms-popup__step {
-    display: none;
-}
-
-.checkout-sms-popup__step.active {
-    display: block;
-}
-
-.checkout-sms-popup .form-row-sms,
-.checkout-sms-popup .form-row {
-    margin-bottom: 20px;
-}
-
-.checkout-sms-popup .phone-input,
-.checkout-sms-popup .code-input,
-.checkout-sms-popup .input-text {
-    width: 100%;
-    padding: 14px 16px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    box-sizing: border-box;
-    transition: border-color 0.2s;
-}
-
-.checkout-sms-popup .phone-input:focus,
-.checkout-sms-popup .code-input:focus,
-.checkout-sms-popup .input-text:focus {
-    outline: none;
-    border-color: var(--color-primary, #007bff);
-}
-
-.checkout-sms-popup .button {
-    width: 100%;
-    padding: 7px;
-    background: var(--color-primary, #007bff);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    margin-top: 10px;
-}
-
-
-
-.checkout-sms-popup .button:hover:not(.disabled) {
-    background: var(--color-primary-hover, #0056b3);
-}
-
-.checkout-sms-popup .button.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.checkout-sms-popup .confirm-sms-code {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.checkout-sms-popup .confirm-sms-code__actions {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    width: 100%;
-    align-items: stretch;
-}
-
-.checkout-sms-popup .confirm-sms-code__actions .button {
-    width: auto;
-    margin-top: 0;
-}
-
-.checkout-sms-popup .confirm-sms-code__actions .verify-button {
-    flex: 6 2 0;
-    min-width: 0;
-}
-
-.checkout-sms-popup .confirm-sms-code__actions .resend-code {
-    flex: 3 1 0;
-    min-width: 0;
-    position: static;
-}
-
-.checkout-sms-popup .verification-code-input {
-    width: 100%;
-}
-
-.checkout-sms-popup .resend-code {
-    background: transparent;
-    color: var(--color-primary, #007bff);
-    border: 1px solid var(--color-primary, #007bff);
-}
-
-.checkout-sms-popup .resend-code:hover:not(.disabled) {
-    background: var(--color-primary, #007bff);
-    color: #fff;
-}
-
-.checkout-sms-popup__error {
-    margin-top: 15px;
-    min-height: 20px;
-}
-
-.checkout-sms-popup__error .woocommerce-error {
-    background: #fee;
-    color: #c00;
-    padding: 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    margin: 0;
-    border: 1px solid #fcc;
-}
- 
-/* Legacy/cached builds: message was nested inside .woocommerce-error */
-.checkout-sms-popup__error > .woocommerce-error:has(> .woocommerce-message) {
-    background: transparent;
-    border: none;
-    padding: 0;
-    color: inherit;
-}
-
-.checkout-sms-popup__error .woocommerce-message {
-    background: linear-gradient(180deg, #f4fbf6 0%, #e8f5ec 100%);
-    color: #0d4d24;
-    padding: 12px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    line-height: 1.45;
-    margin: 0;
-    border: 1px solid #b8dcc4;
-    box-shadow: 0 1px 2px rgba(13, 77, 36, 0.06);
-    text-align: center;
-}
-
-@media (max-width: 768px) {
-    .checkout-sms-popup__error .woocommerce-message {
-        padding: 12px 0;
-    }
-}
-
-.checkout-sms-popup__error .woocommerce-message {
-    margin-top: 25px;
-}
-
-.verification-code-timer {
-    text-align: center;
-    font-size: 14px;
-    color: #666;
-    margin-top: 10px;
-}
-
-body.checkout-sms-popup-open {
-    overflow: hidden;
-}
-
-/* Home delivery: “נשלח ל… – ” + strong “לאן בדיוק?” */
-.checkout-sms-popup__shipping-intro {
-    font-size: 1.1rem;
-    font-weight: 400;
-    line-height: 1.45;
-    text-align: center;
-    color: #1a1a1a;
-    margin: 0 0 1.75rem;
-    padding: 0 6px;
-}
-
-.checkout-sms-popup__shipping-intro strong {
-    font-weight: 700;
-}
-
-.checkout-sms-popup__step--shipping .checkout-sms-shipping-form {
-    margin-top: 0;
-}
-
-/* RTL Support */
-body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
-    left: auto;
-    right: 15px;
-}
-
-.woocommerce-message::before{
-    content: "";
+/* Checkout SMS Popup Styles */
+.checkout-sms-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999999999;
+    display: none;
+}
+
+.checkout-sms-popup__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+}
+
+.checkout-sms-popup__container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.checkout-sms-popup__content {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px 30px;
+    max-width: 450px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 5000000;
+    pointer-events: auto;
+}
+
+/* Override theme `button.default-close-btn` (15×15px + transparent) so the X is visible */
+.checkout-sms-popup button.checkout-sms-popup__close {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: auto;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    background: rgba(0, 0, 0, 0.08);
+    background-color: rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    padding: 0;
+    z-index: 20;
+    pointer-events: auto;
+    color: #333;
+    transition: background 0.2s, color 0.2s;
+}
+
+.checkout-sms-popup button.checkout-sms-popup__close:hover {
+    background: rgba(0, 0, 0, 0.15);
+    background-color: rgba(0, 0, 0, 0.15);
+    color: #000;
+}
+
+.checkout-sms-popup button.checkout-sms-popup__close svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.checkout-sms-popup__title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 30px;
+    text-align: center;
+    color: #333;
+}
+
+.checkout-sms-popup__subtitle {
+    font-size: 16px;
+    margin: 0 0 20px;
+    text-align: center;
+    color: #666;
+}
+
+.checkout-sms-popup__step {
+    display: none;
+}
+
+.checkout-sms-popup__step.active {
+    display: block;
+}
+
+.checkout-sms-popup .form-row-sms,
+.checkout-sms-popup .form-row {
+    margin-bottom: 20px;
+}
+
+.checkout-sms-popup .phone-input,
+.checkout-sms-popup .code-input,
+.checkout-sms-popup .input-text {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.checkout-sms-popup .phone-input:focus,
+.checkout-sms-popup .code-input:focus,
+.checkout-sms-popup .input-text:focus {
+    outline: none;
+    border-color: var(--color-primary, #007bff);
+}
+
+.checkout-sms-popup .button {
+    width: 100%;
+    padding: 7px;
+    background: var(--color-primary, #007bff);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+}
+
+
+
+.checkout-sms-popup .button:hover:not(.disabled) {
+    background: var(--color-primary-hover, #0056b3);
+}
+
+.checkout-sms-popup .button.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.checkout-sms-popup .confirm-sms-code {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.checkout-sms-popup .confirm-sms-code__actions {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: 100%;
+    align-items: stretch;
+}
+
+.checkout-sms-popup .confirm-sms-code__actions .button {
+    width: auto;
+    margin-top: 0;
+}
+
+.checkout-sms-popup .confirm-sms-code__actions .verify-button {
+    flex: 6 2 0;
+    min-width: 0;
+}
+
+.checkout-sms-popup .confirm-sms-code__actions .resend-code {
+    flex: 3 1 0;
+    min-width: 0;
+    position: static;
+}
+
+.checkout-sms-popup .verification-code-input {
+    width: 100%;
+}
+
+.checkout-sms-popup .resend-code {
+    background: transparent;
+    color: var(--color-primary, #007bff);
+    border: 1px solid var(--color-primary, #007bff);
+}
+
+.checkout-sms-popup .resend-code:hover:not(.disabled) {
+    background: var(--color-primary, #007bff);
+    color: #fff;
+}
+
+.checkout-sms-popup__error {
+    margin-top: 15px;
+    min-height: 20px;
+}
+
+.checkout-sms-popup__error .woocommerce-error {
+    background: #fee;
+    color: #c00;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin: 0;
+    border: 1px solid #fcc;
+}
+ 
+/* Legacy/cached builds: message was nested inside .woocommerce-error */
+.checkout-sms-popup__error > .woocommerce-error:has(> .woocommerce-message) {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: inherit;
+}
+
+.checkout-sms-popup__error .woocommerce-message {
+    background: linear-gradient(180deg, #f4fbf6 0%, #e8f5ec 100%);
+    color: #0d4d24;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.45;
+    margin: 0;
+    border: 1px solid #b8dcc4;
+    box-shadow: 0 1px 2px rgba(13, 77, 36, 0.06);
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .checkout-sms-popup__error .woocommerce-message {
+        padding: 12px 0;
+    }
+}
+
+.checkout-sms-popup__error .woocommerce-message {
+    margin-top: 25px;
+}
+
+.verification-code-timer {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    margin-top: 10px;
+}
+
+body.checkout-sms-popup-open {
+    overflow: hidden;
+}
+
+/* Home delivery: “נשלח ל… – ” + strong “לאן בדיוק?” */
+.checkout-sms-popup__shipping-intro {
+    font-size: 1.1rem;
+    font-weight: 400;
+    line-height: 1.45;
+    text-align: center;
+    color: #1a1a1a;
+    margin: 0 0 1.75rem;
+    padding: 0 6px;
+}
+
+.checkout-sms-popup__shipping-intro strong {
+    font-weight: 700;
+}
+
+.checkout-sms-popup__step--shipping .checkout-sms-shipping-form {
+    margin-top: 0;
+}
+
+/* RTL Support */
+body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
+    left: auto;
+    right: 15px;
+}
+
+.woocommerce-message::before{
+    content: "";
+}
+
+/* Header login: same modal, only phone + code (hide register + shipping steps) */
+.checkout-sms-popup--header-only .checkout-sms-popup__step--register,
+.checkout-sms-popup--header-only .checkout-sms-popup__step--shipping {
+    display: none !important;
 }

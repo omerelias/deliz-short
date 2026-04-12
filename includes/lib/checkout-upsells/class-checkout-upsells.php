@@ -34,11 +34,11 @@ class ED_Checkout_Upsells {
 
     add_action('acf/init', [__CLASS__, 'register_acf_fields']);
 
-    
 
-    // Enqueue assets
 
-    add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
+    // Enqueue assets (after theme registers checkout-sms-flow at priority 30)
+
+    add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets'], 35);
 
     
 
@@ -882,7 +882,15 @@ class ED_Checkout_Upsells {
 
 
 
-    // JS
+    // JS (checkout-sms-flow: guests need CheckoutSMSFlow before proceedToCheckoutOrSms)
+
+    $ed_deps = array( 'jquery', 'deliz-ocws-checkout-gate' );
+
+    if ( wp_script_is( 'checkout-sms-flow', 'registered' ) ) {
+
+      $ed_deps[] = 'checkout-sms-flow';
+
+    }
 
     wp_enqueue_script(
 
@@ -890,7 +898,7 @@ class ED_Checkout_Upsells {
 
       get_template_directory_uri() . '/includes/lib/checkout-upsells/assets/js/checkout-upsells.js',
 
-      array( 'jquery', 'deliz-ocws-checkout-gate' ),
+      $ed_deps,
 
       defined('DELIZ_SHORT_VERSION') ? DELIZ_SHORT_VERSION : '1.0.0',
 

@@ -120,7 +120,7 @@ if ( isset( $_COOKIE['oc_shipping_to_other_address'] ) && $_COOKIE['oc_shipping_
 	<?php if ( ! is_user_logged_in() ) : ?>
 		<div class="checkout-login">
 			<span><?php _e( 'Was here previous?', 'deliz-short' ) ?> </span>
-			<a class="my-account-link login-panel" href="#" rel="nofollow">
+			<a class="my-account-link header-sms-open" href="#" rel="nofollow">
 				<strong><?php _e( 'Click for sign in', 'deliz-short' );?></strong>
 			</a>
 		</div>

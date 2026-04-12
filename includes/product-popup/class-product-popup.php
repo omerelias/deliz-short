@@ -1486,7 +1486,7 @@ class ED_Product_Popup {
     }
 
     if (!deliz_short_product_show_product_note((int) $product_id)) {
-      return $cart_item_data; 
+      return $cart_item_data;
     }
     
     if (isset($_POST['product_note']) && !empty(trim($_POST['product_note']))) {

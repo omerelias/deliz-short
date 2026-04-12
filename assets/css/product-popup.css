@@ -516,7 +516,6 @@ body.ed-checkout-upsells-popup-open .ed-product-popup {
 
 .ed-product-popup__options {
 
-  margin-bottom: 1.5rem;
 
   border-top: 1px solid #e9ebee;
 
@@ -544,7 +543,7 @@ body.ed-checkout-upsells-popup-open .ed-product-popup {
 
 .ed-product-popup__option-group {
 
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 
 }
 
@@ -1036,7 +1035,7 @@ display: flex;
 
   flex: 1;
 
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.4rem;
 
   border: 2px solid transparent;
 
@@ -1057,7 +1056,9 @@ display: flex;
   text-align: center;
 
 }
-
+.ed-product-popup__option-label{
+  font-weight:bold;
+}
 
 
 .ed-product-popup__toggle-btn:hover {
@@ -1069,6 +1070,94 @@ display: flex;
 
 
 .ed-product-popup__toggle-btn.is-active {
+
+  background: var(--popup-primary, #007bff);
+
+  color: #ffffff;
+
+  border-color: var(--popup-primary, #007bff);
+
+}
+
+
+
+/* משקל משתנה ליחידה — אותו סגנון כפתורי toggle כמו יח'/ק"ג */
+
+.ed-product-popup__unit-weight-toggle {
+
+  display: inline-flex;
+
+  flex-wrap: wrap;
+
+  align-items: center;
+
+  gap: 0.5rem;
+
+  width: fit-content;
+
+  max-width: 100%;
+
+  box-sizing: border-box;
+
+  margin-bottom: 0;
+
+  padding: 0;
+
+  background: transparent;
+
+}
+
+
+
+.ed-product-popup__unit-weight-toggle .ed-product-popup__toggle-btn {
+
+  position: relative;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  box-sizing: border-box;
+
+  background: rgba(0, 0, 0, 0.05);
+
+  border-color: transparent;
+
+}
+
+
+
+.ed-product-popup__unit-weight-toggle .ed-product-popup__toggle-btn:hover:not(:has(input:checked)) {
+
+  background: rgba(0, 0, 0, 0.08);
+
+}
+
+
+
+.ed-product-popup__unit-weight-toggle .ed-product-popup__toggle-btn input[type="radio"] {
+
+  position: absolute;
+
+  opacity: 0;
+
+  width: 0;
+
+  height: 0;
+
+  margin: 0;
+
+  pointer-events: none;
+
+}
+
+
+
+.ed-product-popup__unit-weight-toggle .ed-product-popup__toggle-btn:has(input:checked) {
 
   background: var(--popup-primary, #007bff);
 
@@ -1623,7 +1712,19 @@ body.popup-open {
 
 
 
-  .ed-product-popup__toggle-btn {
+  .ed-product-popup__unit-weight-toggle {
+
+    flex-direction: row;
+
+    flex-wrap: wrap;
+
+    gap: 0.5rem;
+
+  }
+
+
+
+  .ed-product-popup__quantity-toggle .ed-product-popup__toggle-btn {
 
     padding: 0;
 

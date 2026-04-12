@@ -200,11 +200,11 @@ $options = $product_data['options'] ?? [];
 
           <?php if ($ocwsu['weighable'] && $ocwsu['sold_by_units'] && $ocwsu['unit_weight_type'] === 'variable' && !empty($ocwsu['unit_weight_options'])): ?>
 
-            <div class="ed-product-popup__option-group">
+            <div class="ed-product-popup__option-group ed-product-popup__option-group--unit-weight">
 
               <label class="ed-product-popup__option-label"><?php esc_html_e( 'בחירת משקל ליחידה', 'deliz-short' ); ?></label>
 
-              <div class="ed-product-popup__radio-group" data-option="unit_weight">
+              <div class="ed-product-popup__unit-weight-toggle" data-option="unit_weight" role="radiogroup" aria-label="<?php echo esc_attr__( 'בחירת משקל ליחידה', 'deliz-short' ); ?>">
 
                 <?php foreach ($ocwsu['unit_weight_options'] as $weight): ?>
 
@@ -224,7 +224,7 @@ $options = $product_data['options'] ?? [];
 
                   ?>
 
-                  <label class="ed-product-popup__radio">
+                  <label class="ed-product-popup__toggle-btn">
 
                     <input type="radio"
 
@@ -234,11 +234,7 @@ $options = $product_data['options'] ?? [];
 
                            <?php echo ($weight === $ocwsu['unit_weight_options'][0]) ? 'checked' : ''; ?>>
 
-                    <span class="ed-product-popup__radio-label">
-
-                      <?php echo esc_html($show_weight); ?> <?php echo esc_html($label); ?>
-
-                    </span>
+                    <span><?php echo esc_html($show_weight); ?> <?php echo esc_html($label); ?></span>
 
                   </label>
 

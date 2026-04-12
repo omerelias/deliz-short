@@ -105,51 +105,22 @@ add_action('wp_footer', function () {
 
 // Product Popup functionality is loaded from includes/product-popup/class-product-popup.php
 
-// woocommerce login|register form
-add_action( 'wp_footer', 'oc_menu_authorization_panel' );
-function oc_menu_authorization_panel(){
-    if ( is_user_logged_in() ){
-        return;
-    }
-    ?>
-    <div class="drawer-panel auth-panel" id="auth-panel">
-        <div class="authorization-panel--container">
-            <button class="auth__close default-close-btn btn-empty" type="button" aria-label="<?php _e( 'סגירה של פאנל התחברות', 'deliz-short' ) ?>">
-                <svg xmlns="http://www.w3.org/2000/svg" class="Icon Icon--close" role="presentation" viewBox="0 0 16 14">
-                    <path d="M15 0L1 14m14 0L1 0" stroke="currentColor" fill="none" fill-rule="evenodd"></path>
-              </svg>
-            </button>
-
-            <?php wc_get_template('myaccount/form-login.php');?>
-            <div class="my-account-lost-password-form--container">
-                <?php
-                // Show lost password form by default.
-                wc_get_template(
-                    'myaccount/form-lost-password.php',
-                    array(
-                        'form' => 'lost_password',
-                    )
-                );
-                ?>
-                <button class="return-to-login-form btn-empty" value="1" type="button"><?php _e( 'Return to login form', 'deliz-short' ) ?></button>
-            </div>
-        </div>
-    </div>
-    <?php
-}
-
 add_action( 'wp_footer', 'overlay_bg' );
 function overlay_bg(){
   echo '<div class="site-overlay"></div>';
 }
 
-// Checkout SMS popup – always output when WC cart exists so it works after add-to-cart without refresh
-add_action('wp_footer', function() {
-    if (!function_exists('WC') || !WC()->cart) {
-        return; 
-    }
-    get_template_part('template-parts/checkout-sms-popup');
-});
+// Checkout / header SMS popup (guests)
+add_action(
+	'wp_footer',
+	function () {
+		if ( is_user_logged_in() ) {
+			return;
+		}
+		get_template_part( 'template-parts/checkout-sms-popup' );
+	},
+	15
+);
 
 function print_menu_shortcode($atts, $content = null) {
     extract(shortcode_atts(array( 'name' => null, ), $atts));

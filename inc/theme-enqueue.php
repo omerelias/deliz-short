@@ -131,11 +131,11 @@ add_action(
 );
 
 add_action('wp_enqueue_scripts', function() {
-    if (!function_exists('WC') || !WC()->cart) {
+    if ( is_user_logged_in() ) {
         return;
     }
-    
-    // Checkout SMS flow JS
+
+    // Checkout / header: SMS login popup (guests only; works even with empty cart for header login)
     wp_enqueue_script(
         'checkout-sms-flow',
         get_template_directory_uri() . '/assets/js/checkout-sms-flow.js',

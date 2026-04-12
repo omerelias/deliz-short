@@ -154,7 +154,7 @@
                  value="1" 
                  min="1" 
                  step="1"
-                 class="ed-product-popup__qty-input">
+                 class="ed-product-popup__qty-input"> 
           <button type="button" class="ed-product-popup__qty-btn" data-action="increase">+</button>
         </div>
       `;
@@ -166,12 +166,12 @@
         // Unit weight selection (if variable) - BUT NOT if get_weight_from_variation is enabled
         // If get_weight_from_variation is enabled, we'll use the variation's weight directly
         if (ocwsu.weighable && ocwsu.sold_by_units && ocwsu.unit_weight_type === 'variable' && ocwsu.unit_weight_options?.length && !ocwsu.get_weight_from_variation) {
-            optionsHTML += '<div class="ed-product-popup__option-group"><label class="ed-product-popup__option-label">בחירת משקל ליחידה</label><div class="ed-product-popup__radio-group" data-option="unit_weight">';
+            optionsHTML += '<div class="ed-product-popup__option-group ed-product-popup__option-group--unit-weight"><label class="ed-product-popup__option-label">בחירת משקל ליחידה</label><div class="ed-product-popup__unit-weight-toggle" data-option="unit_weight" role="radiogroup" aria-label="בחירת משקל ליחידה">';
 
             ocwsu.unit_weight_options.forEach((weight, idx) => {
                 const showWeight = ocwsu.product_weight_units === 'kg' && weight < 1 ? weight * 1000 : weight;
                 const label = ocwsu.product_weight_units === 'kg' && weight < 1 ? 'גרם' : (ocwsu.product_weight_units === 'kg' ? 'ק"ג' : 'גרם');
-                optionsHTML += `<label class="ed-product-popup__radio"><input type="radio" name="popup_unit_weight" value="${weight}" ${idx === 0 ? 'checked' : ''}><span class="ed-product-popup__radio-label">${showWeight} ${label}</span></label>`;
+                optionsHTML += `<label class="ed-product-popup__toggle-btn"><input type="radio" name="popup_unit_weight" value="${weight}" ${idx === 0 ? 'checked' : ''}><span>${showWeight} ${label}</span></label>`;
             });
 
             optionsHTML += '</div></div>';

@@ -23,29 +23,25 @@ jQuery(function ($) {
     autoplaySpeed: 4000,
   });
 
-  //login click
-  $("body:not(.logged-in) .header-user-inner a").click(function(event) {
-    event.preventDefault(); 
-    $('body').addClass('auth-active');
-  });
-
-  $("a.login-panel").click(function(event) {
-    event.preventDefault(); 
-    $('body').addClass('auth-active');
+  // Login in header / checkout billing: open SMS popup (checkout-sms-flow.js)
+  $(document).on('click', 'body:not(.logged-in) .header-user-inner a, a.header-sms-open', function (event) {
+    event.preventDefault();
+    if (typeof window.CheckoutSMSFlow !== 'undefined' && typeof window.CheckoutSMSFlow.showHeaderSmsPopup === 'function') {
+      window.CheckoutSMSFlow.showHeaderSmsPopup();
+    }
   });
 
   function closeOverlays() {
-    $('body').removeClass('auth-active');
     $('body').removeClass('basket-open');
     $('.site-overlay').removeClass('active');
   }
 
-  $(".site-overlay,button.auth__close,button.cart-close").click(function(event) {
+  $(".site-overlay,button.cart-close").click(function(event) {
     closeOverlays();
   });
 
   $(document).on('keyup', function(e) {
-    if (e.key === 'Escape' && ($('body').hasClass('basket-open') || $('body').hasClass('auth-active'))) {
+    if (e.key === 'Escape' && $('body').hasClass('basket-open')) {
       closeOverlays();
     }
   });
@@ -355,22 +351,6 @@ jQuery(function ($) {
         }
     });
 
-
-	$(document).on( 'click', 'button.auth-btn', function(e){
-		let val 		= $(this).val();
-		let parent 	= $(this).closest( '#customer_login' );
-		let target;
-		// console.log( val, 'val' );
-		// console.log( parent, 'parent' );
-
-		if ( val == 'register' ){
-			parent.addClass( 'register-show' );
-			target = $('.authorization-panel--container .col-2');
-		} else {
-			target = $('.authorization-panel--container .col-1');
-			parent.removeClass( 'register-show' );
-		}
-	});
 
   //popup modal
   $(document).on( 'click', '.cart-custom-notice a', function(e){
