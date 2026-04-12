@@ -17,6 +17,7 @@ if ( ! is_checkout() ) {
 
 ?>
 <div id="payment" class="woocommerce-checkout-payment">
+	<h2><?php esc_html_e( 'Payment methods', 'deliz-short' ); ?></h2>
 	<?php if ( WC()->cart && WC()->cart->needs_payment() ) : ?>
 		<?php
 		$available_gateways = WC()->payment_gateways ? WC()->payment_gateways->get_available_payment_gateways() : array();
