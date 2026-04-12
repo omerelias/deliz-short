@@ -2116,11 +2116,13 @@
 
         const noteInput = state.popupElement.querySelector('#popup-product-note');
 
-        if (noteInput && cartItemData.product_note) {
+        if (noteInput) {
 
-            noteInput.value = cartItemData.product_note;
+            noteInput.value = cartItemData.product_note ? cartItemData.product_note : '';
 
         }
+
+        window.EDProductPopupBakerNote?.syncFromHidden(state.popupElement);
 
 
 

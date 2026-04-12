@@ -1016,6 +1016,15 @@ class ED_Product_Popup {
       $version,
       true
     );
+
+    // 6b. Baker note line (checkout-style; syncs hidden #popup-product-note)
+    wp_enqueue_script(
+      'deliz-short-product-popup-baker-note',
+      $base_path . 'product-popup-baker-note.js',
+      ['deliz-short-product-popup-state'],
+      $version,
+      true
+    );
     
     // 7. Core functions (must load before cart and mini-cart)
     wp_enqueue_script(
@@ -1028,7 +1037,8 @@ class ED_Product_Popup {
         'deliz-short-product-popup-quantity',
         'deliz-short-product-popup-ocwsu',
         'deliz-short-product-popup-variations',
-        'deliz-short-product-popup-events'
+        'deliz-short-product-popup-events',
+        'deliz-short-product-popup-baker-note'
       ],
       $version,
       true

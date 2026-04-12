@@ -248,11 +248,14 @@
 
         optionsHTML += '<div class="ed-product-popup__error" id="popup-option-error" style="display: none;">נא לבחור אפשרות</div></div>';
 
-        // Note textarea - always show (as per user request)
         const noteHTML = `
-      <div class="ed-product-popup__note">
-        <label for="popup-product-note">הערות לקצב</label>
-        <textarea id="popup-product-note" name="product_note" rows="2" placeholder="הערות לקצב"></textarea>
+      <div class="ed-product-popup__baker-note">
+        <div class="checkout-summary-line checkout-summary-line--notes ed-product-popup__baker-note-line">
+          <div class="checkout-summary-line__label"></div>
+          <div class="checkout-summary-line__value js-popup-product-notes is-add-note" role="button" tabindex="0"></div>
+          <button type="button" class="checkout-summary-line__edit js-popup-product-notes-edit" hidden>שינוי</button>
+        </div>
+        <textarea id="popup-product-note" name="product_note" class="ed-product-popup__product-note-hidden" rows="1" tabindex="-1" aria-hidden="true"></textarea>
       </div>
     `;
 

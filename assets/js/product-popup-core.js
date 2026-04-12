@@ -381,6 +381,8 @@
             // Initialize quantity inputs
             window.EDProductPopupQuantity?.initQuantityInputs();
 
+            window.EDProductPopupBakerNote?.syncFromHidden(state.popupElement);
+
             // Initialize variation selection if variable product
             if (state.popupData.type === 'variable' && state.popupData.attributes.length > 0) {
                 // Trigger updateVariationSelection after a short delay to ensure DOM is ready

@@ -345,21 +345,27 @@ $options = $product_data['options'] ?? [];
 
         </div>
 
-        <!-- Note Input -->
+        <!-- Baker note (product_note) — same pattern as checkout order notes -->
 
-        <div class="ed-product-popup__note">
+        <div class="ed-product-popup__baker-note">
 
-          <label for="popup-product-note"><?php esc_html_e( 'הערה למוצר השקיל', 'deliz-short' ); ?></label>
+          <div class="checkout-summary-line checkout-summary-line--notes ed-product-popup__baker-note-line">
 
-          <textarea id="popup-product-note" 
+            <div class="checkout-summary-line__label"></div>
 
-                    name="product_note" 
+            <div class="checkout-summary-line__value js-popup-product-notes is-add-note" role="button" tabindex="0"></div>
 
-                    rows="2" 
+            <button type="button" class="checkout-summary-line__edit js-popup-product-notes-edit" hidden>
 
-                    placeholder="<?php echo esc_attr__( 'הערות נוספות...', 'deliz-short' ); ?>"></textarea>
+              <?php esc_html_e( 'שינוי', 'deliz-short' ); ?>
 
-        </div>        
+            </button>
+
+          </div>
+
+          <textarea id="popup-product-note" class="ed-product-popup__product-note-hidden" name="product_note" rows="1" tabindex="-1" aria-hidden="true"></textarea>
+
+        </div>
 
         <!-- Related Products -->
 
