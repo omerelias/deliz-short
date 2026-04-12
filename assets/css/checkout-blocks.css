@@ -492,13 +492,27 @@ body .woocommerce table.shop_table tbody th, body .woocommerce table.shop_table 
 }
 
 .checkout-block-popup__actions {
-
-    margin: 24px 0 0;
-
+margin: 24px 0 0;
     padding-top: 16px;
+    border-top: none;
+    text-align: center;
 
-    border-top: 1px solid #e5e5e5;
+}
 
+.checkout-block-popup__actions button{
+        background-color: var(--color-primary);
+    color: var(--main-text-color);
+    display: inline-block;
+    height: 42px;
+    line-height: 38px;
+    text-decoration: none;
+    border-radius: var(--radius);
+    width: 132px;
+    font-size: 16px;
+    padding: 0;
+    margin-block-start: 0;
+    margin-block-end: 20px;
+    margin: auto;
 }
 
 .checkout-block-popup__confirm {
@@ -659,7 +673,7 @@ display: block;
 
     padding: 8px 16px;
 
-    border: 1px solid #ddd;
+    border: 2px solid #ddd;
 
     border-radius: 8px;
 
@@ -688,13 +702,17 @@ display: block;
     transform: translateY(-50%);
 }
 
+.woocommerce-checkout #payment div.form-row{
+    padding: 1em 0;
+}
+
 .woocommerce-checkout #payment ul.payment_methods > li > label:after{
     content: '';
     position: absolute;
     top: 50%;
-    right: 10px;
-    width: 8px;
-    height: 8px;
+    right: 11px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--color-primary);
     transform: translateY(-50%) scale(0);

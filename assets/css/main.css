@@ -1965,7 +1965,7 @@ form#choose-shipping input.green{
     width: 132px;
     font-size: 16px;
     padding: 0;
-    margin-block-start: 15px;
+    margin-block-start: 25px;
     margin-block-end: 20px;
 }
 
@@ -2800,9 +2800,11 @@ div#lastPricePop .modal-dialog.modal-dialog-centered {
 }
 
 .woocommerce form.woocommerce-checkout ul#shipping_method li{
-        margin: 0 0 .5em;
-    line-height: 1.5em;
-    list-style: none outside;
+    width: calc(50% - 3px);
+    margin: 0;
+}
+
+.woocommerce form.woocommerce-checkout ul#shipping_method li label{
     padding: 0;
     max-width: 100%;
     margin-right: unset;
@@ -2810,24 +2812,24 @@ div#lastPricePop .modal-dialog.modal-dialog-centered {
     display: block;
     text-align: center;
     cursor: pointer;
-    line-height: 50px;
-    height: 50px;
+    line-height: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 100px;
+    background: transparent;
+    color: var(--main-text-color-hover);
+    box-shadow: none;
+    font-size: 16px;
+    font-weight: 500;
 }
 
-.woocommerce form.woocommerce-checkout ul#shipping_method li label{
-    display: block;
-    font-size: 18px;
-    font-weight: normal;
-    background: #fff;
-    border: 1px solid #000;
-    box-shadow: 0px 5px 30px 0 rgb(0 0 0 / 10%);
-    border-radius: var(--radius);
-    cursor: pointer;
+.choose-shipping-popup .ocws-checkout-address-extras-pp{
+    display: none;
 }
 
 form.woocommerce-checkout #shipping_method input[type="radio"]:checked + label{
-      background-color: var(--color-primary-hover);
-    color: var(--main-text-color-hover);
+background-color: var(--color-primary);
+    color: var(--main-text-color);
 }
 
 .woocommerce form.woocommerce-checkout ul#shipping_method li input{
@@ -3137,7 +3139,7 @@ body #add_payment_method #payment,body .woocommerce-cart #payment,body .woocomme
 body .woocommerce-checkout #payment h2{
     font-size: 24px;
     font-weight: 500;
-    margin-bottom: 0;
+    margin: 0;
 }
 
 body .woocommerce #payment #place_order,body .woocommerce-page #payment #place_order{
