@@ -2052,8 +2052,9 @@ height: 100%;
     float: right;
 }
 
-.choose-shipping-popup .slot-message{
+.slot-message{
     font-size: 16px;
+    text-align: center;
 }
 
 /*checkout*/
