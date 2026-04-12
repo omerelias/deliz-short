@@ -342,7 +342,7 @@ $options = $product_data['options'] ?? [];
             <?php esc_html_e( 'נא לבחור אפשרות', 'deliz-short' ); ?>
 
           </div>
- 
+
         </div>
 
         <!-- Baker note (product_note) — same pattern as checkout order notes -->
