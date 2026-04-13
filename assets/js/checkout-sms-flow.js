@@ -5,6 +5,14 @@ jQuery(function($) {
         /** True when opened from header / "sign in" — phone + code only, then full page reload. */
         headerSmsMode: false,
 
+        /** After wp_set_auth_cookie(), the page nonce (guest) is invalid — use nonce from JSON if present. */
+        applyNonceFromAuthResponse: function(response) {
+            if (typeof oc_sms_auth !== 'undefined' && response && response.data && typeof response.data === 'object' && response.data.nonce) {
+                oc_sms_auth.nonce = response.data.nonce;
+                console.log('[Checkout SMS] nonce refreshed after login/register');
+            }
+        },
+
         init: function() {
             console.log('[Checkout SMS] Initializing...');
             console.log('[Checkout SMS] oc_sms_auth available:', typeof oc_sms_auth !== 'undefined');
@@ -15,7 +23,7 @@ jQuery(function($) {
                 }
             }
             this.bindEvents();
-            console.log('[Checkout SMS] Events bound'); 
+            console.log('[Checkout SMS] Events bound');
         },
 
         bindEvents: function() {
@@ -154,9 +162,11 @@ jQuery(function($) {
         maybeRestoreExistingCustomerShipping: function(done) {
             const cb = typeof done === 'function' ? done : function() {};
             if (typeof oc_sms_auth === 'undefined' || !oc_sms_auth.ajaxurl) {
+                console.warn('[Checkout SMS] post_existing_restore skipped: oc_sms_auth missing');
                 cb();
                 return;
             }
+            console.log('[Checkout SMS] post_existing_restore request…');
             $.ajax({
                 url: oc_sms_auth.ajaxurl,
                 type: 'POST',
@@ -164,7 +174,15 @@ jQuery(function($) {
                     action: 'deliz_short_sms_post_existing_restore',
                     nonce: oc_sms_auth.nonce
                 },
-                complete: function() {
+                success: function(response) {
+                    console.log('[Checkout SMS] post_existing_restore response (full)', response);
+                    if (response && Object.prototype.hasOwnProperty.call(response, 'data')) {
+                        console.log('[Checkout SMS] post_existing_restore data', response.data);
+                    }
+                    cb();
+                },
+                error: function(xhr, status, err) {
+                    console.error('[Checkout SMS] post_existing_restore ajax error', status, err, xhr && xhr.responseText);
                     cb();
                 }
             });
@@ -230,6 +248,7 @@ jQuery(function($) {
                 success: function(response) {
                     $button.prop('disabled', false).removeClass('disabled');
                     if (response.success) {
+                        CheckoutSMSFlow.applyNonceFromAuthResponse(response);
                         if (sk === 'none') {
                             CheckoutSMSFlow.showStep('how-receive');
                         } else {
@@ -286,7 +305,11 @@ jQuery(function($) {
                 return;
             }
             CheckoutSMSFlow.refreshCheckoutSmsContext(function() {
+                const extra = typeof oc_sms_auth !== 'undefined' ? oc_sms_auth.show_delivery_extra : undefined;
+                const kind = typeof oc_sms_auth !== 'undefined' ? oc_sms_auth.shipping_kind : undefined;
+                console.log('[Checkout SMS] afterSuccessfulAuth context', { show_delivery_extra: extra, shipping_kind: kind });
                 if (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.show_delivery_extra) {
+                    console.log('[Checkout SMS] showing floor/apt step (delivery extra)');
                     CheckoutSMSFlow.showStep('shipping');
                 } else {
                     CheckoutSMSFlow.redirectAfterAuth();
@@ -475,6 +498,7 @@ jQuery(function($) {
                 success: function(response) {
                     $button.prop('disabled', false).removeClass('disabled');
                     if (response.success) {
+                        CheckoutSMSFlow.applyNonceFromAuthResponse(response);
                         CheckoutSMSFlow.maybeRestoreExistingCustomerShipping(function() {
                             CheckoutSMSFlow.afterSuccessfulAuth();
                         });
@@ -556,6 +580,7 @@ jQuery(function($) {
                 success: function(response) {
                     if (response.success) {
                         $button.prop('disabled', false).removeClass('disabled');
+                        CheckoutSMSFlow.applyNonceFromAuthResponse(response);
                         CheckoutSMSFlow.afterSuccessfulAuth();
                     } else {
                         $button.prop('disabled', false).removeClass('disabled');

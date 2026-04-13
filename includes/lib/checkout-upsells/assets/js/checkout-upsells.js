@@ -150,7 +150,7 @@
    */
   function proceedToCheckoutOrSms(checkoutUrl) {
     if (checkoutUrl) {
-      window.edCheckoutUrl = checkoutUrl; 
+      window.edCheckoutUrl = checkoutUrl;
     }
     var isGuest = typeof oc_sms_auth !== 'undefined' && oc_sms_auth.is_logged_in == 0;
     if (isGuest && typeof window.CheckoutSMSFlow !== 'undefined' && typeof window.CheckoutSMSFlow.showPopup === 'function') {

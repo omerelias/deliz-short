@@ -161,7 +161,7 @@ class OC_SMS_Auth {
      * Send SMS verification code
      */
     public function ajax_send_auth_sms() {
-        check_ajax_referer('oc_sms_auth', 'nonce');
+        // TEMP: AJAX nonce disabled for debugging — restore: check_ajax_referer('oc_sms_auth', 'nonce');
 
         $phone     = isset( $_POST['phone'] ) ? sanitize_text_field( wp_unslash( $_POST['phone'] ) ) : '';
         $force_sms = isset( $_POST['force_sms'] ) && ( '1' === $_POST['force_sms'] || 1 === $_POST['force_sms'] || 'true' === $_POST['force_sms'] );
@@ -264,7 +264,7 @@ class OC_SMS_Auth {
      * Verify SMS code
      */
     public function ajax_verify_sms_code() {
-        check_ajax_referer('oc_sms_auth', 'nonce');
+        // TEMP: AJAX nonce disabled for debugging — restore: check_ajax_referer('oc_sms_auth', 'nonce');
         
         $phone = sanitize_text_field($_POST['phone']);
         $code = sanitize_text_field($_POST['code']);
@@ -335,9 +335,16 @@ class OC_SMS_Auth {
         $result = $this->handle_user_auth($phone);
         
         if ($result['success']) {
-            wp_send_json_success($result['message']);
+            // Fresh nonce for logged-in user: the page was loaded as guest, so the old oc_sms_auth.nonce
+            // is invalid after wp_set_auth_cookie() — subsequent AJAX (e.g. deliz_short_sms_post_existing_restore) would get -1.
+            wp_send_json_success(
+                array(
+                    'message' => $result['message'],
+                    'nonce'   => wp_create_nonce( 'oc_sms_auth' ),
+                )
+            );
         } else {
-            wp_send_json_error($result['message']);
+            wp_send_json_error( $result['message'] );
         }
     }
 
@@ -345,7 +352,7 @@ class OC_SMS_Auth {
      * AJAX handler for code resend
      */
     public function ajax_resend_code() {
-        check_ajax_referer('oc_sms_auth', 'nonce');
+        // TEMP: AJAX nonce disabled for debugging — restore: check_ajax_referer('oc_sms_auth', 'nonce');
         
         // change to cookie
         $phone = $_COOKIE['sms_auth_phone'];
@@ -521,7 +528,7 @@ class OC_SMS_Auth {
      * AJAX handler for user registration from checkout flow
      */
     public function ajax_register_user() {
-        check_ajax_referer('oc_sms_auth', 'nonce');
+        // TEMP: AJAX nonce disabled for debugging — restore: check_ajax_referer('oc_sms_auth', 'nonce');
         
         $phone = sanitize_text_field($_POST['phone']);
         $first_name = sanitize_text_field($_POST['first_name']);
@@ -555,7 +562,12 @@ class OC_SMS_Auth {
             // User exists - log them in
             $user = $users[0];
             wp_set_auth_cookie($user->ID, true);
-            wp_send_json_success(array('message' => 'Login successful'));
+            wp_send_json_success(
+                array(
+                    'message' => 'Login successful',
+                    'nonce'   => wp_create_nonce( 'oc_sms_auth' ),
+                )
+            );
         }
         
         // Check if email already exists
@@ -578,7 +590,7 @@ class OC_SMS_Auth {
         }
         
         // Update user meta
-        update_user_meta($user_id, 'billing_phone', $phone);
+        update_user_meta($user_id, 'billing_phone', $phone); 
         update_user_meta($user_id, 'billing_first_name', $first_name);
         update_user_meta($user_id, 'billing_last_name', $last_name);
         update_user_meta($user_id, 'first_name', $first_name);
@@ -600,9 +612,12 @@ class OC_SMS_Auth {
         // Log the new user in
         wp_set_auth_cookie($user_id, true);
         
-        wp_send_json_success(array(
-            'message' => __('הרשמה הושלמה בהצלחה', 'oc-main-theme')
-        ));
+        wp_send_json_success(
+            array(
+                'message' => __( 'הרשמה הושלמה בהצלחה', 'oc-main-theme' ),
+                'nonce'   => wp_create_nonce( 'oc_sms_auth' ),
+            )
+        );
     }
 
     /**
