@@ -47,13 +47,18 @@
         if (!cfg.ocwsActive) {
             return;
         }
-        // Non-empty cart on page load: open choose-shipping (after theme hide-on-load runs).
+        // Non-empty cart on page load: open choose-shipping only if theme did not disable it (confirmed in session).
         if (cfg.autoOpenShippingOnLoad && !$('body').hasClass('ocws-deli-style')) {
+            if (window.console && window.console.debug) {
+                window.console.debug('[deliz-ocws-gate] auto-opening choose-shipping popup (autoOpenShippingOnLoad)');
+            }
             setTimeout(function () {
                 if (typeof window.delizOpenOcwsDeliveryPopup === 'function') {
                     window.delizOpenOcwsDeliveryPopup();
                 }
             }, 200);
+        } else if (window.console && window.console.debug) {
+            window.console.debug('[deliz-ocws-gate] skip auto-open choose-shipping', { autoOpenShippingOnLoad: !!cfg.autoOpenShippingOnLoad });
         }
         // checkout-upsells.js handles this path when enabled (ED_CHECKOUT_UPSELLS is defined).
         if (typeof window.ED_CHECKOUT_UPSELLS !== 'undefined' && window.ED_CHECKOUT_UPSELLS.ajaxUrl) {

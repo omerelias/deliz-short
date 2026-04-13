@@ -102,12 +102,25 @@ add_action(
     if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
       return;
     }
-    $auto_open_shipping = false;
+    $auto_open_shipping  = false;
+    $ocws_popup_confirmed = false;
     if ( class_exists( 'OCWS_Popup', false ) && ! WC()->cart->is_empty() ) {
+      if ( isset( WC()->session ) ) {
+        $ocws_popup_confirmed = (bool) WC()->session->get( 'ocws_shipping_popup_confirmed' );
+      }
       if ( ( ! function_exists( 'is_checkout' ) || ! is_checkout() )
         && ( ! function_exists( 'is_order_received_page' ) || ! is_order_received_page() ) ) {
-        $auto_open_shipping = true;
+        // Do not re-open #choose-shipping on every refresh once the customer confirmed (session flag set in oc-woo-shipping AJAX).
+        $auto_open_shipping = ! $ocws_popup_confirmed;
       }
+    }
+    // Optional: define DELIZ_OCWS_GATE_DEBUG as true in wp-config.php to log gate decisions to debug.log.
+    if ( defined( 'DELIZ_OCWS_GATE_DEBUG' ) && DELIZ_OCWS_GATE_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+      error_log(
+        '[deliz-ocws-gate] autoOpenShippingOnLoad=' . ( $auto_open_shipping ? '1' : '0' )
+        . ' ocws_shipping_popup_confirmed=' . ( $ocws_popup_confirmed ? '1' : '0' )
+        . ' cart_empty=' . ( WC()->cart->is_empty() ? '1' : '0' )
+      );
     }
     $deliz_ocws_gate_deps = array( 'jquery' );
     if ( class_exists( 'OCWS_Popup', false ) ) {

@@ -404,7 +404,7 @@ function ed_rest_get_product_note_label() {
 
 	return new \WP_REST_Response(
 		[
-			'product_note_label' => $label, 
+			'product_note_label' => $label,
 		],
 		200
 	);
