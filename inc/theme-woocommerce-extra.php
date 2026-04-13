@@ -909,7 +909,7 @@ function deliz_short_order_get_ocws_pickup_aff_id( WC_Order $order ) {
 		if ( is_array( $info ) && ! empty( $info['aff_id'] ) ) {
 			return absint( $info['aff_id'] );
 		}
-	}
+	}  
 	return 0;
 }
 
@@ -1102,6 +1102,24 @@ function deliz_short_build_ship_patch_from_order( WC_Order $order ) {
 			$patch['checkout_data']['billing_house_num']  = $house;
 
 			$patch['checkout_data']['shipping_house_num'] = $house;
+
+		}
+
+		foreach ( array( 'billing_floor', 'billing_apartment', 'billing_enter_code' ) as $extra_key ) {
+
+			$ev = $order->get_meta( '_' . $extra_key );
+
+			if ( ! $ev ) {
+
+				$ev = $order->get_meta( $extra_key );
+
+			}
+
+			if ( $ev ) {
+
+				$patch['checkout_data'][ $extra_key ] = $ev;
+
+			}
 
 		}
 
@@ -2053,6 +2071,49 @@ function deliz_short_resolve_ocws_shipping_method_for_sms() {
 
 
 /**
+ * True when floor + apartment already exist (session checkout_data, customer, or user meta).
+ * Used to skip the SMS "קומה / דירה" step after restore or for returning customers.
+ *
+ * @return bool
+ */
+function deliz_short_checkout_sms_has_floor_apartment_filled() {
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return false;
+	}
+	$floor = '';
+	$apt   = '';
+	$cd    = WC()->session->get( 'checkout_data', array() );
+	if ( is_array( $cd ) ) {
+		if ( ! empty( $cd['billing_floor'] ) ) {
+			$floor = trim( (string) $cd['billing_floor'] );
+		}
+		if ( ! empty( $cd['billing_apartment'] ) ) {
+			$apt = trim( (string) $cd['billing_apartment'] );
+		}
+	}
+	$customer = WC()->customer;
+	if ( $customer instanceof WC_Customer ) {
+		if ( $floor === '' ) {
+			$floor = trim( (string) $customer->get_meta( 'billing_floor', true ) );
+		}
+		if ( $apt === '' ) {
+			$apt = trim( (string) $customer->get_meta( 'billing_apartment', true ) );
+		}
+	}
+	if ( ( $floor === '' || $apt === '' ) && is_user_logged_in() ) {
+		$uid = get_current_user_id();
+		if ( $floor === '' ) {
+			$floor = trim( (string) get_user_meta( $uid, 'billing_floor', true ) );
+		}
+		if ( $apt === '' ) {
+			$apt = trim( (string) get_user_meta( $uid, 'billing_apartment', true ) );
+		}
+	}
+
+	return ( $floor !== '' && $apt !== '' );
+}
+
+/**
 
  * Checkout SMS popup ("קומה / דירה / קוד כניסה"): show for OC home delivery; skip for pickup only.
 
@@ -2169,6 +2230,26 @@ function deliz_short_checkout_sms_delivery_extra_for_localize() {
 				'ocws_is_pickup'   => $is_pickup,
 
 				'ocws_is_shipping' => false,
+
+			)
+
+		);
+
+	}
+
+	if ( deliz_short_checkout_sms_has_floor_apartment_filled() ) {
+
+		return deliz_short_checkout_sms_delivery_extra_attach_debug(
+
+			$empty,
+
+			array(
+
+				'reason'        => 'floor_apartment_already_set_skip_extra_step',
+
+				'method'        => $method,
+
+				'method_source' => $method_source,
 
 			)
 
@@ -2510,21 +2591,102 @@ function deliz_short_sms_flow_ocws_delivery_address_triple_complete() {
 }
 
 /**
+ * OC delivery address present in session/checkout_data only (no customer profile, no ocws polygon cookie).
+ * Used to decide if we should skip {@see deliz_short_ajax_sms_post_existing_restore} — profile/cookie must not fake “already chosen”.
+ *
+ * @return bool
+ */
+function deliz_short_sms_flow_ocws_delivery_address_triple_complete_strict_session() {
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return false;
+	}
+	$city   = (string) WC()->session->get( 'chosen_city_name', '' );
+	$street = (string) WC()->session->get( 'chosen_street', '' );
+	$house  = (string) WC()->session->get( 'chosen_house_num', '' );
+
+	$checkout_data = WC()->session->get( 'checkout_data', array() );
+	if ( is_array( $checkout_data ) ) {
+		if ( $street === '' && ! empty( $checkout_data['billing_street'] ) ) {
+			$street = (string) $checkout_data['billing_street'];
+		}
+		if ( $house === '' && ! empty( $checkout_data['billing_house_num'] ) ) {
+			$house = (string) $checkout_data['billing_house_num'];
+		}
+		if ( $city === '' && ! empty( $checkout_data['billing_city_name'] ) ) {
+			$city = (string) $checkout_data['billing_city_name'];
+		}
+	}
+
+	return ( $street !== '' && $house !== '' && $city !== '' );
+}
+
+/**
+ * @param array<string, mixed> $patch Ship patch (e.g. from deliz_oc_ship_last backup).
+ * @return bool
+ */
+function deliz_short_sms_flow_patch_has_complete_ocws_delivery_address( array $patch ) {
+	$city   = isset( $patch['chosen_city_name'] ) ? (string) $patch['chosen_city_name'] : '';
+	$street = isset( $patch['chosen_street'] ) ? (string) $patch['chosen_street'] : '';
+	$house  = isset( $patch['chosen_house_num'] ) ? (string) $patch['chosen_house_num'] : '';
+	$cd     = isset( $patch['checkout_data'] ) && is_array( $patch['checkout_data'] ) ? $patch['checkout_data'] : array();
+	if ( $street === '' && ! empty( $cd['billing_street'] ) ) {
+		$street = (string) $cd['billing_street'];
+	}
+	if ( $house === '' && ! empty( $cd['billing_house_num'] ) ) {
+		$house = (string) $cd['billing_house_num'];
+	}
+	if ( $city === '' && ! empty( $cd['billing_city_name'] ) ) {
+		$city = (string) $cd['billing_city_name'];
+	}
+
+	return ( $street !== '' && $house !== '' && $city !== '' );
+}
+
+/**
+ * @param array<string, mixed> $patch Ship patch.
+ * @return bool
+ */
+function deliz_short_sms_flow_patch_has_ocws_pickup_aff( array $patch ) {
+	if ( ! empty( $patch['chosen_pickup_aff'] ) && absint( $patch['chosen_pickup_aff'] ) > 0 ) {
+		return true;
+	}
+	$cd = isset( $patch['checkout_data'] ) && is_array( $patch['checkout_data'] ) ? $patch['checkout_data'] : array();
+
+	return ! empty( $cd['ocws_lp_pickup_aff_id'] ) && absint( $cd['ocws_lp_pickup_aff_id'] ) > 0;
+}
+
+/**
+ * Session has pickup branch (affiliate id) for OC pickup rate.
+ *
+ * @return bool
+ */
+function deliz_short_sms_flow_session_has_ocws_pickup_aff() {
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return false;
+	}
+	$aff = (int) WC()->session->get( 'chosen_pickup_aff' );
+	if ( $aff > 0 ) {
+		return true;
+	}
+	$cd = WC()->session->get( 'checkout_data', array() );
+
+	return is_array( $cd ) && ! empty( $cd['ocws_lp_pickup_aff_id'] ) && absint( $cd['ocws_lp_pickup_aff_id'] ) > 0;
+}
+
+/**
  * True when WooCommerce session (or Deliz backup cookie from a completed flow) already has a shipping choice.
  * Does NOT treat standalone `ocws` cookie as sufficient — that cookie is often stale vs session and blocked
  * {@see deliz_short_ajax_sms_post_existing_restore} from applying the last order (pickup vs delivery mismatch).
  *
- * OC home delivery with only `chosen_shipping_methods` set but no street/house/city is NOT reliable — allow restore
- * from last order so pickup vs delivery can be corrected.
+ * Stricter than “has any rate id”: OC delivery needs address in **session/checkout_data** (not billing profile alone);
+ * OC pickup needs branch id; `ocws_shipping_popup_confirmed` alone does not block restore; backup cookie must
+ * contain a complete patch, not only `chosen_shipping_methods`.
  *
  * @return bool
  */
 function deliz_short_sms_flow_has_reliable_chosen_shipping_for_restore() {
 	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
 		return false;
-	}
-	if ( (bool) WC()->session->get( 'ocws_shipping_popup_confirmed' ) ) {
-		return true;
 	}
 	$methods = WC()->session->get( 'chosen_shipping_methods', array() );
 	if ( ! is_array( $methods ) || empty( $methods[0] ) ) {
@@ -2536,12 +2698,23 @@ function deliz_short_sms_flow_has_reliable_chosen_shipping_for_restore() {
 	if ( is_array( $methods ) && ! empty( $methods[0] ) ) {
 		$mid = (string) $methods[0];
 		if ( function_exists( 'ocws_is_method_id_shipping' ) && ocws_is_method_id_shipping( $mid ) ) {
-			return deliz_short_sms_flow_ocws_delivery_address_triple_complete();
+			return deliz_short_sms_flow_ocws_delivery_address_triple_complete_strict_session();
+		}
+		if ( function_exists( 'ocws_is_method_id_pickup' ) && ocws_is_method_id_pickup( $mid ) ) {
+			return deliz_short_sms_flow_session_has_ocws_pickup_aff();
 		}
 		return true;
 	}
 	$backup = deliz_short_read_ship_backup_cookie();
-	if ( $backup && ! empty( $backup['patch']['chosen_shipping_methods'][0] ) ) {
+	if ( $backup && ! empty( $backup['patch']['chosen_shipping_methods'][0] ) && is_array( $backup['patch'] ) ) {
+		$pmid  = (string) $backup['patch']['chosen_shipping_methods'][0];
+		$patch = $backup['patch'];
+		if ( function_exists( 'ocws_is_method_id_shipping' ) && ocws_is_method_id_shipping( $pmid ) ) {
+			return deliz_short_sms_flow_patch_has_complete_ocws_delivery_address( $patch );
+		}
+		if ( function_exists( 'ocws_is_method_id_pickup' ) && ocws_is_method_id_pickup( $pmid ) ) {
+			return deliz_short_sms_flow_patch_has_ocws_pickup_aff( $patch );
+		}
 		return true;
 	}
 	return false;
@@ -2753,7 +2926,7 @@ function deliz_short_ajax_sms_post_existing_restore() {
 					'ts_utc'                     => gmdate( 'c' ),
 					'request_uri'                => isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '',
 					'reason'                     => 'skip_already_chosen_reliable',
-					'note'                       => 'ocws cookie alone does not count; see deliz_short_sms_flow_has_reliable_chosen_shipping_for_restore',
+					'note'                       => 'OC delivery: strict session address; OC pickup: branch id; backup patch must be complete; see deliz_short_sms_flow_has_reliable_chosen_shipping_for_restore',
 					'session_chosen'             => WC()->session->get( 'chosen_shipping_methods', array() ),
 					'ocws_cookie_method_preview' => ! empty( $_COOKIE['ocws'] ) && is_array( json_decode( wp_unslash( $_COOKIE['ocws'] ), true ) )
 						? ( json_decode( wp_unslash( $_COOKIE['ocws'] ), true )['method'] ?? '' )
