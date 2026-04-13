@@ -1504,6 +1504,21 @@
 
                 }
 
+                // OCWS delivery chip (משלוח + מחיר) — השרת שולח div#ocws-delivery-data-chip; חובה להחיל כי לא נכלל ב־#ed-float-cart בנתיב הזה
+                const ocwsChipKey = 'div#ocws-delivery-data-chip';
+ 
+                if (fragments[ocwsChipKey] && typeof jQuery !== 'undefined') {
+
+                    const chipEl = document.querySelector(ocwsChipKey);
+
+                    if (chipEl && String(fragments[ocwsChipKey]).trim().length) {
+
+                        jQuery(chipEl).replaceWith(fragments[ocwsChipKey]);
+
+                    }
+
+                }
+
 
 
                 // Also update the row directly if exists

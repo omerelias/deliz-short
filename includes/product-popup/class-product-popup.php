@@ -647,7 +647,7 @@ class ED_Product_Popup {
           </div>
         <?php
         endforeach;
- 
+
         if ( ! empty( $fees ) ) :
           foreach ( $fees as $fee ) :
             $fee_amount = (float) $fee->amount;

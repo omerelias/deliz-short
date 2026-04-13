@@ -77,6 +77,27 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
   return $fragments;
 });
 
+/**
+ * מחיר משלוח ב־#ocws-delivery-data-chip — רינדור אחרון אחרי עדכון הסל (fragments מ-WC / פופאפ / REST),
+ * כדי שהמספר יתאים לכמות ולסה״כ אחרי הוספה לסל ושינויי כמות.
+ */
+add_filter( 'woocommerce_add_to_cart_fragments', 'deliz_short_fragment_ocws_delivery_chip', 50, 1 );
+function deliz_short_fragment_ocws_delivery_chip( $fragments ) {
+	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+		return $fragments;
+	}
+	if ( ! class_exists( 'Oc_Woo_Shipping_Public', false ) || ! is_callable( array( 'Oc_Woo_Shipping_Public', 'show_chip_in_cart' ) ) ) {
+		return $fragments;
+	}
+	ob_start();
+	Oc_Woo_Shipping_Public::show_chip_in_cart();
+	$html = ob_get_clean();
+	if ( $html !== '' ) {
+		$fragments['div#ocws-delivery-data-chip'] = $html;
+	}
+	return $fragments;
+}
+
 // Shipping popup: do not show on page load — only when user adds to cart or clicks delivery chip
 add_action('wp_footer', function () {
   if (is_checkout()) return;
