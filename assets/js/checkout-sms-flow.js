@@ -30,9 +30,14 @@ jQuery(function($) {
             
             // Resend code
             $(document).on('click', '.checkout-sms-popup .resend-code', this.handleResendCode);
-            
+
             // Registration form
             $(document).on('submit', '.checkout-sms-register-form', this.handleRegister);
+
+            // New user wizard (tabs + optional supply fields)
+            $(document).on('submit', '.checkout-sms-newuser-wizard-form', this.handleNewUserWizard);
+            $(document).on('click', '.checkout-sms-wizard-tab', this.onWizardTabClick);
+            $(document).on('click', '.checkout-sms-open-ocws-btn', this.handleOpenOcwsHowReceive);
             
             // Shipping details form (after registration)
             $(document).on('submit', '.checkout-sms-shipping-form', this.handleShippingDetails);
@@ -121,7 +126,7 @@ jQuery(function($) {
                 url: oc_sms_auth.ajaxurl,
                 type: 'POST',
                 data: {
-                    action: 'deliz_short_sms_checkout_context',
+                    action: 'deliz_short_sms_flow_full_context',
                     nonce: oc_sms_auth.nonce
                 },
                 success: function(response) {
@@ -130,6 +135,12 @@ jQuery(function($) {
                         if (response.data.shipping_intro_html !== undefined) {
                             oc_sms_auth.shipping_intro_html = response.data.shipping_intro_html;
                         }
+                        if (response.data.shipping_chosen !== undefined) {
+                            oc_sms_auth.shipping_chosen = !!response.data.shipping_chosen;
+                        }
+                        if (response.data.shipping_kind !== undefined) {
+                            oc_sms_auth.shipping_kind = response.data.shipping_kind;
+                        }
                     }
                     cb();
                 },
@@ -137,6 +148,135 @@ jQuery(function($) {
                     cb();
                 }
             });
+        },
+
+        /** After SMS code — existing customer: restore last order + slot if no shipping chosen */
+        maybeRestoreExistingCustomerShipping: function(done) {
+            const cb = typeof done === 'function' ? done : function() {};
+            if (typeof oc_sms_auth === 'undefined' || !oc_sms_auth.ajaxurl) {
+                cb();
+                return;
+            }
+            $.ajax({
+                url: oc_sms_auth.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'deliz_short_sms_post_existing_restore',
+                    nonce: oc_sms_auth.nonce
+                },
+                complete: function() {
+                    cb();
+                }
+            });
+        },
+
+        onWizardTabClick: function(e) {
+            e.preventDefault();
+            const tab = $(e.currentTarget).data('tab');
+            const $popup = $('#checkout-sms-popup');
+            $popup.find('.checkout-sms-wizard-tab').removeClass('is-active');
+            $popup.find('.checkout-sms-wizard-tab[data-tab="' + tab + '"]').addClass('is-active');
+            $popup.find('.checkout-sms-wizard-panel').removeClass('is-active');
+            $popup.find('.checkout-sms-wizard-panel[data-panel="' + tab + '"]').addClass('is-active');
+        },
+
+        applyNewUserWizardChrome: function() {
+            const sk = (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.shipping_kind) ? oc_sms_auth.shipping_kind : 'none';
+            const i18n = (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.i18n) ? oc_sms_auth.i18n : {};
+            const $popup = $('#checkout-sms-popup');
+            const $tabs = $popup.find('.checkout-sms-wizard-tabs');
+            const $titleMain = $popup.find('.checkout-sms-popup__title--main');
+            $tabs.removeClass('is-hidden');
+            if (sk === 'pickup') {
+                $titleMain.text(i18n.pickup_order_title || 'על שם מי ההזמנה?');
+                $tabs.addClass('is-hidden');
+            } else if (sk === 'delivery') {
+                $titleMain.text(i18n.delivery_complete_title || 'השלם את פרטי המשלוח');
+            } else {
+                $titleMain.text(i18n.data_verify_title || 'אימות נתונים');
+            }
+            if (sk === 'pickup') {
+                $popup.find('.checkout-sms-wizard-panel[data-panel="supply"]').removeClass('is-active');
+                $popup.find('.checkout-sms-wizard-panel[data-panel="details"]').addClass('is-active');
+                $popup.find('.checkout-sms-wizard-tab').removeClass('is-active');
+                $popup.find('.checkout-sms-wizard-tab[data-tab="details"]').addClass('is-active');
+            }
+        },
+
+        handleNewUserWizard: function(e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $button = $form.find('.nu-wizard-submit');
+            const sk = (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.shipping_kind) ? oc_sms_auth.shipping_kind : 'none';
+            const formData = {
+                first_name: $form.find('.nu-first-name').val(),
+                last_name: $form.find('.nu-last-name').val(),
+                email: $form.find('.nu-email').val(),
+                phone: $form.find('.nu-register-phone-input').val(),
+                billing_floor: $form.find('[name="billing_floor"]').val(),
+                billing_apartment: $form.find('[name="billing_apartment"]').val(),
+                billing_enter_code: $form.find('[name="billing_enter_code"]').val()
+            };
+            $button.prop('disabled', true).addClass('disabled');
+            CheckoutSMSFlow.showError('newuser-wizard', '');
+            $.ajax({
+                url: oc_sms_auth.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'oc_register_user',
+                    nonce: oc_sms_auth.nonce,
+                    ...formData
+                },
+                success: function(response) {
+                    $button.prop('disabled', false).removeClass('disabled');
+                    if (response.success) {
+                        if (sk === 'none') {
+                            CheckoutSMSFlow.showStep('how-receive');
+                        } else {
+                            CheckoutSMSFlow.afterSuccessfulAuth();
+                        }
+                    } else {
+                        CheckoutSMSFlow.showError('newuser-wizard', response.data && response.data.message ? response.data.message : 'שגיאה ברישום');
+                    }
+                },
+                error: function() {
+                    $button.prop('disabled', false).removeClass('disabled');
+                    CheckoutSMSFlow.showError('newuser-wizard', 'שגיאה ברישום');
+                }
+            });
+        },
+
+        ocwsWaitPoll: null,
+
+        handleOpenOcwsHowReceive: function(e) {
+            e.preventDefault();
+            CheckoutSMSFlow.showError('how-receive', '');
+            if (typeof window.delizOpenOcwsDeliveryPopup === 'function') {
+                window.delizOpenOcwsDeliveryPopup();
+            } else {
+                const $chip = $('#ocws-delivery-data-chip .cds-button-change');
+                if ($chip.length) {
+                    $chip.trigger('click');
+                } else {
+                    $('.choose-shipping-popup').addClass('shown');
+                    $('body').css({ overflow: 'hidden' });
+                }
+            }
+            if (CheckoutSMSFlow.ocwsWaitPoll) {
+                clearInterval(CheckoutSMSFlow.ocwsWaitPoll);
+            }
+            const gateUrl = (typeof window.delizOcwsCheckoutGate !== 'undefined' && window.delizOcwsCheckoutGate.ajaxUrl)
+                ? window.delizOcwsCheckoutGate.ajaxUrl
+                : oc_sms_auth.ajaxurl;
+            CheckoutSMSFlow.ocwsWaitPoll = setInterval(function() {
+                $.post(gateUrl, { action: 'deliz_ocws_shipping_status' }, function(r) {
+                    if (r && r.success && r.data && r.data.confirmed) {
+                        clearInterval(CheckoutSMSFlow.ocwsWaitPoll);
+                        CheckoutSMSFlow.ocwsWaitPoll = null;
+                        CheckoutSMSFlow.redirectAfterAuth();
+                    }
+                });
+            }, 500);
         },
 
         /** After SMS login or new registration: shipping step when home delivery, else upsells/checkout. */
@@ -155,6 +295,10 @@ jQuery(function($) {
         },
 
         closePopup: function() {
+            if (CheckoutSMSFlow.ocwsWaitPoll) {
+                clearInterval(CheckoutSMSFlow.ocwsWaitPoll);
+                CheckoutSMSFlow.ocwsWaitPoll = null;
+            }
             if (CheckoutSMSFlow.codeTimer) {
                 clearInterval(CheckoutSMSFlow.codeTimer);
                 CheckoutSMSFlow.codeTimer = null;
@@ -197,6 +341,12 @@ jQuery(function($) {
                 $titleMain.text('אימות מספר הטלפון');
             } else if (step === 'register') {
                 $titleMain.text('השלמת פרטי לקוח');
+            } else if (step === 'newuser-wizard') {
+                CheckoutSMSFlow.applyNewUserWizardChrome();
+            } else if (step === 'how-receive') {
+                const i18n = (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.i18n) ? oc_sms_auth.i18n : {};
+                $titleMain.text(i18n.how_receive_title || 'איך תרצו לקבל');
+                $titleMain.show();
             } else if (step === 'shipping') {
                 const $intro = $popup.find('.checkout-sms-popup__shipping-intro');
                 if ($intro.length && typeof oc_sms_auth !== 'undefined' && oc_sms_auth.shipping_intro_html) {
@@ -270,8 +420,11 @@ jQuery(function($) {
                                 return;
                             }
                             $button.prop('disabled', false).removeClass('disabled');
-                            CheckoutSMSFlow.showStep('register');
-                            $('.register-phone-input').val(response.data.phone || phone);
+                            CheckoutSMSFlow.refreshCheckoutSmsContext(function() {
+                                $('.nu-register-phone-input').val(response.data.phone || phone);
+                                $('.register-phone-input').val(response.data.phone || phone);
+                                CheckoutSMSFlow.showStep('newuser-wizard');
+                            });
                         } else {
                             $button.prop('disabled', false).removeClass('disabled');
                             CheckoutSMSFlow.showStep('code');
@@ -283,8 +436,11 @@ jQuery(function($) {
                             if (CheckoutSMSFlow.headerSmsMode) {
                                 CheckoutSMSFlow.showError('phone', response.data.message || response.data || oc_sms_auth.i18n.error_sending);
                             } else {
-                                CheckoutSMSFlow.showStep('register');
-                                $('.register-phone-input').val(response.data.phone || phone);
+                                CheckoutSMSFlow.refreshCheckoutSmsContext(function() {
+                                    $('.nu-register-phone-input').val(response.data.phone || phone);
+                                    $('.register-phone-input').val(response.data.phone || phone);
+                                    CheckoutSMSFlow.showStep('newuser-wizard');
+                                });
                             }
                         } else {
                             CheckoutSMSFlow.showError('phone', response.data.message || response.data || oc_sms_auth.i18n.error_sending);
@@ -319,14 +475,19 @@ jQuery(function($) {
                 success: function(response) {
                     $button.prop('disabled', false).removeClass('disabled');
                     if (response.success) {
-                        CheckoutSMSFlow.afterSuccessfulAuth();
+                        CheckoutSMSFlow.maybeRestoreExistingCustomerShipping(function() {
+                            CheckoutSMSFlow.afterSuccessfulAuth();
+                        });
                     } else {
                         if (response.data && (response.data.show_register || response.data.message && response.data.message.includes('not found'))) {
                             if (CheckoutSMSFlow.headerSmsMode) {
                                 CheckoutSMSFlow.showError('code', response.data.message || response.data || oc_sms_auth.i18n.error_verifying);
                             } else {
-                                CheckoutSMSFlow.showStep('register');
-                                $('.register-phone-input').val(phone);
+                                CheckoutSMSFlow.refreshCheckoutSmsContext(function() {
+                                    $('.nu-register-phone-input').val(phone);
+                                    $('.register-phone-input').val(phone);
+                                    CheckoutSMSFlow.showStep('newuser-wizard');
+                                });
                             }
                         } else {
                             CheckoutSMSFlow.showError('code', response.data.message || response.data || oc_sms_auth.i18n.error_verifying);

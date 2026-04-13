@@ -102,15 +102,18 @@ add_action(
     if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
       return;
     }
-    $auto_open_shipping  = false;
+    // Default: do NOT auto-open #choose-shipping on every page load (disruptive before upsell/SMS flow).
+    // Re-enable old behavior: add_filter( 'deliz_ocws_auto_open_shipping_on_load', '__return_true' );
+    $auto_open_shipping   = false;
     $ocws_popup_confirmed = false;
-    if ( class_exists( 'OCWS_Popup', false ) && ! WC()->cart->is_empty() ) {
+    if ( apply_filters( 'deliz_ocws_auto_open_shipping_on_load', false )
+      && class_exists( 'OCWS_Popup', false )
+      && ! WC()->cart->is_empty() ) {
       if ( isset( WC()->session ) ) {
         $ocws_popup_confirmed = (bool) WC()->session->get( 'ocws_shipping_popup_confirmed' );
       }
       if ( ( ! function_exists( 'is_checkout' ) || ! is_checkout() )
         && ( ! function_exists( 'is_order_received_page' ) || ! is_order_received_page() ) ) {
-        // Do not re-open #choose-shipping on every refresh once the customer confirmed (session flag set in oc-woo-shipping AJAX).
         $auto_open_shipping = ! $ocws_popup_confirmed;
       }
     }
@@ -173,6 +176,9 @@ add_action('wp_enqueue_scripts', function() {
         'shipping_intro_html' => '',
       );
 
+    $shipping_chosen = function_exists( 'deliz_short_sms_flow_has_chosen_shipping' ) ? deliz_short_sms_flow_has_chosen_shipping() : false;
+    $shipping_kind   = function_exists( 'deliz_short_sms_flow_shipping_kind' ) ? deliz_short_sms_flow_shipping_kind() : 'none';
+
     wp_localize_script('checkout-sms-flow', 'oc_sms_auth', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('oc_sms_auth'),
@@ -180,6 +186,8 @@ add_action('wp_enqueue_scripts', function() {
         'code_expiry' => isset($settings['code_expiry']) ? $settings['code_expiry'] : 180,
         'show_delivery_extra' => ! empty( $delivery_extra['show_delivery_extra'] ),
         'shipping_intro_html' => isset( $delivery_extra['shipping_intro_html'] ) ? $delivery_extra['shipping_intro_html'] : '',
+        'shipping_chosen' => $shipping_chosen,
+        'shipping_kind' => $shipping_kind,
         'i18n' => array(
             'invalid_phone' => __('מספר טלפון לא תקין', 'deliz-short'),
             'code_sent' => __('קוד נשלח בהצלחה', 'deliz-short'),
@@ -187,6 +195,14 @@ add_action('wp_enqueue_scripts', function() {
             'code_resent' => __('קוד נשלח מחדש', 'deliz-short'),
             'error_verifying' => __('שגיאה באימות הקוד', 'deliz-short'),
             'error_resending' => __('שגיאה בשליחה חוזרת של הקוד', 'deliz-short'),
+            'tab_details' => __('פרטים', 'deliz-short'),
+            'tab_supply' => __('אספקה', 'deliz-short'),
+            'wizard_continue' => __('המשך', 'deliz-short'),
+            'how_receive_title' => __('איך תרצו לקבל', 'deliz-short'),
+            'pickup_order_title' => __('על שם מי ההזמנה?', 'deliz-short'),
+            'delivery_complete_title' => __('השלם את פרטי המשלוח', 'deliz-short'),
+            'open_shipping_btn' => __('בחרו אופן קבלת ההזמנה', 'deliz-short'),
+            'data_verify_title' => __('אימות נתונים', 'deliz-short'),
         )
     ));
     

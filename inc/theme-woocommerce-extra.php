@@ -2195,6 +2195,276 @@ add_action( 'wp_ajax_deliz_short_sms_checkout_context', 'deliz_short_ajax_sms_ch
 add_action( 'wp_ajax_nopriv_deliz_short_sms_checkout_context', 'deliz_short_ajax_sms_checkout_context' );
 
 
+/**
+ * Whether the customer already chose OCWS shipping / pickup (session + cookie fallback).
+ *
+ * @return bool
+ */
+function deliz_short_sms_flow_has_chosen_shipping() {
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return false;
+	}
+	if ( (bool) WC()->session->get( 'ocws_shipping_popup_confirmed' ) ) {
+		return true;
+	}
+	$methods = WC()->session->get( 'chosen_shipping_methods', array() );
+	if ( is_array( $methods ) && ! empty( $methods[0] ) ) {
+		return true;
+	}
+	$sync = WC()->session->get( 'sync_chosen_shipping_methods', array() );
+	if ( is_array( $sync ) && ! empty( $sync[0] ) ) {
+		return true;
+	}
+	if ( ! empty( $_COOKIE['ocws'] ) ) {
+		$c = json_decode( wp_unslash( $_COOKIE['ocws'] ), true );
+		if ( is_array( $c ) && ! empty( $c['method'] ) && is_string( $c['method'] ) ) {
+			$m = $c['method'];
+			if ( ( function_exists( 'ocws_is_method_id_pickup' ) && ocws_is_method_id_pickup( $m ) )
+				|| ( function_exists( 'ocws_is_method_id_shipping' ) && ocws_is_method_id_shipping( $m ) ) ) {
+				return true;
+			}
+		}
+	}
+	$backup = deliz_short_read_ship_backup_cookie();
+	if ( $backup && ! empty( $backup['patch']['chosen_shipping_methods'][0] ) ) {
+		return true;
+	}
+	return false;
+}
+
+/**
+ * pickup | delivery | none
+ *
+ * @return string
+ */
+function deliz_short_sms_flow_shipping_kind() {
+	list( $method, $src ) = deliz_short_resolve_ocws_shipping_method_for_sms();
+	if ( ! $method ) {
+		return 'none';
+	}
+	if ( function_exists( 'ocws_is_method_id_pickup' ) && ocws_is_method_id_pickup( $method ) ) {
+		return 'pickup';
+	}
+	if ( function_exists( 'ocws_is_method_id_shipping' ) && ocws_is_method_id_shipping( $method ) ) {
+		return 'delivery';
+	}
+	return 'none';
+}
+
+/**
+ * Last customer order suitable for restoring shipping (excludes pending payment & cancelled).
+ *
+ * @param int $user_id User ID.
+ * @return WC_Order|null
+ */
+function deliz_short_get_last_valid_order_for_sms_restore( $user_id ) {
+	$user_id = absint( $user_id );
+	if ( ! $user_id ) {
+		return null;
+	}
+	$orders = wc_get_orders(
+		array(
+			'customer_id' => $user_id,
+			'limit'       => 1,
+			'orderby'     => 'date',
+			'order'       => 'DESC',
+			'status'      => array( 'processing', 'completed', 'on-hold' ),
+		)
+	);
+	if ( empty( $orders[0] ) || ! $orders[0] instanceof WC_Order ) {
+		return null;
+	}
+	return $orders[0];
+}
+
+/**
+ * After session patch from last order: set earliest available slot (delivery or pickup).
+ *
+ * @return bool True if a slot was applied.
+ */
+function deliz_short_session_set_closest_ocws_slot() {
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return false;
+	}
+	$chosen = WC()->session->get( 'chosen_shipping_methods', array() );
+	if ( ! is_array( $chosen ) || empty( $chosen[0] ) ) {
+		return false;
+	}
+	$mid = $chosen[0];
+	$cd  = WC()->session->get( 'checkout_data', array() );
+	if ( ! is_array( $cd ) ) {
+		$cd = array();
+	}
+
+	if ( function_exists( 'ocws_is_method_id_shipping' ) && ocws_is_method_id_shipping( $mid ) ) {
+		$post_data = $cd;
+		if ( empty( $post_data['billing_city'] ) ) {
+			$post_data['billing_city'] = WC()->session->get( 'chosen_shipping_city', '' );
+		}
+		if ( empty( $post_data['billing_city_code'] ) && ! empty( $cd['billing_city_code'] ) ) {
+			$post_data['billing_city_code'] = $cd['billing_city_code'];
+		}
+		if ( empty( $post_data['billing_address_coords'] ) && ! empty( $cd['billing_address_coords'] ) ) {
+			$post_data['billing_address_coords'] = $cd['billing_address_coords'];
+		}
+		$location_code = 0;
+		if ( function_exists( 'ocws_use_google_cities_and_polygons' ) && ocws_use_google_cities_and_polygons() && class_exists( 'OC_Woo_Shipping_Polygon' ) ) {
+			$location_code = OC_Woo_Shipping_Polygon::get_location_code_by_post_data_network( $post_data );
+		} else {
+			$location_code = isset( $post_data['billing_city'] ) ? $post_data['billing_city'] : WC()->session->get( 'chosen_shipping_city', '' );
+		}
+		if ( ! $location_code || ! function_exists( 'ocws_is_location_enabled' ) || ! ocws_is_location_enabled( $location_code ) ) {
+			return false;
+		}
+		if ( ! class_exists( 'OC_Woo_Shipping_Slots' ) ) {
+			return false;
+		}
+		$oc_slots = new OC_Woo_Shipping_Slots( $location_code );
+		$days     = $oc_slots->calculate_slots_for_checkout();
+		foreach ( $days as $day ) {
+			if ( empty( $day['slots'] ) ) {
+				continue;
+			}
+			$slot = $day['slots'][0];
+			$info = array(
+				'date'       => $day['formatted_date'],
+				'slot_start' => $slot['start'],
+				'slot_end'   => $slot['end'],
+			);
+			OC_Woo_Shipping_Info::save_shipping_info( $info );
+			ocws_update_session_checkout_field( 'order_expedition_date', $info['date'] );
+			ocws_update_session_checkout_field( 'order_expedition_slot_start', $info['slot_start'] );
+			ocws_update_session_checkout_field( 'order_expedition_slot_end', $info['slot_end'] );
+			if ( WC()->cart ) {
+				WC()->cart->calculate_shipping();
+				WC()->cart->calculate_totals();
+			}
+			return true;
+		}
+		return false;
+	}
+
+	if ( function_exists( 'ocws_is_method_id_pickup' ) && ocws_is_method_id_pickup( $mid ) ) {
+		$aff = WC()->session->get( 'chosen_pickup_aff' );
+		if ( ! $aff && ! empty( $cd['ocws_lp_pickup_aff_id'] ) ) {
+			$aff = $cd['ocws_lp_pickup_aff_id'];
+		}
+		$aff = absint( $aff );
+		if ( ! $aff || ! class_exists( 'OCWS_LP_Pickup_Slots' ) ) {
+			return false;
+		}
+		$oc_slots = new OCWS_LP_Pickup_Slots( $aff );
+		$days     = $oc_slots->calculate_slots_for_checkout();
+		foreach ( $days as $day ) {
+			if ( empty( $day['slots'] ) ) {
+				continue;
+			}
+			$slot = $day['slots'][0];
+			$aff_name = '';
+			if ( class_exists( 'OCWS_LP_Affiliates' ) ) {
+				$ads = new OCWS_LP_Affiliates();
+				$aff_name = $ads->get_affiliate_name( $aff );
+			}
+			$pickup_info = array(
+				'aff_id'     => $aff,
+				'aff_name'   => $aff_name,
+				'date'       => $day['formatted_date'],
+				'slot_start' => $slot['start'],
+				'slot_end'   => $slot['end'],
+			);
+			OCWS_LP_Pickup_Info::save_pickup_info( $pickup_info );
+			ocws_update_session_checkout_field( 'ocws_lp_pickup_aff_id', $aff );
+			ocws_update_session_checkout_field( 'ocws_lp_pickup_date', $pickup_info['date'] );
+			ocws_update_session_checkout_field( 'ocws_lp_pickup_slot_start', $pickup_info['slot_start'] );
+			ocws_update_session_checkout_field( 'ocws_lp_pickup_slot_end', $pickup_info['slot_end'] );
+			if ( WC()->cart ) {
+				WC()->cart->calculate_shipping();
+				WC()->cart->calculate_totals();
+			}
+			return true;
+		}
+		return false;
+	}
+
+	return false;
+}
+
+/**
+ * Existing customer after SMS: restore last order shipping + closest slot if nothing was chosen yet.
+ */
+function deliz_short_ajax_sms_post_existing_restore() {
+	check_ajax_referer( 'oc_sms_auth', 'nonce' );
+	if ( ! is_user_logged_in() || ! function_exists( 'WC' ) || ! WC()->session ) {
+		wp_send_json_error( array( 'message' => __( 'לא מחובר', 'deliz-short' ) ) );
+	}
+	if ( deliz_short_sms_flow_has_chosen_shipping() ) {
+		wp_send_json_success(
+			array(
+				'did_restore' => false,
+				'reason'      => 'already_chosen',
+			)
+		);
+	}
+	$order = deliz_short_get_last_valid_order_for_sms_restore( get_current_user_id() );
+	if ( ! $order ) {
+		wp_send_json_success(
+			array(
+				'did_restore' => false,
+				'reason'      => 'no_order',
+			)
+		);
+	}
+	$patch = deliz_short_build_ship_patch_from_order( $order );
+	if ( ! $patch ) {
+		wp_send_json_success(
+			array(
+				'did_restore' => false,
+				'reason'      => 'no_patch',
+			)
+		);
+	}
+	deliz_short_apply_ship_patch( $patch );
+	deliz_short_write_ship_backup_cookie( $patch );
+	deliz_short_session_set_closest_ocws_slot();
+	WC()->session->save_data();
+	wp_send_json_success(
+		array(
+			'did_restore' => true,
+			'reason'      => 'restored',
+		)
+	);
+}
+
+add_action( 'wp_ajax_deliz_short_sms_post_existing_restore', 'deliz_short_ajax_sms_post_existing_restore' );
+add_action( 'wp_ajax_nopriv_deliz_short_sms_post_existing_restore', 'deliz_short_ajax_sms_post_existing_restore' );
+
+
+/**
+ * Extended SMS checkout context (shipping flags for new wizard).
+ */
+function deliz_short_ajax_sms_flow_full_context() {
+	check_ajax_referer( 'oc_sms_auth', 'nonce' );
+	$delivery = function_exists( 'deliz_short_checkout_sms_delivery_extra_for_localize' )
+		? deliz_short_checkout_sms_delivery_extra_for_localize()
+		: array(
+			'show_delivery_extra'   => false,
+			'shipping_intro_html'   => '',
+			'delivery_address_line' => '',
+		);
+	wp_send_json_success(
+		array(
+			'show_delivery_extra'   => ! empty( $delivery['show_delivery_extra'] ),
+			'shipping_intro_html'   => isset( $delivery['shipping_intro_html'] ) ? $delivery['shipping_intro_html'] : '',
+			'shipping_chosen'       => function_exists( 'deliz_short_sms_flow_has_chosen_shipping' ) ? deliz_short_sms_flow_has_chosen_shipping() : false,
+			'shipping_kind'         => function_exists( 'deliz_short_sms_flow_shipping_kind' ) ? deliz_short_sms_flow_shipping_kind() : 'none',
+			'ocws_popup_confirmed'  => ( function_exists( 'WC' ) && WC()->session ) ? (bool) WC()->session->get( 'ocws_shipping_popup_confirmed' ) : false,
+		)
+	);
+}
+
+add_action( 'wp_ajax_deliz_short_sms_flow_full_context', 'deliz_short_ajax_sms_flow_full_context' );
+add_action( 'wp_ajax_nopriv_deliz_short_sms_flow_full_context', 'deliz_short_ajax_sms_flow_full_context' );
+
 
 /**
 

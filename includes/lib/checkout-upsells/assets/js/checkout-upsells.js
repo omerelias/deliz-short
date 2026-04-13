@@ -145,15 +145,30 @@
   }
 
   /**
-   * After upsell step (or when no upsells): SMS for guests, else go to checkout.
+   * After upsell step (or when no upsells): SMS for guests, else OCWS gate then checkout.
+   * OCWS gate must NOT run before upsells/SMS — only when actually proceeding to checkout URL.
    */
   function proceedToCheckoutOrSms(checkoutUrl) {
     if (checkoutUrl) {
-      window.edCheckoutUrl = checkoutUrl;
+      window.edCheckoutUrl = checkoutUrl; 
     }
-    if (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.is_logged_in == 0 &&
-        typeof window.CheckoutSMSFlow !== 'undefined' && typeof window.CheckoutSMSFlow.showPopup === 'function') {
+    var isGuest = typeof oc_sms_auth !== 'undefined' && oc_sms_auth.is_logged_in == 0;
+    if (isGuest && typeof window.CheckoutSMSFlow !== 'undefined' && typeof window.CheckoutSMSFlow.showPopup === 'function') {
       window.CheckoutSMSFlow.showPopup();
+      return;
+    }
+    if (typeof window.delizOcwsCheckoutGateRun === 'function') {
+      window.delizOcwsCheckoutGateRun(function(confirmed) {
+        if (!confirmed) {
+          if (typeof window.delizOpenOcwsDeliveryPopup === 'function') {
+            window.delizOpenOcwsDeliveryPopup();
+          }
+          return;
+        }
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+        }
+      });
       return;
     }
     if (checkoutUrl) {
@@ -448,7 +463,7 @@
       console.log('🔵 Config:', config);
 
       function continueUpsellFlow() {
-        // Upsells first; SMS only after upsell step or when there are no upsells (see proceedToCheckoutOrSms)
+        // Upsells first; SMS / OCWS gate only after upsell step or when there are no upsells (see proceedToCheckoutOrSms)
         $.ajax({
           url: config.ajaxUrl,
           type: 'POST',
@@ -477,19 +492,6 @@
             proceedToCheckoutOrSms(checkoutUrl);
           },
         });
-      }
-
-      if (typeof window.delizOcwsCheckoutGateRun === 'function') {
-        window.delizOcwsCheckoutGateRun(function(confirmed) {
-          if (!confirmed) {
-            if (typeof window.delizOpenOcwsDeliveryPopup === 'function') {
-              window.delizOpenOcwsDeliveryPopup();
-            }
-            return;
-          }
-          continueUpsellFlow();
-        });
-        return false;
       }
 
       continueUpsellFlow();

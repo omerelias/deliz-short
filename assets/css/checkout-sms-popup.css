@@ -286,6 +286,53 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
 
 /* Header login: same modal, only phone + code (hide register + shipping steps) */
 .checkout-sms-popup--header-only .checkout-sms-popup__step--register,
-.checkout-sms-popup--header-only .checkout-sms-popup__step--shipping {
+.checkout-sms-popup--header-only .checkout-sms-popup__step--shipping,
+.checkout-sms-popup--header-only .checkout-sms-popup__step--newuser-wizard,
+.checkout-sms-popup--header-only .checkout-sms-popup__step--how-receive {
     display: none !important;
+}
+
+.checkout-sms-wizard-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 20px;
+    justify-content: center;
+}
+
+.checkout-sms-wizard-tab {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f5f5f5;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: #555;
+}
+
+.checkout-sms-wizard-tab.is-active {
+    background: var(--color-primary, #007bff);
+    color: #fff;
+    border-color: var(--color-primary, #007bff);
+}
+
+.checkout-sms-wizard-panel {
+    display: none;
+}
+
+.checkout-sms-wizard-panel.is-active {
+    display: block;
+}
+
+.checkout-sms-popup__step--newuser-wizard .checkout-sms-wizard-tabs.is-hidden {
+    display: none;
+}
+
+.checkout-sms-how-receive-hint {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    margin: 0 0 16px;
+    line-height: 1.45;
 }

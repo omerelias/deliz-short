@@ -583,6 +583,19 @@ class OC_SMS_Auth {
         update_user_meta($user_id, 'billing_last_name', $last_name);
         update_user_meta($user_id, 'first_name', $first_name);
         update_user_meta($user_id, 'last_name', $last_name);
+
+        $floor = isset($_POST['billing_floor']) ? sanitize_text_field(wp_unslash($_POST['billing_floor'])) : '';
+        $apartment = isset($_POST['billing_apartment']) ? sanitize_text_field(wp_unslash($_POST['billing_apartment'])) : '';
+        $enter_code = isset($_POST['billing_enter_code']) ? sanitize_text_field(wp_unslash($_POST['billing_enter_code'])) : '';
+        if ($floor !== '') {
+            update_user_meta($user_id, 'billing_floor', $floor);
+        }
+        if ($apartment !== '') {
+            update_user_meta($user_id, 'billing_apartment', $apartment);
+        }
+        if ($enter_code !== '') {
+            update_user_meta($user_id, 'billing_enter_code', $enter_code);
+        }
         
         // Log the new user in
         wp_set_auth_cookie($user_id, true);
