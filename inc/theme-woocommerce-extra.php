@@ -1989,6 +1989,36 @@ function deliz_short_checkout_sms_delivery_extra_attach_debug( array $result, ar
 
 
 /**
+ * WC often stores the first calculated OCWS rate in session; that is not the same as the user confirming
+ * the OCWS popup ({@see WC session key ocws_shipping_popup_confirmed} in oc-woo-shipping).
+ *
+ * @param string $method_id Method id.
+ * @param string $source    chosen_shipping_methods|sync_chosen_shipping_methods.
+ * @return bool True when this session entry should be ignored for SMS / wizard resolution.
+ */
+function deliz_short_sms_flow_is_session_ocws_without_popup_confirmation( $method_id, $source ) {
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return false;
+	}
+	if ( (bool) WC()->session->get( 'ocws_shipping_popup_confirmed' ) ) {
+		return false;
+	}
+	$source = (string) $source;
+	if ( 'chosen_shipping_methods' !== $source && 'sync_chosen_shipping_methods' !== $source ) {
+		return false;
+	}
+	$m = (string) $method_id;
+	if ( function_exists( 'ocws_is_method_id_pickup' ) && ocws_is_method_id_pickup( $m ) ) {
+		return true;
+	}
+	if ( function_exists( 'ocws_is_method_id_shipping' ) && ocws_is_method_id_shipping( $m ) ) {
+		return true;
+	}
+	return false;
+}
+
+
+/**
 
  * Resolve OCWS / WC shipping method id for SMS localize when `chosen_shipping_methods` is still empty
 
@@ -2012,7 +2042,13 @@ function deliz_short_resolve_ocws_shipping_method_for_sms() {
 
 	if ( is_array( $methods ) && ! empty( $methods[0] ) ) {
 
-		return array( (string) $methods[0], 'chosen_shipping_methods' );
+		$m = (string) $methods[0];
+
+		if ( ! deliz_short_sms_flow_is_session_ocws_without_popup_confirmation( $m, 'chosen_shipping_methods' ) ) {
+
+			return array( $m, 'chosen_shipping_methods' );
+
+		}
 
 	}
 
@@ -2020,7 +2056,13 @@ function deliz_short_resolve_ocws_shipping_method_for_sms() {
 
 	if ( is_array( $sync ) && ! empty( $sync[0] ) ) {
 
-		return array( (string) $sync[0], 'sync_chosen_shipping_methods' );
+		$m = (string) $sync[0];
+
+		if ( ! deliz_short_sms_flow_is_session_ocws_without_popup_confirmation( $m, 'sync_chosen_shipping_methods' ) ) {
+
+			return array( $m, 'sync_chosen_shipping_methods' );
+
+		}
 
 	}
 
@@ -2490,6 +2532,95 @@ function deliz_short_ajax_sms_checkout_context() {
 add_action( 'wp_ajax_deliz_short_sms_checkout_context', 'deliz_short_ajax_sms_checkout_context' );
 
 add_action( 'wp_ajax_nopriv_deliz_short_sms_checkout_context', 'deliz_short_ajax_sms_checkout_context' );
+ 
+
+/**
+ * Debug: why shipping_chosen / shipping_kind are set (session vs cookies vs backup).
+ * Mirrors the evaluation order of {@see deliz_short_sms_flow_has_chosen_shipping()}.
+ *
+ * @return array<string, mixed>
+ */
+function deliz_short_sms_flow_shipping_debug_context() {
+	$out = array(
+		'shipping_chosen'                      => false,
+		'shipping_chosen_because'              => 'no_wc_session',
+		'shipping_kind'                        => 'none',
+		'resolved_method_id'                   => '',
+		'resolved_method_source'               => '',
+		'ocws_popup_confirmed'                 => false,
+		'session_chosen_shipping_methods'      => array(),
+		'session_sync_chosen_shipping_methods' => array(),
+		'ocws_cookie_method'                   => '',
+		'ocws_cookie_counts_as_chosen'         => false,
+		'backup_patch_method'                  => '',
+		'session_ocws_auto_in_chosen_ignored'  => false,
+	);
+
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return $out;
+	}
+
+	$out['ocws_popup_confirmed']                 = (bool) WC()->session->get( 'ocws_shipping_popup_confirmed' );
+	$chosen                                      = WC()->session->get( 'chosen_shipping_methods', array() );
+	$out['session_chosen_shipping_methods']      = is_array( $chosen ) ? $chosen : array();
+	$sync                                        = WC()->session->get( 'sync_chosen_shipping_methods', array() );
+	$out['session_sync_chosen_shipping_methods'] = is_array( $sync ) ? $sync : array();
+
+	if ( ! empty( $out['session_chosen_shipping_methods'][0] ) && deliz_short_sms_flow_is_session_ocws_without_popup_confirmation( $out['session_chosen_shipping_methods'][0], 'chosen_shipping_methods' ) ) {
+		$out['session_ocws_auto_in_chosen_ignored'] = true;
+	}
+
+	if ( ! empty( $_COOKIE['ocws'] ) ) {
+		$c = json_decode( wp_unslash( $_COOKIE['ocws'] ), true );
+		if ( is_array( $c ) && ! empty( $c['method'] ) && is_string( $c['method'] ) ) {
+			$m = $c['method'];
+			$out['ocws_cookie_method']           = (string) $m;
+			$out['ocws_cookie_counts_as_chosen'] = ( function_exists( 'ocws_is_method_id_pickup' ) && ocws_is_method_id_pickup( $m ) )
+				|| ( function_exists( 'ocws_is_method_id_shipping' ) && ocws_is_method_id_shipping( $m ) );
+		}
+	}
+
+	$backup = deliz_short_read_ship_backup_cookie();
+	if ( $backup && ! empty( $backup['patch']['chosen_shipping_methods'][0] ) ) {
+		$out['backup_patch_method'] = (string) $backup['patch']['chosen_shipping_methods'][0];
+	}
+
+	// Same order as deliz_short_sms_flow_has_chosen_shipping() (OCWS session auto-rate ignored until popup confirmed).
+	if ( $out['ocws_popup_confirmed'] ) {
+		$out['shipping_chosen']         = true;
+		$out['shipping_chosen_because'] = 'ocws_shipping_popup_confirmed';
+	} elseif ( ! empty( $out['session_chosen_shipping_methods'][0] ) ) {
+		if ( ! deliz_short_sms_flow_is_session_ocws_without_popup_confirmation( $out['session_chosen_shipping_methods'][0], 'chosen_shipping_methods' ) ) {
+			$out['shipping_chosen']         = true;
+			$out['shipping_chosen_because'] = 'chosen_shipping_methods';
+		}
+	}
+	if ( ! $out['shipping_chosen'] && ! empty( $out['session_sync_chosen_shipping_methods'][0] ) ) {
+		if ( ! deliz_short_sms_flow_is_session_ocws_without_popup_confirmation( $out['session_sync_chosen_shipping_methods'][0], 'sync_chosen_shipping_methods' ) ) {
+			$out['shipping_chosen']         = true;
+			$out['shipping_chosen_because'] = 'sync_chosen_shipping_methods';
+		}
+	}
+	if ( ! $out['shipping_chosen'] && $out['ocws_cookie_method'] !== '' && $out['ocws_cookie_counts_as_chosen'] ) {
+		$out['shipping_chosen']         = true;
+		$out['shipping_chosen_because'] = 'ocws_cookie';
+	}
+	if ( ! $out['shipping_chosen'] && $out['backup_patch_method'] !== '' ) {
+		$out['shipping_chosen']         = true;
+		$out['shipping_chosen_because'] = 'deliz_ship_backup_cookie';
+	}
+	if ( ! $out['shipping_chosen'] ) {
+		$out['shipping_chosen']         = false;
+		$out['shipping_chosen_because'] = 'none';
+	}
+
+	list( $mid, $src )             = deliz_short_resolve_ocws_shipping_method_for_sms();
+	$out['resolved_method_id']     = $mid ? (string) $mid : '';
+	$out['resolved_method_source'] = $src ? (string) $src : 'none';
+	$out['shipping_kind']          = function_exists( 'deliz_short_sms_flow_shipping_kind' ) ? deliz_short_sms_flow_shipping_kind() : 'none';
+
+	return $out;
+}
 
 
 /**
@@ -2506,11 +2637,15 @@ function deliz_short_sms_flow_has_chosen_shipping() {
 	}
 	$methods = WC()->session->get( 'chosen_shipping_methods', array() );
 	if ( is_array( $methods ) && ! empty( $methods[0] ) ) {
-		return true;
+		if ( ! deliz_short_sms_flow_is_session_ocws_without_popup_confirmation( $methods[0], 'chosen_shipping_methods' ) ) {
+			return true;
+		}
 	}
 	$sync = WC()->session->get( 'sync_chosen_shipping_methods', array() );
 	if ( is_array( $sync ) && ! empty( $sync[0] ) ) {
-		return true;
+		if ( ! deliz_short_sms_flow_is_session_ocws_without_popup_confirmation( $sync[0], 'sync_chosen_shipping_methods' ) ) {
+			return true;
+		}
 	}
 	if ( ! empty( $_COOKIE['ocws'] ) ) {
 		$c = json_decode( wp_unslash( $_COOKIE['ocws'] ), true );
@@ -3034,6 +3169,8 @@ function deliz_short_ajax_sms_flow_full_context() {
 			'shipping_intro_html'   => '',
 			'delivery_address_line' => '',
 		);
+	$ship_debug = function_exists( 'deliz_short_sms_flow_shipping_debug_context' ) ? deliz_short_sms_flow_shipping_debug_context() : array();
+
 	wp_send_json_success(
 		array(
 			'show_delivery_extra'   => ! empty( $delivery['show_delivery_extra'] ),
@@ -3041,6 +3178,7 @@ function deliz_short_ajax_sms_flow_full_context() {
 			'shipping_chosen'       => function_exists( 'deliz_short_sms_flow_has_chosen_shipping' ) ? deliz_short_sms_flow_has_chosen_shipping() : false,
 			'shipping_kind'         => function_exists( 'deliz_short_sms_flow_shipping_kind' ) ? deliz_short_sms_flow_shipping_kind() : 'none',
 			'ocws_popup_confirmed'  => ( function_exists( 'WC' ) && WC()->session ) ? (bool) WC()->session->get( 'ocws_shipping_popup_confirmed' ) : false,
+			'shipping_debug'        => $ship_debug,
 		)
 	);
 }

@@ -336,3 +336,85 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
     margin: 0 0 16px;
     line-height: 1.45;
 }
+
+/* OCWS #choose-shipping embedded in new-user wizard — visible only on "אספקה" tab */
+.checkout-sms-ocws-embed-wrap {
+    margin: 0 0 20px;
+    text-align: right;
+}
+
+.checkout-sms-ocws-embed__title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: #333;
+}
+
+.checkout-sms-ocws-embed-mount {
+    min-height: 120px;
+    border-radius: 10px;
+    overflow: visible;
+}
+
+.checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed {
+    max-width: min(96vw, 720px);
+}
+
+.checkout-sms-ocws-embed-mount .choose-shipping-popup.choose-shipping-popup--embedded-in-sms {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0;
+    opacity: 1 !important;
+    z-index: 1 !important;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.checkout-sms-ocws-embed-mount .choose-shipping-popup--embedded-in-sms .white-overlay {
+    display: none !important;
+}
+
+.checkout-sms-ocws-embed-mount .choose-shipping-popup--embedded-in-sms .inner {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto;
+    transform: none !important;
+}
+
+.checkout-sms-ocws-embed-mount .choose-shipping-popup--embedded-in-sms .inner-wrapper {
+    position: relative !important;
+    top: auto !important;
+    transform: none !important;
+    max-height: min(65vh, 520px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.checkout-sms-ocws-embed-mount .choose-shipping-popup--embedded-in-sms form#choose-shipping {
+    padding: 10px 12px !important;
+}
+
+/* "המשך" בוויזארד משמש כשמירת שיטה — כפתור האישור של OCWS מוסתר ב-embed */
+.checkout-sms-ocws-embed-mount #choose-shipping input[type="submit"] {
+    display: none !important;
+}
+
+/* Google Places: .pac-container נוצר על body — חייב z-index מעל .checkout-sms-popup (9999999999) */
+body.checkout-sms-popup-open .pac-container,
+.checkout-sms-popup .pac-container {
+    z-index: 999000000099999 !important;
+}
+
+.checkout-sms-popup--header-only .checkout-sms-ocws-embed-wrap {
+    display: none !important;
+}

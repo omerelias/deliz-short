@@ -114,6 +114,9 @@ class OC_SMS_Auth {
         add_action('wp_ajax_nopriv_oc_register_user', array($this, 'ajax_register_user'));
         add_action('wp_ajax_oc_register_user', array($this, 'ajax_register_user'));
 
+        add_action('wp_ajax_nopriv_oc_check_register_email', array($this, 'ajax_check_register_email'));
+        add_action('wp_ajax_oc_check_register_email', array($this, 'ajax_check_register_email'));
+
         add_action('wp_ajax_oc_update_shipping_details', array($this, 'ajax_update_shipping_details'));
         add_action('wp_ajax_nopriv_oc_update_shipping_details', array($this, 'ajax_update_shipping_details'));
     }
@@ -522,6 +525,24 @@ class OC_SMS_Auth {
             'success' => false,
             'message' => 'User not found and registration is not allowed'
         );
+    }
+
+    /**
+     * AJAX: בדיקה שהאימייל פנוי לפני מעבר לשלב אספקה בוויזארד (אותה לוגיקה כמו ברישום).
+     */
+    public function ajax_check_register_email() {
+        $email = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
+        if (empty($email) || !is_email($email)) {
+            wp_send_json_error(array(
+                'message' => __('אימייל לא תקין', 'oc-main-theme'),
+            ));
+        }
+        if (email_exists($email)) {
+            wp_send_json_error(array(
+                'message' => __('כתובת האימייל כבר קיימת במערכת', 'oc-main-theme'),
+            ));
+        }
+        wp_send_json_success();
     }
 
     /**

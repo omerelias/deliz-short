@@ -156,10 +156,17 @@ add_action('wp_enqueue_scripts', function() {
     }
 
     // Checkout / header: SMS login popup (guests only; works even with empty cart for header login)
+    $checkout_sms_deps = array( 'jquery' );
+    if ( wp_script_is( 'deliz-ocws-checkout-gate', 'registered' ) ) {
+      $checkout_sms_deps[] = 'deliz-ocws-checkout-gate';
+    }
+    if ( wp_script_is( 'ocws-google-maps-init', 'registered' ) ) {
+      $checkout_sms_deps[] = 'ocws-google-maps-init';
+    }
     wp_enqueue_script(
         'checkout-sms-flow',
         get_template_directory_uri() . '/assets/js/checkout-sms-flow.js',
-        array('jquery'),
+        $checkout_sms_deps,
         DELIZ_SHORT_VERSION,
         true
     );
@@ -178,6 +185,7 @@ add_action('wp_enqueue_scripts', function() {
 
     $shipping_chosen = function_exists( 'deliz_short_sms_flow_has_chosen_shipping' ) ? deliz_short_sms_flow_has_chosen_shipping() : false;
     $shipping_kind   = function_exists( 'deliz_short_sms_flow_shipping_kind' ) ? deliz_short_sms_flow_shipping_kind() : 'none';
+    $shipping_debug  = function_exists( 'deliz_short_sms_flow_shipping_debug_context' ) ? deliz_short_sms_flow_shipping_debug_context() : array();
 
     wp_localize_script('checkout-sms-flow', 'oc_sms_auth', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
@@ -188,6 +196,7 @@ add_action('wp_enqueue_scripts', function() {
         'shipping_intro_html' => isset( $delivery_extra['shipping_intro_html'] ) ? $delivery_extra['shipping_intro_html'] : '',
         'shipping_chosen' => $shipping_chosen,
         'shipping_kind' => $shipping_kind,
+        'shipping_debug' => $shipping_debug,
         'i18n' => array(
             'invalid_phone' => __('מספר טלפון לא תקין', 'deliz-short'),
             'code_sent' => __('קוד נשלח בהצלחה', 'deliz-short'),
@@ -203,6 +212,8 @@ add_action('wp_enqueue_scripts', function() {
             'delivery_complete_title' => __('השלם את פרטי המשלוח', 'deliz-short'),
             'open_shipping_btn' => __('בחרו אופן קבלת ההזמנה', 'deliz-short'),
             'data_verify_title' => __('אימות נתונים', 'deliz-short'),
+            'wizard_need_shipping' => __( 'נא להשלים למעלה את בחירת המשלוח / האיסוף והשעות לפני המשך.', 'deliz-short' ),
+            'wizard_details_required' => __( 'נא למלא שם פרטי, שם משפחה ואימייל לפני מעבר לאספקה.', 'deliz-short' ),
         )
     ));
     

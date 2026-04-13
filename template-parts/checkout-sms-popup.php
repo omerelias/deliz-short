@@ -79,9 +79,16 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
 
             <!-- New customer: tabbed wizard (OCWS shipping_kind) -->
             <div class="checkout-sms-popup__step checkout-sms-popup__step--newuser-wizard">
-                <div class="checkout-sms-wizard-tabs" role="tablist">
+                <div class="checkout-sms-wizard-tabs" role="tablist"> 
                     <button type="button" class="checkout-sms-wizard-tab is-active" data-tab="details" role="tab"><?php echo esc_html__( 'פרטים', 'deliz-short' ); ?></button>
                     <button type="button" class="checkout-sms-wizard-tab" data-tab="supply" role="tab"><?php echo esc_html__( 'אספקה', 'deliz-short' ); ?></button>
+                </div>
+                <?php
+                /* #choose-shipping is a separate <form> — keep this wrap outside .checkout-sms-newuser-wizard-form (no nested forms). Shown only on the "אספקה" tab via JS. */
+                ?>
+                <div id="checkout-sms-ocws-embed-wrap" class="checkout-sms-ocws-embed-wrap" hidden aria-hidden="true">
+                    <p class="checkout-sms-ocws-embed__title"><?php echo esc_html__( 'אופן קבלה ומשלוח', 'deliz-short' ); ?></p>
+                    <div id="checkout-sms-ocws-embed-mount" class="checkout-sms-ocws-embed-mount" aria-live="polite"></div>
                 </div>
                 <form class="checkout-sms-newuser-wizard-form" method="post">
                     <div class="checkout-sms-wizard-panel is-active" data-panel="details">
@@ -99,17 +106,19 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
                         </div>
                     </div>
                     <div class="checkout-sms-wizard-panel" data-panel="supply">
-                        <div class="form-row">
-                            <input type="text" name="billing_floor" class="input-text"
-                                   placeholder="<?php echo esc_attr__( 'קומה', 'deliz-short' ); ?>" />
-                        </div>
-                        <div class="form-row">
-                            <input type="text" name="billing_apartment" class="input-text"
-                                   placeholder="<?php echo esc_attr__( 'דירה', 'deliz-short' ); ?>" />
-                        </div>
-                        <div class="form-row">
-                            <input type="text" name="billing_enter_code" class="input-text"
-                                   placeholder="<?php echo esc_attr__( 'קוד כניסה', 'deliz-short' ); ?>" />
+                        <div class="checkout-sms-supply-floor-fields">
+                            <div class="form-row">
+                                <input type="text" name="billing_floor" class="input-text"
+                                       placeholder="<?php echo esc_attr__( 'קומה', 'deliz-short' ); ?>" />
+                            </div>
+                            <div class="form-row">
+                                <input type="text" name="billing_apartment" class="input-text"
+                                       placeholder="<?php echo esc_attr__( 'דירה', 'deliz-short' ); ?>" />
+                            </div>
+                            <div class="form-row">
+                                <input type="text" name="billing_enter_code" class="input-text"
+                                       placeholder="<?php echo esc_attr__( 'קוד כניסה', 'deliz-short' ); ?>" />
+                            </div>
                         </div>
                     </div>
                     <input type="hidden" name="phone" class="nu-register-phone-input" />
