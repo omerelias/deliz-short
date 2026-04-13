@@ -1506,7 +1506,7 @@
 
                 // OCWS delivery chip (משלוח + מחיר) — השרת שולח div#ocws-delivery-data-chip; חובה להחיל כי לא נכלל ב־#ed-float-cart בנתיב הזה
                 const ocwsChipKey = 'div#ocws-delivery-data-chip';
- 
+
                 if (fragments[ocwsChipKey] && typeof jQuery !== 'undefined') {
 
                     const chipEl = document.querySelector(ocwsChipKey);
