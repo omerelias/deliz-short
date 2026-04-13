@@ -2978,6 +2978,14 @@ body p.other-recipient-field label{
     margin-block-start: 10px;
 }
 
+.delivery-data-chip .cds-data, .checkout-delivery-data-chip .cds-data{
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 0;
+    flex-direction: column;
+    font-size: 14px;
+}
+
 .ed-float-cart__coupon>label{
     font-size: 14px;
     font-weight: 500;
@@ -3054,6 +3062,7 @@ body p.other-recipient-field label{
     margin-top: 10px;
     max-height: 165px;
     overflow: auto;
+    min-height: 125px;
 }
 
 .ocws-day-cards-slider .day-card__slots::-webkit-scrollbar {
