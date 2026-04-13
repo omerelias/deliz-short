@@ -1,12 +1,12 @@
 /* Modern Checkout Blocks - AliExpress Style */
 
-
+body.woocommerce-checkout{
+    background-color: var(--checkout-background,#363636);
+}
 
 body.woocommerce-checkout .top-header,
 
-body.woocommerce-checkout .site-header .ed-ajax-search,
-
-body.woocommerce-checkout .site-header .header-left{
+body.woocommerce-checkout .site-header{
 
     display: none;
 
@@ -51,18 +51,7 @@ body.woocommerce-checkout h1.entry-title{
 
 
 .checkout-block {
-
-
-
-    background: #fff;
-
-
-
-    border: 1px solid #e5e5e5;
-
-
-
-    border-radius: 8px;
+    border-radius: 10px;
 
 
 
@@ -1840,36 +1829,25 @@ ul.woocommerce-SavedPaymentMethods{
 
 .checkout-order-compact {
 
-
-
     display: flex;
-
-
-
     align-items: center;
-
-
-
     flex-wrap: wrap;
-
-
-
     gap: 6px 8px;
-
-
-
     padding: 20px 24px;
-
-
-
     font-size: 16px;
-
     justify-content: space-between;
-
+    background:var(--checkout-block-background,#fff);
 
 
 }
 
+.checkout_logo{
+    text-align: center;
+}
+
+.checkout_logo img{
+    max-width: 138px;
+}
 
 
 .checkout-order-compact .checkout-order-compact__sep{
@@ -2002,6 +1980,10 @@ ul.woocommerce-SavedPaymentMethods{
 
     padding: 20px 24px 24px;
 
+    background:var(--checkout-block-background,#fff);
+    margin-block-start: 25px;
+    border-radius: 10px 10px 0 0;
+
 
 
 }
@@ -2088,25 +2070,13 @@ ul.woocommerce-SavedPaymentMethods{
 
 .checkout-order-summary {
 
-
-
     padding: 0 24px 16px;
-
-
-
     display: flex;
-
-
-
     flex-direction: column;
-
-
-
     gap: 8px;
-
-
-
     font-size: 14px;
+    background:var(--checkout-block-background,#fff);
+    border-radius: 0 0 10px 10px;
 
 
 

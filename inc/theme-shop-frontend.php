@@ -182,3 +182,19 @@ function deliz_short_ajax_ocws_shipping_status() {
 }
 add_action( 'wp_ajax_deliz_ocws_shipping_status', 'deliz_short_ajax_ocws_shipping_status' );
 add_action( 'wp_ajax_nopriv_deliz_ocws_shipping_status', 'deliz_short_ajax_ocws_shipping_status' );
+
+
+add_action(
+	'woocommerce_before_checkout_form',
+	function () {
+      $custom_logo_id = get_theme_mod('custom_logo');      
+      $site_name = get_bloginfo('name');
+      $logo = '<a href="' . esc_url(home_url('/')) . '"><img src="' . esc_url(wp_get_attachment_image_url($custom_logo_id, 'full')) . '" alt="' . esc_attr($site_name) . '"></a>';
+      if(get_field('checkout_logo', 'option')){
+        $logo = '<a href="' . esc_url(home_url('/')) . '"><img src="' . esc_url(get_field('checkout_logo', 'option')) . '" alt="' . esc_attr($site_name) . '"></a>';
+      }
+
+      echo '<div class="checkout_logo">"'.$logo.'"</div>';
+	},
+	15
+);

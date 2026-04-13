@@ -3402,6 +3402,7 @@ div#order-email {
         flex: 0 0 75px;
         width: 75px;
         min-width: 75px;
+        margin-block-start: 15px;
    }
 
    .ed-float-cart__items .ed-float-cart__item .ed-float-cart__price{
