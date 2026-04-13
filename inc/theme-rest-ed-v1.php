@@ -389,3 +389,94 @@ add_action( 'rest_api_init', function () {
 		}
 	] );
 } );
+
+/**
+ * ACF Options: product_note_label (הגדרות אתר › site-settings).
+ *
+ * @return \WP_REST_Response
+ */
+function ed_rest_get_product_note_label() {
+	if ( function_exists( 'deliz_short_get_product_note_label' ) ) {
+		$label = deliz_short_get_product_note_label();
+	} else { 
+		$label = __( 'הערה לקצב', 'deliz-short' );
+	}
+
+	return new \WP_REST_Response(
+		[
+			'product_note_label' => $label, 
+		],
+		200
+	);
+}
+
+/**
+ * GET — קריאה (ציבורי). POST — עדכון השדה ב־ACF options (ציבורי; ללא אימות).
+ *
+ * @param \WP_REST_Request $request Request.
+ * @return \WP_REST_Response|\WP_Error
+ */
+function ed_rest_product_note_label_dispatch( $request ) {
+	if ( $request->get_method() === 'POST' ) {
+		$params = $request->get_json_params();
+		if ( ! is_array( $params ) ) {
+			return new \WP_Error(
+				'ed_rest_invalid_json',
+				__( 'Invalid JSON body.', 'deliz-short' ),
+				[ 'status' => 400 ]
+			);
+		}
+		if ( ! array_key_exists( 'product_note_label', $params ) ) {
+			return new \WP_Error(
+				'ed_rest_missing_field',
+				__( 'Missing product_note_label in body.', 'deliz-short' ),
+				[ 'status' => 400 ]
+			);
+		}
+		$raw = $params['product_note_label'];
+		if ( is_array( $raw ) || is_object( $raw ) ) {
+			return new \WP_Error(
+				'ed_rest_invalid_type',
+				__( 'product_note_label must be a string.', 'deliz-short' ),
+				[ 'status' => 400 ]
+			);
+		}
+		$label = sanitize_text_field( wp_unslash( (string) $raw ) );
+
+		if ( ! function_exists( 'update_field' ) ) {
+			return new \WP_Error(
+				'ed_rest_acf_missing',
+				__( 'ACF is not available.', 'deliz-short' ),
+				[ 'status' => 503 ]
+			);
+		}
+
+		update_field( 'product_note_label', $label, 'option' );
+
+		$out = function_exists( 'deliz_short_get_product_note_label' )
+			? deliz_short_get_product_note_label()
+			: $label;
+
+		return new \WP_REST_Response(
+			[
+				'success'            => true,
+				'product_note_label' => $out,
+			],
+			200
+		);
+	}
+
+	return ed_rest_get_product_note_label();
+}
+
+add_action( 'rest_api_init', function () {
+	register_rest_route(
+		'ed/v1',
+		'/product-note-label',
+		[
+			'methods'             => [ WP_REST_Server::READABLE, WP_REST_Server::CREATABLE ],
+			'permission_callback' => '__return_true',
+			'callback'            => 'ed_rest_product_note_label_dispatch',
+		]
+	);
+} );

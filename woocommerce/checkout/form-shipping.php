@@ -210,7 +210,7 @@ $local_pickup_chosen = $chosen_shipping && (
 			<?php endif;?>
 			
 			<!-- Shipping methods display -->
-			<?php if ( WC()->cart->needs_shipping() && WC()->cart->show_shipping() ) : ?> 
+			<?php if ( WC()->cart->needs_shipping() && WC()->cart->show_shipping() ) : ?>
 				<h2 class="entry-title crossed-title">
 					<label>
 						<span><?php esc_html_e( 'איך תרצו לקבל את ההזמנה?', 'deliz-short' ); ?></span>
