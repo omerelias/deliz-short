@@ -538,12 +538,6 @@ if (
 
 					if ($cart->needs_shipping() && $cart->show_shipping() && deliz_short_float_cart_show_shipping_row()) :
 						$running_total += (float) $cart->get_shipping_total();
-						?>
-						<div class="ed-float-cart__row ed-float-cart__row--shipping cart-shipping">
-							<span><?php echo esc_html(deliz_short_get_float_cart_shipping_label()); ?></span>
-							<strong><?php echo wp_kses_post($cart->get_cart_shipping_total()); ?></strong>
-						</div>
-						<?php
 					endif;
 
 					if (!empty($fees)) :
