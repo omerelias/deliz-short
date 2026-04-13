@@ -418,3 +418,62 @@ body.checkout-sms-popup-open .pac-container,
 .checkout-sms-popup--header-only .checkout-sms-ocws-embed-wrap {
     display: none !important;
 }
+
+/* מעבר לצ'קאאוט: מסתיר לגמרי את כל .checkout-sms-popup__content (כולל --ocws-embed וכל מה שבפנים) */
+.checkout-sms-popup--checkout-transition .checkout-sms-popup__content {
+    display: none !important;
+}
+
+.checkout-sms-popup--checkout-transition .checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed {
+    display: none !important;
+}
+
+.checkout-sms-popup--checkout-transition .checkout-sms-popup__close {
+    display: none !important;
+}
+
+/* Loader ככרטיסה באותו מיקום/מידות כמו .checkout-sms-popup__content — לא שכבה על כל המסך */
+.checkout-sms-popup__checkout-loader {
+    display: none;
+    position: relative;
+    z-index: 5000001;
+    pointer-events: auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 40px 30px;
+    max-width: 450px;
+    width: 100%;
+    box-sizing: border-box;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.checkout-sms-popup--checkout-transition .checkout-sms-popup__checkout-loader {
+    display: flex;
+}
+
+.checkout-sms-popup__checkout-loader-spinner {
+    display: block;
+    width: 44px;
+    height: 44px;
+    border: 3px solid #e8e8e8;
+    border-top-color: #3d7a5a;
+    border-radius: 50%;
+    animation: checkout-sms-checkout-spin 0.75s linear infinite;
+}
+
+.checkout-sms-popup__checkout-loader-text {
+    margin: 0;
+    font-size: 16px;
+    color: #444;
+}
+
+@keyframes checkout-sms-checkout-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

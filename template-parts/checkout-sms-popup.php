@@ -161,6 +161,12 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
                 </form>
             </div>
         </div>
+
+        <?php /* מוצג ב-JS בזמן מעבר לצ'קאאוט — מסתיר את כל .checkout-sms-popup__content (כולל OCWS embed) */ ?>
+        <div class="checkout-sms-popup__checkout-loader" id="checkout-sms-checkout-loader" hidden aria-hidden="true">
+            <span class="checkout-sms-popup__checkout-loader-spinner" aria-hidden="true"></span>
+            <p class="checkout-sms-popup__checkout-loader-text"><?php echo esc_html__( 'מעבירים לתשלום…', 'deliz-short' ); ?></p>
+        </div>
     </div>
 </div>
 
