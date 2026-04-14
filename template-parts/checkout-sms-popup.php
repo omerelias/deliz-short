@@ -80,8 +80,8 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
             <!-- New customer: tabbed wizard (OCWS shipping_kind) -->
             <div class="checkout-sms-popup__step checkout-sms-popup__step--newuser-wizard">
                 <div class="checkout-sms-wizard-tabs" role="tablist"> 
-                    <button type="button" class="checkout-sms-wizard-tab is-active" data-tab="details" role="tab"><?php echo esc_html__( 'פרטי המזמין', 'deliz-short' ); ?></button>
-                    <button type="button" class="checkout-sms-wizard-tab" data-tab="supply" role="tab"><?php echo esc_html__( 'שיטת אספקה', 'deliz-short' ); ?></button>
+                    <button type="button" class="checkout-sms-wizard-tab is-active" data-tab="details" role="tab" aria-selected="true" id="checkout-sms-tab-details"><?php echo esc_html__( 'פרטי המזמין', 'deliz-short' ); ?></button>
+                    <button type="button" class="checkout-sms-wizard-tab" data-tab="supply" role="tab" aria-selected="false" id="checkout-sms-tab-supply"><?php echo esc_html__( 'שיטת אספקה', 'deliz-short' ); ?></button>
                 </div>
                 <?php
                 /* #choose-shipping is a separate <form> — keep this wrap outside .checkout-sms-newuser-wizard-form (no nested forms). Shown only on the "אספקה" tab via JS. */

@@ -519,13 +519,27 @@ jQuery(function($) {
             });
         },
 
+        /**
+         * שלב 1 (פרטי מזמין) → is-active. אחרי מעבר לשלב 2: שלב 1 = is-completed (הושלם), שלב 2 = is-active.
+         */
         activateWizardTab: function(tab) {
             CheckoutSMSFlow.showError('newuser-wizard', '');
             const $popup = $('#checkout-sms-popup');
-            $popup.find('.checkout-sms-wizard-tab').removeClass('is-active');
-            $popup.find('.checkout-sms-wizard-tab[data-tab="' + tab + '"]').addClass('is-active');
+            const $detailsTab = $popup.find('.checkout-sms-wizard-tab[data-tab="details"]');
+            const $supplyTab = $popup.find('.checkout-sms-wizard-tab[data-tab="supply"]');
+            $popup.find('.checkout-sms-wizard-tab').removeClass('is-active is-completed');
             $popup.find('.checkout-sms-wizard-panel').removeClass('is-active');
             $popup.find('.checkout-sms-wizard-panel[data-panel="' + tab + '"]').addClass('is-active');
+            if (tab === 'supply') {
+                $detailsTab.addClass('is-completed');
+                $supplyTab.addClass('is-active');
+                $detailsTab.attr('aria-selected', 'false');
+                $supplyTab.attr('aria-selected', 'true');
+            } else {
+                $detailsTab.addClass('is-active');
+                $supplyTab.attr('aria-selected', 'false');
+                $detailsTab.attr('aria-selected', 'true');
+            }
             CheckoutSMSFlow.syncOcwsEmbedTabVisibility();
             CheckoutSMSFlow.syncCheckoutSmsSupplyFloorFieldsVisibility();
             CheckoutSMSFlow.syncNuWizardSubmitButtonLabel();
@@ -961,6 +975,12 @@ jQuery(function($) {
             $popup.find('.checkout-sms-popup__step--phone').addClass('active');
             $popup.find('form')[0]?.reset();
             $popup.find('.checkout-sms-popup__error').empty();
+            $popup.find('.checkout-sms-wizard-tab').removeClass('is-active is-completed');
+            $popup.find('.checkout-sms-wizard-tab[data-tab="details"]').addClass('is-active');
+            $popup.find('.checkout-sms-wizard-tab[data-tab="details"]').attr('aria-selected', 'true');
+            $popup.find('.checkout-sms-wizard-tab[data-tab="supply"]').attr('aria-selected', 'false');
+            $popup.find('.checkout-sms-wizard-panel').removeClass('is-active');
+            $popup.find('.checkout-sms-wizard-panel[data-panel="details"]').addClass('is-active');
             CheckoutSMSFlow.syncNuInvoiceCompanyField();
             CheckoutSMSFlow.syncNuWizardSubmitButtonLabel();
         },

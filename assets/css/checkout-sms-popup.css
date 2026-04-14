@@ -337,6 +337,11 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
     color: #000;
 }
 
+/* שלב 1 הושלם — פס וטקסט כמו פעיל, בלי להיות הטאב הנוכחי (הנוכחי הוא שלב 2) */
+.checkout-sms-wizard-tab.is-completed {
+    color: #000; 
+}
+
 .checkout-sms-wizard-tab:after{
     content:"";
     width:100%;
@@ -354,8 +359,9 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
     border-radius: 0 3px 3px 0;
 }
 
-.checkout-sms-wizard-tab.is-active:after{
-    background-color: var(--color-primary);   
+.checkout-sms-wizard-tab.is-active:after,
+.checkout-sms-wizard-tab.is-completed:after {
+    background-color: var(--color-primary);
 }
 
 .checkout-sms-wizard-panel {
