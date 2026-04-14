@@ -12,6 +12,7 @@ body{
 
 *:not(body)::-webkit-scrollbar {
   width: 5px;
+  height: 0;
 }
 
 *:not(body)::-webkit-scrollbar-track {
@@ -1932,8 +1933,14 @@ form#choose-shipping{
     padding-inline-end: 25px;
 }
 
+.woocommerce form.woocommerce-checkout ul#shipping_method li label>span{
+    position: relative;
+    padding-inline-end: 23px;
+}
+
 .choose-shipping .ship-choose .shipping-method-wraper[class*="shipping_method"] label span.label::before,
-.choose-shipping .ship-choose .shipping-method-wraper[class*="pickup_method"] label span.label::before{
+.choose-shipping .ship-choose .shipping-method-wraper[class*="pickup_method"] label span.label::before,
+.woocommerce form.woocommerce-checkout ul#shipping_method li label>span::before{
     content: "";
     position: absolute;
     inset-inline-end: 0;
@@ -1947,7 +1954,8 @@ form#choose-shipping{
 }
 
 /* shipping_method - default: צבע דינמי אחד */
-.choose-shipping .ship-choose .shipping-method-wraper[class*="shipping_method"] label span.label::before{
+.choose-shipping .ship-choose .shipping-method-wraper[class*="shipping_method"] label span.label::before,
+.woocommerce form.woocommerce-checkout ul#shipping_method li[class*="shipping_method"] label>span::before{
     background-color: var(--color-primary);
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
@@ -1960,7 +1968,8 @@ form#choose-shipping{
 }
 
 /* shipping_method - active: יש כמה צבעים, אז background-image רגיל */
-.choose-shipping .ship-choose .shipping-method-wraper[class*="shipping_method"] label.active span.label::before{
+.choose-shipping .ship-choose .shipping-method-wraper[class*="shipping_method"] label.active span.label::before,
+form.woocommerce-checkout ul#shipping_method li[class*="shipping_method"] input[type="radio"]:checked + label>span::before{
     background-color: transparent;
     -webkit-mask-image: none;
     mask-image: none;
@@ -1968,7 +1977,8 @@ form#choose-shipping{
 }
 
 /* pickup_method - default: צבע דינמי אחד */
-.choose-shipping .ship-choose .shipping-method-wraper[class*="pickup_method"] label span.label::before{
+.choose-shipping .ship-choose .shipping-method-wraper[class*="pickup_method"] label span.label::before,
+.woocommerce form.woocommerce-checkout ul#shipping_method li[class*="pickup_method"] label>span::before{
     background-color: var(--color-primary);
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
@@ -1981,7 +1991,8 @@ form#choose-shipping{
 }
 
 /* pickup_method - active: צבע קשיח */
-.choose-shipping .ship-choose .shipping-method-wraper[class*="pickup_method"] label.active span.label::before{
+.choose-shipping .ship-choose .shipping-method-wraper[class*="pickup_method"] label.active span.label::before,
+form.woocommerce-checkout ul#shipping_method li[class*="pickup_method"] input[type="radio"]:checked + label>span::before{
     background-color: var(--main-text-color);
 
 }
@@ -2143,7 +2154,7 @@ height: 100%;
     margin-top: 10px;
     padding-block-end: 10px;
     background-position: 10px;
-    padding: 14px 16px;
+    padding: 11px 16px;
     border: 1px solid #D9D9D9;
     border-radius: 8px;
     font-size: 15px;
@@ -2203,6 +2214,25 @@ body.rtl.woocommerce-checkout .woocommerce .col2-set .col-1, body.rtl.woocommerc
     line-height: 35px;
     color: #000;
     border-radius: var(--radius);   
+        display: block;
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #908B85;
+    color: #000;
+    font-size: 16px;    
+    outline: none;
+
+    padding-top: 1px;
+    border-radius: 0;
+    padding-block-end: 10px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #D9D9D9;
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+    height: 40px;
 }
 
 .woocommerce-billing-fields__field-wrapper{
@@ -2906,16 +2936,12 @@ div#lastPricePop .modal-dialog.modal-dialog-centered {
 }
 
 .woocommerce form.woocommerce-checkout ul#shipping_method{
-    display: flex;
-    margin-block-start: 20px;
-        justify-content: space-between;
-    gap: 15px;
-        margin-block-end: 30px;
+margin-block-end: 30px;
     margin-top: 0;
     width: 100%;
     max-width: 100%;
     margin-inline: auto;
-    background-color: var(--color-primary-hover);
+    background-color: #F3F3F3;
     border-radius: 100px;
     padding: 5px;
     box-sizing: border-box;
@@ -2939,10 +2965,11 @@ div#lastPricePop .modal-dialog.modal-dialog-centered {
     border: none;
     border-radius: 100px;
     background: transparent;
-    color: var(--main-text-color-hover);
+    color: var(--color-primary);
     box-shadow: none;
     font-size: 16px;
     font-weight: 500;
+    position: relative;
 }
 
 .choose-shipping-popup .ocws-checkout-address-extras-pp{
@@ -3612,5 +3639,72 @@ div#order-email {
     form.woocommerce-checkout button.owl-prev, .choose-shipping-popup button.owl-prev{
         right: -2px;
     }
+    form#choose-shipping .ocws-popup-continue-row.ocws-popup-continue-row--below-min .ocws-popup-min-total-notice{
+        width: 100%
+    }
 }
 
+form#choose-shipping .ocws-popup-continue-row.ocws-popup-continue-row--below-min{
+        background: #F8F8F8;
+    border-radius: 5px;
+    padding: 20px;
+    box-sizing: border-box;
+    flex-direction: row;
+    margin-top: 30px;
+}
+
+form#choose-shipping .ocws-popup-continue-row.ocws-popup-continue-row--below-min .ocws-popup-min-total-notice{
+    text-align: right;
+    width: 72%;
+}
+
+form#choose-shipping .ocws-popup-continue-row.ocws-popup-continue-row--below-min .ocws-popup-min-total-notice .first{
+        font-size: 14px;
+    color: #FF0000;
+    font-weight: 500;
+}
+
+form#choose-shipping .ocws-popup-continue-row.ocws-popup-continue-row--below-min .ocws-popup-min-total-notice .second{
+    margin-top: 4px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+form#choose-shipping .ocws-popup-continue-row.ocws-popup-continue-row--below-min input.green{
+        width: 28%;
+    font-size: 14px;
+}
+
+.delivery-data-chip .cds-min-order-notice, .checkout-delivery-data-chip .cds-min-order-notice{
+        font-size: 14px;
+    line-height: 1.35;
+    color: #FF0505;
+    text-align: right;
+    width: 100%;
+    margin-block-start: 10px;
+}
+
+
+@media (max-width: 700px) {
+    .choose-shipping-popup .inner-wrapper, .redirect-dialog-popup .inner-wrapper{
+        padding-inline: 0;
+        max-width: 100%;
+        padding-block: 25px;
+    }
+
+    .choose-shipping-popup:not(.choose-shipping-popup--embedded-in-sms) header h2{
+        padding-inline: 15px;
+    }
+
+    form.woocommerce-checkout button.owl-next, .choose-shipping-popup button.owl-next{
+        left: -2px;
+    }
+
+    form.woocommerce-checkout button.owl-prev, .choose-shipping-popup button.owl-prev{
+        right: -2px;
+    }
+    form#choose-shipping .ocws-popup-continue-row.ocws-popup-continue-row--below-min .ocws-popup-min-total-notice,
+    form#choose-shipping .ocws-popup-continue-row.ocws-popup-continue-row--below-min input.green{
+        width: 100%
+    }
+}
