@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"C:/Users/User/PhpstormProjects/delizShortNEW/wp-content/themes/deliz-short\" remote -v)",
+      "Bash(git -C \"C:/Users/User/PhpstormProjects/delizShortNEW/wp-content/themes/deliz-short\" log --oneline -5)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://api.github.com/repos/omerelias/deliz-short)"
+    ]
+  }
+}

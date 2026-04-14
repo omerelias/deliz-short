@@ -29,7 +29,7 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
                         <input type="tel" name="phone" class="phone-input" required
                                placeholder="<?php echo esc_attr__('מספר טלפון', 'deliz-short'); ?>" />
                     </div>
-                    <button type="submit" class="button submit-sms"><?php echo esc_html__('שלח קוד', 'deliz-short'); ?></button>
+                    <button type="submit" class="button submit-sms"><?php echo esc_html__('המשך', 'deliz-short'); ?></button>
                     <div class="checkout-sms-popup__error"></div>
                 </form>
             </div>
