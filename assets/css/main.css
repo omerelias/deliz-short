@@ -10,6 +10,20 @@ body{
     font-style: normal;
 }
 
+*:not(body)::-webkit-scrollbar {
+  width: 5px;
+}
+
+*:not(body)::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+*:not(body)::-webkit-scrollbar-thumb {
+  background:#888;
+  border-radius: 10px;
+}
+
 button,input,textarea{
     font-family: "Heebo", sans-serif;
 }
@@ -255,6 +269,20 @@ body.logged-in .site-header .header-user .header-user-inner:before{
 
 .site-header .container > *{
     flex: 0 0 calc(100% / var(--cols));
+}
+
+.ed-product-popup__content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.ed-product-popup__content::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.ed-product-popup__content::-webkit-scrollbar-thumb {
+  background:#888;
+  border-radius: 10px;
 }
 
 /*סליידר ראשי*/
@@ -1823,9 +1851,9 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
 
 .choose-shipping-popup header h2, #shipping-redirect-dialog h3 {
     margin: 0;
-    text-align: center;
-    padding-top: 45px;
-    font-size: 24px;
+    text-align: right;
+    padding-top: 10px;
+    font-size: 20px;
     font-weight: 500;
 }
 
@@ -1864,7 +1892,7 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
     border: none;
     border-radius: 100px;
     background: transparent;
-    color: var(--main-text-color-hover);
+    color: var(--color-primary);
     box-shadow: none;
     font-size: 16px;
     font-weight: 500;
@@ -1878,10 +1906,10 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
 .choose-shipping .ship-choose{
     margin-block-end: 30px;
     margin-top: 0;
-    width: 372px;
+    width: 100%;
     max-width: 100%;
     margin-inline: auto;
-    background-color: var(--color-primary-hover);
+    background-color:#F3F3F3;
     border-radius: 100px;
     padding: 5px;
     box-sizing: border-box;
@@ -1910,7 +1938,7 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
 
 /* shipping_method - default: צבע דינמי אחד */
 .choose-shipping .ship-choose .shipping-method-wraper[class*="shipping_method"] label span.label::before{
-    background-color: var(--main-text-color-hover);
+    background-color: var(--color-primary);
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
     -webkit-mask-size: 16px 16px;
@@ -1931,7 +1959,7 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
 
 /* pickup_method - default: צבע דינמי אחד */
 .choose-shipping .ship-choose .shipping-method-wraper[class*="pickup_method"] label span.label::before{
-    background-color: var(--main-text-color-hover);
+    background-color: var(--color-primary);
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
     -webkit-mask-size: 16px 16px;
@@ -1963,7 +1991,7 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
 }
 
 .ocws-checkout-inputs-pp {
-    margin-top: 25px;
+    margin-top: 5px;
 }
 
 .ocws-checkout-inputs-pp .ocws-checkout-pac-input {
@@ -1975,12 +2003,13 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
     font-size: 16px;
     background-image: url('data:image/svg+xml,<svg width="12" height="16" viewBox="0 0 12 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.20524 0C3.01008 0 0.410645 2.59944 0.410645 5.79456C0.410645 9.75981 5.59624 15.581 5.81702 15.8269C6.02439 16.0579 6.38646 16.0575 6.59346 15.8269C6.81424 15.581 11.9998 9.75981 11.9998 5.79456C11.9998 2.59944 9.40036 0 6.20524 0ZM6.20524 8.70997C4.59768 8.70997 3.28986 7.40212 3.28986 5.79456C3.28986 4.187 4.59771 2.87919 6.20524 2.87919C7.81277 2.87919 9.12058 4.18703 9.12058 5.79459C9.12058 7.40216 7.81277 8.70997 6.20524 8.70997Z" fill="%23908B85"/></svg>');
     background-repeat: no-repeat;
-    background-position: right 6px;
+    background-position: right 10px top 10px;
     outline: none;
     padding-right: 18px;
     padding-top: 1px;
     border-radius: 0;
     padding-block-end: 10px;
+    padding-inline-start: 32px !important;
 }
 
 input,select{
@@ -2046,19 +2075,24 @@ form#choose-shipping #popup-form-messages .error, form#choose-shipping #popup-sh
 }
 
 #popup-shipping-options .shipping-description div{
-    font-size: 24px;
+  font-size: 16px;
+    text-align: right;
 }
 
 .shipping-settings-title, .ocws-days-with-slots-list-label,
 #ocws_lp_pickup_aff_id_field label {
-    font-size: 24px !important;
+font-size: 16px !important;
     font-weight: 500 !important;
-    margin: 40px 0 20px !important;
-    text-align: center !important;
+    margin: 10px 0 15px !important;
+    text-align: right !important;
 }
 
 #ocws_lp_pickup_aff_id_field label{
     margin: 0 !important;
+}
+
+.ocws-days-with-slots-list{
+    margin-inline: -10px;
 }
 
 .shipping-settings-title{
@@ -3090,9 +3124,9 @@ body p.other-recipient-field label{
     background: #FFFFFF;
     border-radius: 8px;
     margin-top: 10px;
-    max-height: 165px;
+    max-height: 80px;
     overflow: auto;
-    min-height: 125px;
+    min-height: 83px;
 }
 
 .ocws-day-cards-slider .day-card__slots::-webkit-scrollbar {
@@ -3100,12 +3134,12 @@ body p.other-recipient-field label{
 }
 
 .ocws-day-cards-slider .day-card__slots::-webkit-scrollbar-track {
-  background: #888;
+  background: transparent;
   border-radius: 10px;
 }
 
 .ocws-day-cards-slider .day-card__slots::-webkit-scrollbar-thumb {
-  background:var(--color-primary);
+  background:#888;
   border-radius: 10px;
 }
 

@@ -42,6 +42,11 @@
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     z-index: 5000000;
     pointer-events: auto;
+    padding-block-end: 10px;
+}
+
+.checkout-sms-popup__content span.checkout-sms-field-hint{
+    font-size: 13px;
 }
 
 /* Override theme `button.default-close-btn` (15×15px + transparent) so the X is visible */
@@ -82,11 +87,11 @@
 }
 
 .checkout-sms-popup__title {
-    font-size: 24px;
+font-size: 21px;
     font-weight: 600;
-    margin: 0 0 30px;
-    text-align: center;
-    color: #333;
+    margin: 0 0 10px;
+    text-align: right;
+    color: #000;
 }
 
 .checkout-sms-popup__subtitle {
@@ -109,16 +114,31 @@
     margin-bottom: 20px;
 }
 
+.checkout-sms-popup .form-row label{
+    display: none;
+}
+
+.checkout-sms-popup .form-row.checkout-sms-labeled-field:nth-of-type(1){
+    float: right;
+    width: 48%;
+}
+
+.checkout-sms-popup .form-row.checkout-sms-labeled-field:nth-of-type(2){
+     float: left;
+    width: 48%;   
+}
+
 .checkout-sms-popup .phone-input,
 .checkout-sms-popup .code-input,
 .checkout-sms-popup .input-text {
     width: 100%;
     padding: 14px 16px;
-    border: 1px solid #ddd;
+    border: 1px solid #D9D9D9;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 13px;
     box-sizing: border-box;
     transition: border-color 0.2s;
+    height: 40px;
 }
 
 .checkout-sms-popup .phone-input:focus,
@@ -204,13 +224,14 @@
 }
 
 .checkout-sms-popup__error .woocommerce-error {
-    background: #fee;
+background: #fee;
     color: #c00;
-    padding: 12px;
+    padding: 11px;
     border-radius: 6px;
     font-size: 14px;
     margin: 0;
     border: 1px solid #fcc;
+    padding-inline-start: 40px;
 }
  
 /* Legacy/cached builds: message was nested inside .woocommerce-error */
@@ -301,20 +322,40 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
 
 .checkout-sms-wizard-tab {
     flex: 1;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
+    padding:0;
+    border: none;
     border-radius: 8px;
-    background: #f5f5f5;
+    background: transparent;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 12px;
     font-weight: 600;
-    color: #555;
+    color: #D9D9D9;
+    text-align: right;
 }
 
 .checkout-sms-wizard-tab.is-active {
-    background: var(--color-primary, #007bff);
-    color: #fff;
-    border-color: var(--color-primary, #007bff);
+    color: #000;
+}
+
+.checkout-sms-wizard-tab:after{
+    content:"";
+    width:100%;
+    height: 7px;
+    background-color: #D9D9D9;
+    display: block;
+    margin-block-start: 4px;
+}
+
+.checkout-sms-wizard-tab[data-tab="supply"]:after{
+    border-radius: 3px 0 0px 3px;
+}
+
+.checkout-sms-wizard-tab[data-tab="details"]:after{
+    border-radius: 0 3px 3px 0;
+}
+
+.checkout-sms-wizard-tab.is-active:after{
+    background-color: var(--color-primary);   
 }
 
 .checkout-sms-wizard-panel {
@@ -323,6 +364,22 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
 
 .checkout-sms-wizard-panel.is-active {
     display: block;
+}
+
+.checkout-sms-wizard-panel h3.checkout-sms-details-heading{
+    font-size: 20px;
+    font-weight: 600;
+    color: #000;
+    margin-block-start: 29px;
+    margin-block-end: 0;
+}
+
+.checkout-sms-wizard-panel p.checkout-sms-details-sub{
+    margin: 0;
+    font-size: 13px;
+    color: #6D6A6A;
+    font-weight: 300;
+        margin-block-end: 25px;
 }
 
 .checkout-sms-popup__step--newuser-wizard .checkout-sms-wizard-tabs.is-hidden {
@@ -339,7 +396,7 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
 
 /* OCWS #choose-shipping embedded in new-user wizard — visible only on "אספקה" tab */
 .checkout-sms-ocws-embed-wrap {
-    margin: 0 0 20px;
+    margin: 0;
     text-align: right;
 }
 
@@ -357,7 +414,12 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
 }
 
 .checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed {
-    max-width: min(96vw, 720px);
+    width: 641px;
+    padding-inline: 104px;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-block: 50px;
+    padding-block-end: 30px;
 }
 
 /* הרשמה + embed בלבד: בלי כותרת ראשית, בלי "אופן קבלה ומשלוח", בלי "אבחר בהמשך"; קומה/דירה/קוד בשליש רוחב */
@@ -440,10 +502,11 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    padding-inline-end: 5px;
 }
 
 .checkout-sms-ocws-embed-mount .choose-shipping-popup--embedded-in-sms form#choose-shipping {
-    padding: 10px 12px !important;
+    padding: 0;
 }
 
 /* ב-embed: שדות קומה/דירה/קוד מהוויזארד מוזזים אחרי #popup-shipping-options — לא מציגים כפילות מ-ocws_render_address_extra_fields_for_popup */
@@ -453,8 +516,8 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
 
 .checkout-sms-ocws-embed-mount #choose-shipping .checkout-sms-supply-floor-fields {
     margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    padding-top: 0px;
+    border-top: none;
     text-align: right;
 }
 
