@@ -201,6 +201,9 @@ jQuery(function($) {
                 }
             }
             this.bindEvents();
+            $(document.body).on('ocws_min_total_continue_sync', function() {
+                CheckoutSMSFlow.syncNuWizardSubmitButtonLabel();
+            });
             $(document.body).on('ocws_cart_fragments_refreshed', function() {
                 if (!$('#checkout-sms-popup').is(':visible')) {
                     return;
@@ -448,7 +451,7 @@ jQuery(function($) {
             return true;
         },
 
-        /** כפתור שליחה משותף: בטאב פרטי מזמין — "המשך לבחירת אספקה"; בטאב שיטת אספקה — "המשך" */
+        /** כפתור שליחה משותף: בטאב פרטי מזמין — "המשך לבחירת אספקה"; בטאב שיטת אספקה — "המשך" או "הוסף עוד מוצרים" כשהעגלה מתחת למינימום למשלוח (OCWS) */
         syncNuWizardSubmitButtonLabel: function() {
             const $btn = $('#checkout-sms-popup .nu-wizard-submit');
             if (!$btn.length) {
@@ -462,9 +465,17 @@ jQuery(function($) {
             const detailsActive = $popup.find('.checkout-sms-wizard-panel[data-panel="details"]').hasClass('is-active');
             if (detailsActive) {
                 $btn.text(i18n.wizard_continue_to_supply || 'המשך לבחירת אספקה');
-            } else {
-                $btn.text(i18n.wizard_continue || 'המשך');
+                return;
             }
+            const belowMin = typeof window.ocwsMinTotalBelowMin !== 'undefined' && window.ocwsMinTotalBelowMin;
+            if (belowMin) {
+                const addLbl = (typeof ocws !== 'undefined' && ocws.localize && ocws.localize.messages && ocws.localize.messages.addMoreProductsContinue)
+                    ? ocws.localize.messages.addMoreProductsContinue
+                    : 'הוסף עוד מוצרים';
+                $btn.text(addLbl);
+                return;
+            }
+            $btn.text(i18n.wizard_continue || 'המשך');
         },
 
         syncNuInvoiceCompanyField: function() {
@@ -646,7 +657,11 @@ jQuery(function($) {
             CheckoutSMSFlow._wizardOcwsRegisterStarted = false;
             $button.prop('disabled', true).addClass('disabled');
             CheckoutSMSFlow.clearWizardErrorIfContainerExists();
-            $('#choose-shipping').trigger('submit');
+            if (typeof window.ocwsSubmitChooseShippingWhenReady === 'function') {
+                window.ocwsSubmitChooseShippingWhenReady();
+            } else {
+                $('#choose-shipping').trigger('submit');
+            }
 
             var attempts = 0;
             var maxAttempts = 45;
