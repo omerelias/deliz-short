@@ -25,6 +25,8 @@ class Deliz_Short_Theme_Updater {
 		add_filter( 'pre_set_site_transient_update_themes', [ $this, 'check_for_update' ] );
 		add_filter( 'upgrader_source_selection',            [ $this, 'fix_source_dir' ], 10, 4 );
 		add_action( 'upgrader_process_complete',            [ $this, 'flush_cache' ], 10, 2 );
+		add_action( 'admin_post_deliz_short_force_check',   [ $this, 'handle_force_check' ] );
+		add_action( 'admin_notices',                        [ $this, 'render_check_button' ] );
 	}
 
 	/**
@@ -69,9 +71,15 @@ class Deliz_Short_Theme_Updater {
 	 * @return array|false ['tag' => string, 'zip' => string]
 	 */
 	private function get_remote_release() {
-		$cached = get_site_transient( self::CACHE_KEY );
-		if ( is_array( $cached ) ) {
-			return $cached;
+		// When WP's native "Check Again" button is clicked (or our custom button),
+		// bypass our local cache so the admin gets a truly fresh answer.
+		$force = ! empty( $_GET['force-check'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( ! $force ) {
+			$cached = get_site_transient( self::CACHE_KEY );
+			if ( is_array( $cached ) ) {
+				return $cached;
+			}
 		}
 
 		$api = sprintf(
@@ -161,6 +169,74 @@ class Deliz_Short_Theme_Updater {
 			return;
 		}
 		delete_site_transient( self::CACHE_KEY );
+	}
+
+	/**
+	 * Handle the dedicated "Check now" button: clear our cache + the WP
+	 * theme-update transient, then bounce back to the updates page where
+	 * WP will immediately re-run the check and show the result.
+	 */
+	public function handle_force_check() {
+		if ( ! current_user_can( 'update_themes' ) ) {
+			wp_die( esc_html__( 'Not allowed.', 'deliz-short' ) );
+		}
+		check_admin_referer( 'deliz_short_force_check' );
+
+		delete_site_transient( self::CACHE_KEY );
+		delete_site_transient( 'update_themes' );
+
+		wp_safe_redirect( add_query_arg(
+			[ 'deliz_short_checked' => '1' ],
+			self_admin_url( 'update-core.php?force-check=1' )
+		) );
+		exit;
+	}
+
+	/**
+	 * Show a notice with a "Check deliz-short updates now" button on the
+	 * updates screen only. Also shows installed vs. latest-seen versions
+	 * for quick sanity checks.
+	 */
+	public function render_check_button() {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || $screen->id !== 'update-core' ) {
+			return;
+		}
+		if ( ! current_user_can( 'update_themes' ) ) {
+			return;
+		}
+
+		$theme         = wp_get_theme( self::THEME_SLUG );
+		$installed_ver = $theme->exists() ? $theme->get( 'Version' ) : '—';
+		$cached        = get_site_transient( self::CACHE_KEY );
+		$remote_ver    = ( is_array( $cached ) && ! empty( $cached['tag'] ) )
+			? ltrim( $cached['tag'], 'vV' )
+			: __( 'לא נבדק עדיין', 'deliz-short' );
+
+		$url = wp_nonce_url(
+			admin_url( 'admin-post.php?action=deliz_short_force_check' ),
+			'deliz_short_force_check'
+		);
+
+		$just_checked = ! empty( $_GET['deliz_short_checked'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		?>
+		<div class="notice notice-info" style="padding:14px 18px;">
+			<h3 style="margin:0 0 6px;">תבנית deliz-short - בדיקת עדכונים מ-GitHub</h3>
+			<p style="margin:4px 0;">
+				<strong>גרסה מותקנת:</strong> <?php echo esc_html( $installed_ver ); ?>
+				&nbsp;|&nbsp;
+				<strong>גרסה אחרונה ב-GitHub (מה-cache):</strong> <?php echo esc_html( $remote_ver ); ?>
+			</p>
+			<p style="margin:10px 0 0;">
+				<a href="<?php echo esc_url( $url ); ?>" class="button button-primary">
+					בדוק עדכונים עכשיו
+				</a>
+				<?php if ( $just_checked ) : ?>
+					<span style="color:#1d7c2a;margin-inline-start:10px;">✓ נבדק ונוקה cache. אם יש גרסה חדשה היא תופיע מתחת.</span>
+				<?php endif; ?>
+			</p>
+		</div>
+		<?php
 	}
 }
 
