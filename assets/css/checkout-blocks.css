@@ -2406,7 +2406,7 @@ ul.woocommerce-SavedPaymentMethods{
 
 }
 
-.woocommerce .checkout-block .woocommerce-billing-fields__field-wrapper .form-row{
+.woocommerce .checkout-block .woocommerce-billing-fields__field-wrapper.billing-fields-shipping-data-1 .form-row{
         flex: 0 0 calc(33.33333% - 9px);
     width: 33.333%;
 }
@@ -2415,7 +2415,7 @@ ul.woocommerce-SavedPaymentMethods{
     font-size: 13px;
 }
 
-.woocommerce .checkout-block .woocommerce-billing-fields__field-wrapper .form-row#billing_google_autocomplete_field{
+.woocommerce .checkout-block .woocommerce-billing-fields__field-wrapper.billing-fields-shipping-data-1 .form-row#billing_google_autocomplete_field{
     width: 100%;
     flex: 100%;
 }
@@ -2881,7 +2881,9 @@ body.rtl .checkout-block__icon {
 
 @media (max-width: 768px) {
 
-
+    #checkout-block-popup--billing .checkout-block-popup__container{
+        padding-block-start: 30px !important;
+    }
 
     .woocommerce-checkout #payment ul.payment_methods > li.payment_method_cardcom{
 
