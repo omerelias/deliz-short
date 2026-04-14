@@ -2377,6 +2377,21 @@ form.woocommerce-checkout .ocws-days-with-slots-list-label{
     cursor: pointer;
 }
 
+.delivery-data-chip button.cds-button-change.cds-chip-supply-prompt{
+    background: transparent;
+    color: #000;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 0;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+.delivery-data-chip button.cds-button-change.cds-chip-supply-prompt:hover,
+.delivery-data-chip button.cds-button-change.cds-chip-supply-prompt:focus-visible{
+    text-decoration: underline;
+}
+
 #oc-woo-pickup-additional .slot-message{
     margin-block-end: 20px;
     font-size: 16px;
