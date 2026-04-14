@@ -106,6 +106,8 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
                         </div>
                     </div>
                     <div class="checkout-sms-wizard-panel" data-panel="supply">
+                        <?php /* anchor for JS: restore .checkout-sms-supply-floor-fields after embed unmount */ ?>
+                        <div id="checkout-sms-supply-floor-placeholder" class="checkout-sms-supply-floor-placeholder" aria-hidden="true"></div>
                         <div class="checkout-sms-supply-floor-fields">
                             <div class="form-row">
                                 <input type="text" name="billing_floor" class="input-text"

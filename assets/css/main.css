@@ -473,6 +473,22 @@ flex: 0 0 435px;
     border-radius: 50%;
 }
 
+.ed-category-mood--demo{
+    margin-block-end: 16px;
+    border-radius: var(--radius, 8px);
+    overflow: hidden;
+    max-height: 200px;
+    background: #f0f0f0;
+}
+
+.ed-category-mood--demo img{
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+}
+
 .center-column .ed-mp-products-wrap h2.ed-mp__title{
     margin-block-start: 0;
 }

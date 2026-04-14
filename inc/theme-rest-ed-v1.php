@@ -128,7 +128,7 @@ function ed_rest_get_products_html( \WP_REST_Request $req ) {
 
 	$response_data = [
 		'term' => [
-			'slug'   => $slug,
+			'slug'   => $term->slug,
 			'name'   => $term->name,
 			'parent' => (int) $term->parent,
 		],

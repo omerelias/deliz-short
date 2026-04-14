@@ -63,6 +63,52 @@ jQuery(function($) {
             log('wrap activated; calling syncOcwsEmbedTabVisibility (אספקה tab must be active to show)');
             CheckoutSMSFlow.syncOcwsEmbedTabVisibility();
             CheckoutSMSFlow.syncCheckoutSmsSupplyFloorFieldsVisibility();
+            CheckoutSMSFlow.relocateSupplyFloorFieldsAfterShippingOptions();
+        },
+
+        /**
+         * קומה/דירה/קוד — מקור יחיד לעומת .ocws-checkout-address-extras-pp (מוסתר ב-CSS ב-embed).
+         * ממוקם אחרי #popup-shipping-options בתוך #choose-shipping כדי להישלח עם submit של OCWS (סשן צ'קאאוט) ולשמור ערכים לפני הרישום.
+         */
+        relocateSupplyFloorFieldsAfterShippingOptions: function() {
+            if (CheckoutSMSFlow.headerSmsMode) {
+                return;
+            }
+            const $floor = $('#checkout-sms-popup .checkout-sms-supply-floor-fields').first();
+            const $opts = $('#choose-shipping #popup-shipping-options').first();
+            if (!$floor.length || !$opts.length) {
+                return;
+            }
+            if ($floor.prev()[0] === $opts[0]) {
+                $floor.attr('data-deliz-floor-embedded', '1');
+                return;
+            }
+            $floor.insertAfter($opts);
+            $floor.attr('data-deliz-floor-embedded', '1');
+        },
+
+        /** להחזיר לוויזארד לפני סגירת פופאב — לא לקרוא מ-unmount לפני submit של #choose-shipping (השדות חייבים להישאר בטופס). */
+        restoreSupplyFloorFieldsToWizard: function() {
+            const $floor = $('.checkout-sms-supply-floor-fields[data-deliz-floor-embedded="1"]').first();
+            const $ph = $('#checkout-sms-supply-floor-placeholder');
+            if (!$floor.length || !$ph.length) {
+                return;
+            }
+            $floor.insertAfter($ph);
+            $floor.removeAttr('data-deliz-floor-embedded');
+        },
+
+        /** ערכי קומה/דירה/קוד בין אם השדות בטופס הוויזארד ובין אם הוזזו ל-#choose-shipping */
+        getNewUserWizardBillingExtras: function() {
+            const $box = $('.checkout-sms-supply-floor-fields').first();
+            if (!$box.length) {
+                return { billing_floor: '', billing_apartment: '', billing_enter_code: '' };
+            }
+            return {
+                billing_floor: String($box.find('[name="billing_floor"]').val() || '').trim(),
+                billing_apartment: String($box.find('[name="billing_apartment"]').val() || '').trim(),
+                billing_enter_code: String($box.find('[name="billing_enter_code"]').val() || '').trim()
+            };
         },
 
         unmountOcwsFromWizard: function() {
@@ -607,14 +653,15 @@ jQuery(function($) {
                 return;
             }
 
+            const billingExtras = CheckoutSMSFlow.getNewUserWizardBillingExtras();
             const formData = {
                 first_name: $form.find('.nu-first-name').val(),
                 last_name: $form.find('.nu-last-name').val(),
                 email: $form.find('.nu-email').val(),
                 phone: $form.find('.nu-register-phone-input').val(),
-                billing_floor: $form.find('[name="billing_floor"]').val(),
-                billing_apartment: $form.find('[name="billing_apartment"]').val(),
-                billing_enter_code: $form.find('[name="billing_enter_code"]').val()
+                billing_floor: billingExtras.billing_floor,
+                billing_apartment: billingExtras.billing_apartment,
+                billing_enter_code: billingExtras.billing_enter_code
             };
 
             const skPre = (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.shipping_kind) ? oc_sms_auth.shipping_kind : 'none';
@@ -714,6 +761,7 @@ jQuery(function($) {
             $('#checkout-sms-popup').removeClass('checkout-sms-popup--header-only');
             const $popup = $('#checkout-sms-popup');
             CheckoutSMSFlow.hideCheckoutNavigationLoader();
+            CheckoutSMSFlow.restoreSupplyFloorFieldsToWizard();
             CheckoutSMSFlow.unmountOcwsFromWizard();
             $popup.fadeOut(300);
             $('body').removeClass('checkout-sms-popup-open');
@@ -769,6 +817,7 @@ jQuery(function($) {
                 clearInterval(CheckoutSMSFlow.ocwsWaitPoll);
                 CheckoutSMSFlow.ocwsWaitPoll = null;
             }
+            CheckoutSMSFlow.restoreSupplyFloorFieldsToWizard();
             CheckoutSMSFlow.unmountOcwsFromWizard();
             $('.choose-shipping-popup').removeClass('shown');
             $('body').css('overflow', '');
@@ -808,6 +857,9 @@ jQuery(function($) {
                 clearInterval(CheckoutSMSFlow.ocwsWaitPoll);
                 CheckoutSMSFlow.ocwsWaitPoll = null;
             }
+            if ($('#checkout-sms-popup .checkout-sms-popup__container').length) {
+                CheckoutSMSFlow.restoreSupplyFloorFieldsToWizard();
+            }
             CheckoutSMSFlow.unmountOcwsFromWizard();
             $('.choose-shipping-popup').removeClass('shown');
             $('body').css('overflow', '');
@@ -841,6 +893,7 @@ jQuery(function($) {
             if (!$popup.find('.checkout-sms-popup__container').length) {
                 return;
             }
+            CheckoutSMSFlow.restoreSupplyFloorFieldsToWizard();
             CheckoutSMSFlow.unmountOcwsFromWizard();
             $popup.find('.checkout-sms-popup__step').removeClass('active');
             $popup.find('.checkout-sms-popup__step--phone').addClass('active');

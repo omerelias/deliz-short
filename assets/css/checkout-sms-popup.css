@@ -360,6 +360,48 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
     max-width: min(96vw, 720px);
 }
 
+/* הרשמה + embed בלבד: בלי כותרת ראשית, בלי "אופן קבלה ומשלוח", בלי "אבחר בהמשך"; קומה/דירה/קוד בשליש רוחב */
+.checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed .checkout-sms-popup__title--main,
+.checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed .checkout-sms-ocws-embed__title {
+    display: none !important;
+}
+
+.checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed .ocws-popup-dismiss {
+    display: none !important;
+}
+
+.checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed .checkout-sms-supply-floor-fields {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: flex-end;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed .checkout-sms-supply-floor-fields .form-row {
+    flex: 1 1 33.333%;
+    min-width: 0;
+    margin-bottom: 0 !important;
+}
+
+.checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed .checkout-sms-supply-floor-fields .input-text {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 520px) {
+    .checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed .checkout-sms-supply-floor-fields {
+        flex-wrap: wrap;
+    }
+
+    .checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed .checkout-sms-supply-floor-fields .form-row {
+        flex: 1 1 calc(33.333% - 6px);
+        min-width: calc(33.333% - 6px);
+    }
+}
+
 .checkout-sms-ocws-embed-mount .choose-shipping-popup.choose-shipping-popup--embedded-in-sms {
     position: relative !important;
     top: auto !important;
@@ -394,7 +436,7 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
     position: relative !important;
     top: auto !important;
     transform: none !important;
-    max-height: min(65vh, 520px);
+    max-height: min(65vh, 520px); 
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
@@ -402,6 +444,22 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
 
 .checkout-sms-ocws-embed-mount .choose-shipping-popup--embedded-in-sms form#choose-shipping {
     padding: 10px 12px !important;
+}
+
+/* ב-embed: שדות קומה/דירה/קוד מהוויזארד מוזזים אחרי #popup-shipping-options — לא מציגים כפילות מ-ocws_render_address_extra_fields_for_popup */
+.choose-shipping-popup--embedded-in-sms .ocws-checkout-address-extras-pp {
+    display: none !important;
+}
+
+.checkout-sms-ocws-embed-mount #choose-shipping .checkout-sms-supply-floor-fields {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    text-align: right;
+}
+
+.checkout-sms-supply-floor-placeholder:empty {
+    display: none;
 }
 
 /* "המשך" בוויזארד משמש כשמירת שיטה — כפתור האישור של OCWS מוסתר ב-embed */

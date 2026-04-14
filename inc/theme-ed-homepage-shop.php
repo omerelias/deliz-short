@@ -6,6 +6,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * דמו: תמונת אווירה מעל רשת המוצרים (מפת URL לפי slug).
+ * כיבוי מרוכז — בלי להשאיר הערות על עשרות שורות:
+ *   define( 'DELIZ_ED_CATEGORY_MOOD_DEMO', false ); // ב-wp-config.php לפני require wp-settings
+ * או: add_filter( 'deliz_ed_category_mood_demo_enabled', '__return_false' );
+ */
+if ( ! defined( 'DELIZ_ED_CATEGORY_MOOD_DEMO' ) ) {
+	define( 'DELIZ_ED_CATEGORY_MOOD_DEMO', false );
+}
+
+/**
+ * @return bool
+ */
+function deliz_ed_category_mood_demo_enabled() {
+	return (bool) apply_filters( 'deliz_ed_category_mood_demo_enabled', DELIZ_ED_CATEGORY_MOOD_DEMO );
+}
+
 //main slider
 add_shortcode('ed_main_slider', function () {
   if ( ! have_rows('slider_settings', 'option') ) return '';
@@ -170,6 +187,29 @@ add_shortcode('ed_menu_sidebar', function ($atts) {
   $page_url = get_permalink();
   $default_slug = $cats[0]['slug'];
 
+  $category_mood_demo = [];
+  if ( deliz_ed_category_mood_demo_enabled() ) {
+    // דמו: תמונות אווירה לשלוש קטגוריות המוצר הראשונות בתפריט — לא כולל rebuy
+    $mood_demo_urls = [
+      'https://deliz-short.mywebsite.co.il/wp-content/uploads/2026/04/Gemini_Generated_Image_c4f0w1c4f0w1c4f0-1.png',
+      'https://deliz-short.mywebsite.co.il/wp-content/uploads/2026/04/Gemini_Generated_Image_c4f0w1c4f0w1c4f0-1.png',
+      'https://deliz-short.mywebsite.co.il/wp-content/uploads/2026/04/Gemini_Generated_Image_c4f0w1c4f0w1c4f0-1.png',
+    ];
+    $mood_i = 0;
+    foreach ( $cats as $c ) {
+      if ( ( $c['slug'] ?? '' ) === 'rebuy' ) {
+        continue;
+      }
+      if ( $mood_i >= 3 ) {
+        break;
+      }
+      if ( ! empty( $c['slug'] ) && isset( $mood_demo_urls[ $mood_i ] ) ) {
+        $category_mood_demo[ (string) $c['slug'] ] = $mood_demo_urls[ $mood_i ];
+        $mood_i++;
+      }
+    }
+  }
+
   // enqueue shared JS once
   wp_register_script('ed-menu-products', false, [], null, true);
   wp_enqueue_script('ed-menu-products');
@@ -192,7 +232,15 @@ $config = [
   'cartFragmentsEndpoint' => rest_url('ed/v1/cart-fragments'),
 ];
 
-  wp_add_inline_script('ed-menu-products', 'window.ED_MENU_PRODUCTS=' . wp_json_encode($config) . ';', 'before');
+  if ( ! empty( $category_mood_demo ) ) {
+    $config['categoryMoodDemo'] = $category_mood_demo;
+  }
+
+  wp_add_inline_script(
+    'ed-menu-products',
+    'window.ED_MENU_PRODUCTS=' . wp_json_encode( $config, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';',
+    'before'
+  );
   wp_add_inline_script('ed-menu-products', ed_menu_products_js_shared(), 'after');
 
   ob_start(); ?>
@@ -285,8 +333,16 @@ add_shortcode('ed_products_box', function ($atts) {
     }
   }
 
+  $mood_html = '';
+  if ( deliz_ed_category_mood_demo_enabled() ) {
+    $mood_html = '
+    <div class="ed-category-mood ed-category-mood--demo" data-ed-category-mood="1" hidden>
+      <img src="" alt="" decoding="async" loading="lazy" width="1200" height="360" />
+    </div>';
+  }
+
   return '
-  <div class="' . esc_attr($atts['class']) . '">
+  <div class="' . esc_attr($atts['class']) . '">' . $mood_html . '
     <' . $tag . ' class="ed-mp__title" data-ed-products-title="1">' . $title_html . '</' . $tag . '>
     ' . $subcats_html . '
     <div class="ed-mp__products" data-ed-products-box="1" aria-live="polite">' . $products_html . '</div>
@@ -327,6 +383,20 @@ function ed_menu_products_js_shared() {
   }
   if (!box.style.transform) {
     box.style.transform = 'translateY(0)';
+  }
+
+  const moodEl = document.querySelector('[data-ed-category-mood="1"]');
+  const MOOD_MS = 230;
+  if (moodEl && cfg.categoryMoodDemo) {
+    if (!moodEl.style.transition) {
+      moodEl.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
+    }
+    if (!moodEl.style.opacity) {
+      moodEl.style.opacity = '1';
+    }
+    if (!moodEl.style.transform) {
+      moodEl.style.transform = 'translateY(0)';
+    }
   }
 
   const links = () => Array.from(document.querySelectorAll(cfg.menuSelector));
@@ -374,6 +444,65 @@ function ed_menu_products_js_shared() {
     });
   }
 
+  function moodDemoUrlForSlug(map, slug) {
+    if (!slug || !map || typeof map !== 'object') return '';
+    const s = String(slug).trim();
+    if (map[s]) return map[s];
+    const lower = s.toLowerCase();
+    for (const k of Object.keys(map)) {
+      if (k === s || k.toLowerCase() === lower) return map[k];
+    }
+    return '';
+  }
+
+  function moodFadeOut() {
+    if (!moodEl || !cfg.categoryMoodDemo) return;
+    moodEl.style.opacity = '0';
+    moodEl.style.transform = 'translateY(10px)';
+  }
+
+  function moodFadeOutAndHide() {
+    if (!moodEl || !cfg.categoryMoodDemo) return;
+    moodFadeOut();
+    setTimeout(() => {
+      moodEl.hidden = true;
+      const im = moodEl.querySelector('img');
+      if (im) im.removeAttribute('src');
+    }, MOOD_MS);
+  }
+
+  function fadeInBoxWithMood(moodSlug) {
+    if (!box) return;
+    box.style.opacity = '0';
+    box.style.transform = 'translateY(10px)';
+    let moodUrl = '';
+    if (moodEl && cfg.categoryMoodDemo) {
+      moodUrl = moodDemoUrlForSlug(cfg.categoryMoodDemo, moodSlug) || '';
+      if (moodUrl) {
+        moodEl.hidden = false;
+        moodEl.style.opacity = '0';
+        moodEl.style.transform = 'translateY(10px)';
+        const img = moodEl.querySelector('img');
+        if (img) {
+          img.removeAttribute('src');
+          img.src = moodUrl;
+        }
+      } else {
+        moodEl.hidden = true;
+        const img = moodEl.querySelector('img');
+        if (img) img.removeAttribute('src');
+      }
+    }
+    requestAnimationFrame(() => {
+      box.style.opacity = '1';
+      box.style.transform = 'translateY(0)';
+      if (moodEl && cfg.categoryMoodDemo && moodUrl) {
+        moodEl.style.opacity = '1';
+        moodEl.style.transform = 'translateY(0)';
+      }
+    });
+  }
+
   function getTermFromUrl() {
     const u = new URL(location.href);
 
@@ -416,6 +545,9 @@ function ed_menu_products_js_shared() {
     setActive(term);
 
     fadeOutBox();
+    if (cfg.categoryMoodDemo && moodEl) {
+      moodFadeOut();
+    }
 
     if (controller) controller.abort();
     controller = new AbortController();
@@ -441,7 +573,13 @@ function ed_menu_products_js_shared() {
 
       box.innerHTML = data.html || '';
       box.classList.remove('is-loading');
-      fadeInBox();
+
+      const moodSlug = (data.term && data.term.slug) ? data.term.slug : term;
+      if (cfg.categoryMoodDemo && moodEl) {
+        fadeInBoxWithMood(moodSlug);
+      } else {
+        fadeInBox();
+      }
 
       if (data.term && data.term.name) setTitle(data.term.name);
 
@@ -465,6 +603,7 @@ function ed_menu_products_js_shared() {
   }
 
   async function loadRebuyFromPhp({push=false} = {}) {
+    moodFadeOutAndHide();
     current = 'rebuy';
     setActive('rebuy');
     setTitle(I18N.rebuyTitle);
@@ -523,6 +662,7 @@ function ed_menu_products_js_shared() {
   async function loadRebuy({push=false} = {}) {
     if (!cfg.rebuyEndpoint) return;
 
+    moodFadeOutAndHide();
     current = 'rebuy';
     setActive('rebuy');
     setTitle(I18N.purchaseHistoryTitle);
@@ -647,6 +787,7 @@ function ed_menu_products_js_shared() {
   }
 
   async function loadSearch(q, {push=false} = {}) {
+    moodFadeOutAndHide();
     const input = getSearchInput();
     const query = String(q || (input ? input.value : '') || '').trim();
     if (!query) return;
