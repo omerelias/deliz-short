@@ -2420,6 +2420,11 @@ ul.woocommerce-SavedPaymentMethods{
     flex: 100%;
 }
 
+/* פופאב «איך תרצו לקבל את ההזמנה?» — רק כותרת שיטה, בלי מחיר משלוח בשורה */
+#checkout-block-popup--shipping .woocommerce-shipping-methods .woocommerce-Price-amount {
+    display: none !important;
+}
+
 
 .woocommerce .checkout-block .woocommerce-billing-fields__field-wrapper .form-row#billing_house_num_field{
     display:none

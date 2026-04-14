@@ -1519,6 +1519,20 @@
 
                 }
 
+                const basketBarSel = '#ed-basket-bar';
+
+                if (fragments[basketBarSel] && typeof jQuery !== 'undefined') {
+
+                    const barEl = document.querySelector(basketBarSel);
+
+                    if (barEl && String(fragments[basketBarSel]).trim().length) {
+
+                        jQuery(barEl).replaceWith(fragments[basketBarSel]);
+
+                    }
+
+                }
+
 
 
                 // Also update the row directly if exists
@@ -1616,6 +1630,50 @@
                 }
 
                 seedFloatCartCommittedQty();
+
+            }
+
+            if (result.data && typeof result.data.cart_count !== 'undefined') { 
+
+                const raw = result.data.cart_count;
+
+                const count = typeof raw === 'number' ? raw : parseInt(String(raw), 10);
+
+                if (Number.isFinite(count) && count >= 0) {
+
+                    const bar = document.getElementById('ed-basket-bar');
+
+                    if (bar) {
+
+                        if (count > 0) {
+
+                            bar.classList.add('basket-btn-active');
+
+                            const countEl = bar.querySelector('.ed-basket-bar__count');
+
+                            if (countEl) {
+
+                                countEl.textContent = String(count);
+
+                            }
+
+                        } else {
+
+                            bar.classList.remove('basket-btn-active');
+
+                            const countEl = bar.querySelector('.ed-basket-bar__count');
+
+                            if (countEl) {
+
+                                countEl.textContent = '0';
+
+                            }
+
+                        }
+
+                    }
+
+                }
 
             }
 

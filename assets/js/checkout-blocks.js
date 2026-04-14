@@ -646,6 +646,25 @@ jQuery(function($) {
         console.log('[Checkout Blocks] setInitialBlockStates complete');
     }
 
+    /**
+     * בפופאב משלוח: אחרי הסתרת מחיר ב-CSS נשארות לעיתים נקודתיים לפני המחיר — מסירים אותן מטקסט התווית בלבד.
+     */
+    function stripShippingPopupLabelTrailingColon() {
+        var $root = $('#checkout-block-popup--shipping');
+        if (!$root.length) {
+            return;
+        }
+        $root.find('.woocommerce-shipping-methods label[for^="shipping_method_"] > span').each(function() {
+            var el = this;
+            for (var i = 0; i < el.childNodes.length; i++) {
+                var node = el.childNodes[i];
+                if (node.nodeType === 3 && node.textContent) {
+                    node.textContent = node.textContent.replace(/\s*:\s*$/, '');
+                }
+            }
+        });
+    }
+
     // Hide payment methods list when only one method is available
     function updatePaymentMethodsVisibility() {
         const $list = $('.wc_payment_methods.payment_methods.methods');
@@ -778,6 +797,7 @@ jQuery(function($) {
     $('.checkout-block--billing, .checkout-block--shipping, .checkout-block--notes').each(function() {
         updateBlockSummary($(this));
     });
+    stripShippingPopupLabelTrailingColon();
 
     // Handle WooCommerce update_order_review -1 issue after AJAX login:
     // if we get -1 for the checkout update request, reload once so nonces match the logged-in user.
@@ -809,6 +829,7 @@ jQuery(function($) {
         $('.checkout-block--billing, .checkout-block--shipping, .checkout-block--notes').each(function() {
             updateBlockSummary($(this));
         });
+        stripShippingPopupLabelTrailingColon();
     });
 
     // When payment method changes, update place order button text (with logging)

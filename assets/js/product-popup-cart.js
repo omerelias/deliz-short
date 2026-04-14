@@ -168,6 +168,33 @@
         return result;
     }
 
+    /**
+     * מסנכרן את סרגל הסל התחתון לפי cart_count מהשרת — מציג מיד כשיש פריטים (גיבוי אם ה-HTML מ-fragments לא הוחל).
+     */
+    function syncEdBasketBarFromCartCount(result) {
+        if (!result) return;
+        if (result.error === true) return;
+        const raw = result.cart_count != null ? result.cart_count : result.data?.cart_count;
+        if (raw == null) return;
+        const count = typeof raw === 'number' ? raw : parseInt(String(raw), 10);
+        if (!Number.isFinite(count) || count < 0) return;
+        const bar = document.getElementById('ed-basket-bar');
+        if (!bar) return;
+        if (count > 0) {
+            bar.classList.add('basket-btn-active');
+            const countEl = bar.querySelector('.ed-basket-bar__count');
+            if (countEl) {
+                countEl.textContent = String(count);
+            }
+        } else {
+            bar.classList.remove('basket-btn-active');
+            const countEl = bar.querySelector('.ed-basket-bar__count');
+            if (countEl) {
+                countEl.textContent = '0';
+            }
+        }
+    }
+
     function applyAddToCartFragments(result) {
         if (result.fragments && typeof result.fragments === 'object') {
             const floatHeaderSel = '#ed-float-cart header.ed-float-cart__header';
@@ -211,6 +238,14 @@
                 }
             }
 
+            const basketBarSel = '#ed-basket-bar';
+            if (result.fragments[basketBarSel] && typeof jQuery !== 'undefined') {
+                const barEl = document.querySelector(basketBarSel);
+                if (barEl && String(result.fragments[basketBarSel]).trim().length) {
+                    jQuery(barEl).replaceWith(result.fragments[basketBarSel]);
+                }
+            }
+
             if (window.updateCartFragments) {
                 window.updateCartFragments(result.fragments);
             } else if (typeof jQuery !== 'undefined' && jQuery.fn.trigger) {
@@ -218,6 +253,7 @@
                 jQuery('body').trigger('added_to_cart', [result.fragments, '', '', '']);
             }
         }
+        syncEdBasketBarFromCartCount(result);
     }
 
     /**  
