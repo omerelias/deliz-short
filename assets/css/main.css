@@ -3708,3 +3708,10 @@ form#choose-shipping .ocws-popup-continue-row.ocws-popup-continue-row--below-min
         width: 100%
     }
 }
+
+
+.ed-float-cart__btn--checkout-disabled {
+    pointer-events: none!important;
+    opacity: 0.6!important;
+    cursor: not-allowed!important;
+}
