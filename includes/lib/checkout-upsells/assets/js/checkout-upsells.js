@@ -449,13 +449,19 @@
 
     // Intercept checkout link click (from floating cart)
     $(document).on('click', '.ed-float-cart__btn--checkout', function(e) {
+      const $link = $(this);
+      if ($link.hasClass('ed-float-cart__btn--checkout-disabled') || $link.attr('aria-disabled') === 'true') {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return false;
+      }
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
       
       console.log('🔵 Checkout button clicked - intercepting...'); 
-      
-      const $link = $(this); 
+       
       const checkoutUrl = $link.attr('href');
       window.edCheckoutUrl = checkoutUrl;
       

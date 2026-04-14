@@ -563,10 +563,15 @@ if (
 					<?php do_action('deliz_short_float_cart_footer_shipping'); ?>
 				</div>
 
+				<?php
+				$deliz_ocws_checkout_min_disabled = class_exists( 'OC_Woo_Shipping_Public' ) && method_exists( 'OC_Woo_Shipping_Public', 'is_float_cart_checkout_disabled_for_min_order' ) && OC_Woo_Shipping_Public::is_float_cart_checkout_disabled_for_min_order();
+				$deliz_float_cart_checkout_url    = wc_get_checkout_url();
+				?>
 				<div class="ed-float-cart__actions">
-					<a class="ed-float-cart__btn ed-float-cart__btn--checkout checkout-btn-trigger"
-					   href="<?php echo esc_url(wc_get_checkout_url()); ?>"
-					   data-checkout-url="<?php echo esc_url(wc_get_checkout_url()); ?>">
+					<a class="ed-float-cart__btn ed-float-cart__btn--checkout checkout-btn-trigger<?php echo $deliz_ocws_checkout_min_disabled ? ' ed-float-cart__btn--checkout-disabled' : ''; ?>"
+					   href="<?php echo $deliz_ocws_checkout_min_disabled ? '#' : esc_url( $deliz_float_cart_checkout_url ); ?>"
+					   data-checkout-url="<?php echo esc_url( $deliz_float_cart_checkout_url ); ?>"
+						<?php echo $deliz_ocws_checkout_min_disabled ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>
 						<span><?php echo esc_html__('מעבר לתשלום', 'deliz-short'); ?></span>
 						<?php //if ( abs( $running_total - $subtotal_base ) > 0.0001 ): ?>
 							<span class="ed-float-cart__total-with-discounts">~ <?php echo wp_kses_post(wc_price($running_total)); ?></span>

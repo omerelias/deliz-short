@@ -66,6 +66,12 @@
         }
 
         $(document).on('click', '.ed-float-cart__btn--checkout', function (e) {
+            var $btn = $(this);
+            if ($btn.hasClass('ed-float-cart__btn--checkout-disabled') || $btn.attr('aria-disabled') === 'true') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
+            }
             e.preventDefault();
             e.stopImmediatePropagation();
             var href = $(this).attr('href');
