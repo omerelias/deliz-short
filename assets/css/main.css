@@ -413,8 +413,22 @@ flex: 0 0 435px;
     padding: 0;
     list-style: none;
     margin: 0;
-    height: 80vh;
+    height: 90vh;
     overflow: auto;
+}
+
+.main-content .menu-block ul.ed-mp__menu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.main-content .menu-block ul.ed-mp__menu::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.main-content .menu-block ul.ed-mp__menu::-webkit-scrollbar-thumb {
+  background:#888;
+  border-radius: 10px;
 }
 
 .menu-block .ed-mp-sidebar{
@@ -471,22 +485,6 @@ flex: 0 0 435px;
 
 .main-content .menu-block ul.ed-mp__menu li.ed-mp__item a.ed-mp__link img.icon-style-1{
     border-radius: 50%;
-}
-
-.ed-category-mood--demo{
-    margin-block-end: 16px;
-    border-radius: var(--radius, 8px);
-    overflow: hidden;
-    max-height: 200px;
-    background: #f0f0f0;
-}
-
-.ed-category-mood--demo img{
-    display: block;
-    width: 100%;
-    height: auto;
-    max-height: 200px;
-    object-fit: cover;
 }
 
 .center-column .ed-mp-products-wrap h2.ed-mp__title{
@@ -629,6 +627,20 @@ body.desktop-per-row-5 .center-column .ed-mp-products-wrap .ed-mp__products ul.p
     -webkit-overflow-scrolling: touch;
     border-top: 1px solid #e9ebee;
     padding-block-start: 15px;
+}
+
+.ed-float-cart__items::-webkit-scrollbar {
+  width: 5px;
+}
+
+.ed-float-cart__items::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.ed-float-cart__items::-webkit-scrollbar-thumb {
+  background:#888;
+  border-radius: 10px;
 }
 
 .ed-float-cart__inner{
@@ -870,6 +882,8 @@ border: 1px solid var(--color-primary);
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__price{
         flex: 1 1 auto;
     min-width: 0;
+    text-align: left;
+    padding-inline-end: 10px;
 }
 
 .ed-float-cart__items .ed-float-cart__item .ed-float-cart__price .woocommerce-Price-amount{
@@ -3344,6 +3358,10 @@ div#order-email {
         width: 260px;
         min-width: 260px;
         padding-right: 15px;
+    }
+
+    .main-content .left-column .ed-float-cart{
+        padding-inline: 10px;
     }
 
     .site-header .container-header-inner{
