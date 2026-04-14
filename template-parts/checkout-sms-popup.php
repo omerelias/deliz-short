@@ -80,8 +80,8 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
             <!-- New customer: tabbed wizard (OCWS shipping_kind) -->
             <div class="checkout-sms-popup__step checkout-sms-popup__step--newuser-wizard">
                 <div class="checkout-sms-wizard-tabs" role="tablist"> 
-                    <button type="button" class="checkout-sms-wizard-tab is-active" data-tab="details" role="tab"><?php echo esc_html__( 'פרטים', 'deliz-short' ); ?></button>
-                    <button type="button" class="checkout-sms-wizard-tab" data-tab="supply" role="tab"><?php echo esc_html__( 'אספקה', 'deliz-short' ); ?></button>
+                    <button type="button" class="checkout-sms-wizard-tab is-active" data-tab="details" role="tab"><?php echo esc_html__( 'פרטי המזמין', 'deliz-short' ); ?></button>
+                    <button type="button" class="checkout-sms-wizard-tab" data-tab="supply" role="tab"><?php echo esc_html__( 'שיטת אספקה', 'deliz-short' ); ?></button>
                 </div>
                 <?php
                 /* #choose-shipping is a separate <form> — keep this wrap outside .checkout-sms-newuser-wizard-form (no nested forms). Shown only on the "אספקה" tab via JS. */
@@ -92,17 +92,34 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
                 </div>
                 <form class="checkout-sms-newuser-wizard-form" method="post">
                     <div class="checkout-sms-wizard-panel is-active" data-panel="details">
-                        <div class="form-row">
-                            <input type="text" name="first_name" class="input-text nu-first-name" required
+                        <h3 class="checkout-sms-details-heading"><?php echo esc_html__( 'על שם מי ההזמנה?', 'deliz-short' ); ?></h3>
+                        <p class="checkout-sms-details-sub"><?php echo esc_html__( 'בהזמנה הבאה כבר נזכור אותך :)', 'deliz-short' ); ?></p>
+                        <div class="form-row checkout-sms-labeled-field">
+                            <label class="checkout-sms-field-label" for="nu-wizard-first-name"><?php echo esc_html__( 'שם פרטי', 'deliz-short' ); ?></label>
+                            <input type="text" name="first_name" id="nu-wizard-first-name" class="input-text nu-first-name" required autocomplete="given-name"
                                    placeholder="<?php echo esc_attr__( 'שם פרטי', 'deliz-short' ); ?>" />
                         </div>
-                        <div class="form-row">
-                            <input type="text" name="last_name" class="input-text nu-last-name" required
+                        <div class="form-row checkout-sms-labeled-field">
+                            <label class="checkout-sms-field-label" for="nu-wizard-last-name"><?php echo esc_html__( 'שם משפחה', 'deliz-short' ); ?></label>
+                            <input type="text" name="last_name" id="nu-wizard-last-name" class="input-text nu-last-name" required autocomplete="family-name"
                                    placeholder="<?php echo esc_attr__( 'שם משפחה', 'deliz-short' ); ?>" />
                         </div>
-                        <div class="form-row">
-                            <input type="email" name="email" class="input-text nu-email" required
-                                   placeholder="<?php echo esc_attr__( 'אימייל', 'deliz-short' ); ?>" />
+                        <div class="form-row checkout-sms-labeled-field">
+                            <label class="checkout-sms-field-label" for="nu-wizard-email"><?php echo esc_html__( 'כתובת מייל', 'deliz-short' ); ?></label>
+                            <span class="checkout-sms-field-hint"><?php echo esc_html__( 'לשליחת אישור הזמנה וחשבונית', 'deliz-short' ); ?></span>
+                            <input type="email" name="email" id="nu-wizard-email" class="input-text nu-email" required autocomplete="email"
+                                   placeholder="<?php echo esc_attr__( 'כתובת מייל', 'deliz-short' ); ?>" />
+                        </div>
+                        <div class="form-row checkout-sms-invoice-other-row">
+                            <label class="checkout-sms-checkbox-label">
+                                <input type="checkbox" name="invoice_other_name" value="1" class="nu-invoice-other-name" />
+                                <span><?php echo esc_html__( 'חשבונית על שם אחר', 'deliz-short' ); ?></span>
+                            </label>
+                        </div>
+                        <div class="form-row checkout-sms-labeled-field checkout-sms-nu-company-wrap" id="checkout-sms-nu-company-wrap" hidden>
+                            <label class="checkout-sms-field-label" for="nu-wizard-billing-company"><?php echo esc_html__( 'שם לחשבונית (חברה / עוסק)', 'deliz-short' ); ?></label>
+                            <input type="text" name="billing_company" id="nu-wizard-billing-company" class="input-text nu-billing-company" autocomplete="organization"
+                                   placeholder="<?php echo esc_attr__( 'שם החברה או העוסק לחשבונית', 'deliz-short' ); ?>" />
                         </div>
                     </div>
                     <div class="checkout-sms-wizard-panel" data-panel="supply">
@@ -125,7 +142,7 @@ $settings = $sms_auth ? $sms_auth->get_settings() : array();
                     </div>
                     <input type="hidden" name="phone" class="nu-register-phone-input" />
                     <button type="submit" class="button nu-wizard-submit">
-                        <?php echo esc_html__( 'המשך', 'deliz-short' ); ?>
+                        <?php echo esc_html__( 'המשך לבחירת אספקה', 'deliz-short' ); ?>
                     </button>
                     <div class="checkout-sms-popup__error"></div>
                 </form>

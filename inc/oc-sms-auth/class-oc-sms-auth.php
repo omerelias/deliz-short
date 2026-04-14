@@ -629,6 +629,11 @@ class OC_SMS_Auth {
         if ($enter_code !== '') {
             update_user_meta($user_id, 'billing_enter_code', $enter_code);
         }
+
+        $billing_company = isset( $_POST['billing_company'] ) ? sanitize_text_field( wp_unslash( $_POST['billing_company'] ) ) : '';
+        if ( $billing_company !== '' ) {
+            update_user_meta( $user_id, 'billing_company', $billing_company );
+        }
         
         // Log the new user in
         wp_set_auth_cookie($user_id, true);

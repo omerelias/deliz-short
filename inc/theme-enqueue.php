@@ -204,9 +204,10 @@ add_action('wp_enqueue_scripts', function() {
             'code_resent' => __('קוד נשלח מחדש', 'deliz-short'),
             'error_verifying' => __('שגיאה באימות הקוד', 'deliz-short'),
             'error_resending' => __('שגיאה בשליחה חוזרת של הקוד', 'deliz-short'),
-            'tab_details' => __('פרטים', 'deliz-short'),
-            'tab_supply' => __('אספקה', 'deliz-short'),
+            'tab_details' => __('פרטי המזמין', 'deliz-short'),
+            'tab_supply' => __('שיטת אספקה', 'deliz-short'),
             'wizard_continue' => __('המשך', 'deliz-short'),
+            'wizard_continue_to_supply' => __('המשך לבחירת אספקה', 'deliz-short'),
             'how_receive_title' => __('איך תרצו לקבל', 'deliz-short'),
             'pickup_order_title' => __('על שם מי ההזמנה?', 'deliz-short'),
             'delivery_complete_title' => __('השלם את פרטי המשלוח', 'deliz-short'),
@@ -214,6 +215,7 @@ add_action('wp_enqueue_scripts', function() {
             'data_verify_title' => __('אימות נתונים', 'deliz-short'),
             'wizard_need_shipping' => __( 'נא להשלים למעלה את בחירת המשלוח / האיסוף והשעות לפני המשך.', 'deliz-short' ),
             'wizard_details_required' => __( 'נא למלא שם פרטי, שם משפחה ואימייל לפני מעבר לאספקה.', 'deliz-short' ),
+            'wizard_company_required' => __( 'נא למלא שם לחשבונית.', 'deliz-short' ),
         )
     ));
     

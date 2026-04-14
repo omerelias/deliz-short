@@ -220,6 +220,8 @@ jQuery(function($) {
                 });
             });
             console.log('[Checkout SMS] Events bound');
+            CheckoutSMSFlow.syncNuInvoiceCompanyField();
+            CheckoutSMSFlow.syncNuWizardSubmitButtonLabel();
         },
 
         bindEvents: function() {
@@ -241,6 +243,7 @@ jQuery(function($) {
             // New user wizard (tabs + optional supply fields)
             $(document).on('submit', '.checkout-sms-newuser-wizard-form', this.handleNewUserWizard);
             $(document).on('click', '.checkout-sms-wizard-tab', this.onWizardTabClick);
+            $(document).on('change', '.checkout-sms-newuser-wizard-form .nu-invoice-other-name', this.syncNuInvoiceCompanyField);
             $(document).on('change', '#choose-shipping input[name="popup-shipping-method"]', function() {
                 CheckoutSMSFlow.syncCheckoutSmsSupplyFloorFieldsVisibility();
             });
@@ -430,9 +433,55 @@ jQuery(function($) {
             }
             const $email = $form.find('.nu-email');
             if ($email.length && $email[0].checkValidity && typeof $email[0].checkValidity === 'function') {
-                return $email[0].checkValidity();
+                if (!$email[0].checkValidity()) {
+                    return false;
+                }
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+                return false;
             }
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
+            if ($form.find('.nu-invoice-other-name').is(':checked')) {
+                const co = ($form.find('.nu-billing-company').val() || '').trim();
+                if (!co) {
+                    return false;
+                }
+            }
+            return true;
+        },
+
+        /** כפתור שליחה משותף: בטאב פרטי מזמין — "המשך לבחירת אספקה"; בטאב שיטת אספקה — "המשך" */
+        syncNuWizardSubmitButtonLabel: function() {
+            const $btn = $('#checkout-sms-popup .nu-wizard-submit');
+            if (!$btn.length) {
+                return;
+            }
+            const i18n = (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.i18n) ? oc_sms_auth.i18n : {};
+            const $popup = $('#checkout-sms-popup');
+            if (!$popup.find('.checkout-sms-popup__step--newuser-wizard').hasClass('active')) {
+                return;
+            }
+            const detailsActive = $popup.find('.checkout-sms-wizard-panel[data-panel="details"]').hasClass('is-active');
+            if (detailsActive) {
+                $btn.text(i18n.wizard_continue_to_supply || 'המשך לבחירת אספקה');
+            } else {
+                $btn.text(i18n.wizard_continue || 'המשך');
+            }
+        },
+
+        syncNuInvoiceCompanyField: function() {
+            const $form = $('#checkout-sms-popup .checkout-sms-newuser-wizard-form');
+            const $cb = $form.find('.nu-invoice-other-name');
+            const $wrap = $form.find('#checkout-sms-nu-company-wrap');
+            const $inp = $form.find('.nu-billing-company');
+            if (!$wrap.length) {
+                return;
+            }
+            if ($cb.is(':checked')) {
+                $wrap.removeAttr('hidden').show().attr('aria-hidden', 'false');
+                $inp.prop('required', true);
+            } else {
+                $wrap.attr('hidden', 'hidden').hide().attr('aria-hidden', 'true');
+                $inp.prop('required', false).val('');
+            }
         },
 
         /**
@@ -479,6 +528,7 @@ jQuery(function($) {
             $popup.find('.checkout-sms-wizard-panel[data-panel="' + tab + '"]').addClass('is-active');
             CheckoutSMSFlow.syncOcwsEmbedTabVisibility();
             CheckoutSMSFlow.syncCheckoutSmsSupplyFloorFieldsVisibility();
+            CheckoutSMSFlow.syncNuWizardSubmitButtonLabel();
         },
 
         onWizardTabClick: function(e) {
@@ -488,7 +538,11 @@ jQuery(function($) {
             const $form = $popup.find('.checkout-sms-newuser-wizard-form');
             if (tab === 'supply' && !CheckoutSMSFlow.validateNewUserWizardDetails($form)) {
                 const i18n = (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.i18n) ? oc_sms_auth.i18n : {};
-                CheckoutSMSFlow.showError('newuser-wizard', i18n.wizard_details_required || 'נא למלא שם פרטי, משפחה ואימייל');
+                let msg = i18n.wizard_details_required || 'נא למלא שם פרטי, משפחה ואימייל';
+                if ($form.find('.nu-invoice-other-name').is(':checked') && !String($form.find('.nu-billing-company').val() || '').trim()) {
+                    msg = i18n.wizard_company_required || 'נא למלא שם לחשבונית';
+                }
+                CheckoutSMSFlow.showError('newuser-wizard', msg);
                 return;
             }
             if (tab === 'supply') {
@@ -635,7 +689,11 @@ jQuery(function($) {
             const $button = $form.find('.nu-wizard-submit');
             const i18n = (typeof oc_sms_auth !== 'undefined' && oc_sms_auth.i18n) ? oc_sms_auth.i18n : {};
             if (!CheckoutSMSFlow.validateNewUserWizardDetails($form)) {
-                CheckoutSMSFlow.showError('newuser-wizard', i18n.wizard_details_required || 'נא למלא שם פרטי, משפחה ואימייל');
+                let msg = i18n.wizard_details_required || 'נא למלא שם פרטי, משפחה ואימייל';
+                if ($form.find('.nu-invoice-other-name').is(':checked') && !String($form.find('.nu-billing-company').val() || '').trim()) {
+                    msg = i18n.wizard_company_required || 'נא למלא שם לחשבונית';
+                }
+                CheckoutSMSFlow.showError('newuser-wizard', msg);
                 return;
             }
             const $popup = $('#checkout-sms-popup');
@@ -654,11 +712,15 @@ jQuery(function($) {
             }
 
             const billingExtras = CheckoutSMSFlow.getNewUserWizardBillingExtras();
+            const companyVal = $form.find('.nu-invoice-other-name').is(':checked')
+                ? String($form.find('.nu-billing-company').val() || '').trim()
+                : '';
             const formData = {
                 first_name: $form.find('.nu-first-name').val(),
                 last_name: $form.find('.nu-last-name').val(),
                 email: $form.find('.nu-email').val(),
                 phone: $form.find('.nu-register-phone-input').val(),
+                billing_company: companyVal,
                 billing_floor: billingExtras.billing_floor,
                 billing_apartment: billingExtras.billing_apartment,
                 billing_enter_code: billingExtras.billing_enter_code
@@ -899,6 +961,8 @@ jQuery(function($) {
             $popup.find('.checkout-sms-popup__step--phone').addClass('active');
             $popup.find('form')[0]?.reset();
             $popup.find('.checkout-sms-popup__error').empty();
+            CheckoutSMSFlow.syncNuInvoiceCompanyField();
+            CheckoutSMSFlow.syncNuWizardSubmitButtonLabel();
         },
 
         showStep: function(step) {
@@ -923,6 +987,7 @@ jQuery(function($) {
             } else if (step === 'newuser-wizard') {
                 console.log('[Checkout SMS] showStep → newuser-wizard');
                 CheckoutSMSFlow.applyNewUserWizardChrome();
+                CheckoutSMSFlow.syncNuWizardSubmitButtonLabel();
                 setTimeout(function() {
                     CheckoutSMSFlow.embedOcwsInWizardIfNeeded();
                 }, 0);
