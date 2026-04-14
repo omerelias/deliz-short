@@ -3127,6 +3127,7 @@ body p.other-recipient-field label{
     max-height: 80px;
     overflow: auto;
     min-height: 83px;
+    padding-inline-end: 1px;
 }
 
 .ocws-day-cards-slider .day-card__slots::-webkit-scrollbar {

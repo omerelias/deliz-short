@@ -337,11 +337,6 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
     color: #000;
 }
 
-/* שלב 1 הושלם — פס וטקסט כמו פעיל, בלי להיות הטאב הנוכחי (הנוכחי הוא שלב 2) */
-.checkout-sms-wizard-tab.is-completed {
-    color: #000; 
-}
-
 .checkout-sms-wizard-tab:after{
     content:"";
     width:100%;
@@ -359,9 +354,8 @@ body.rtl .checkout-sms-popup button.checkout-sms-popup__close {
     border-radius: 0 3px 3px 0;
 }
 
-.checkout-sms-wizard-tab.is-active:after,
-.checkout-sms-wizard-tab.is-completed:after {
-    background-color: var(--color-primary);
+.checkout-sms-wizard-tab.is-active:after{
+    background-color: var(--color-primary);   
 }
 
 .checkout-sms-wizard-panel {
@@ -602,5 +596,14 @@ body.checkout-sms-popup-open .pac-container,
 @keyframes checkout-sms-checkout-spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 700px) {
+    .checkout-sms-popup__content.checkout-sms-popup__content--ocws-embed{
+        padding-inline: 15px;
+        max-width: 100%;
+        padding-block: 25px;
+        padding-block-end: 0;
     }
 }
