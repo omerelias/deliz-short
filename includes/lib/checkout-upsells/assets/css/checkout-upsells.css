@@ -519,6 +519,10 @@ body.ed-checkout-upsells-popup-open {
     border-radius: 0 0 8px 8px;
 }
 
+.ed-checkout-upsells-popup__products .woocommerce ul.products li.product .price_per{
+  padding-inline-end: 10px;
+}
+
 .ed-checkout-upsells-popup__products .woocommerce ul.products li.product .loop-bottom-wrap{
   text-align: center;
     padding-block-end: 10px;

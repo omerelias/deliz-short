@@ -1428,14 +1428,39 @@ display: block;
 .woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li label{
 
     position: relative;
+    padding-inline-start: 0;
+    width: auto;
+    font-weight: normal;
+    text-align: center;
+    height: 35px;
+    line-height: 35px;
+    font-size: 14px;
+    display: inline-block;
+    padding-inline: 18px;
+    padding-block: 0;
+    background-color: var(--color-primary);
+    color: var(--main-text-color);
+    border-radius: var(--radius);
+    opacity: 0.5;
+    box-sizing: border-box;
 
-        padding-inline-start: 20px;
+}
 
+.woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li input[type="radio"]:checked + label{
+    opacity: 1;
+        background-color: var(--color-primary-hover);
+    color: var(--main-text-color-hover);
+}
+
+.woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li label:hover{
+    background-color: var(--color-primary-hover);
+    color: var(--main-text-color-hover);
+     opacity: 1;
 }
 
 
 
-.woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li label:before{
+/*.woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li label:before{
 
         content: '';
 
@@ -1504,8 +1529,7 @@ display: block;
         transform: translateY(-50%) scale(1);
 
 }
-
-
+*/
 
 
 
@@ -1564,7 +1588,14 @@ display: block;
 ul.woocommerce-SavedPaymentMethods{
 
     padding: 0;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row-reverse;
 
+}
+
+.woocommerce-checkout #payment ul.payment_methods li input#wc-cardcom-new-payment-method{
+    margin: 0;
 }
 
 
@@ -2867,6 +2898,10 @@ body.rtl .checkout-block__icon {
         padding-inline-end: 15px;
     }
 
+    .checkout-order-summary{
+        margin-block-start: -2px;
+    }
+
     .checkout-summary-line__value{
         width: 100%;
         padding-inline-end: 0;
@@ -2885,6 +2920,15 @@ body.rtl .checkout-block__icon {
 
 
 @media (max-width: 768px) {
+
+    .woocommerce-checkout #payment div.payment_box .woocommerce-SavedPaymentMethods li label{
+        width: 100%;
+
+    }
+
+    ul.woocommerce-SavedPaymentMethods{
+            flex-direction: column-reverse;
+    }
 
     #checkout-block-popup--billing .checkout-block-popup__container{
         padding-block-start: 30px !important;

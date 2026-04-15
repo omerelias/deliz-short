@@ -750,110 +750,57 @@ jQuery(function ($) {
 
 
 
-//mobile menu
-
+// mobile menu
 (function () {
-
   const menu = document.querySelector('.main-content .menu-block ul.ed-mp__menu');
-
   if (!menu) return;
 
+  function getScrollLeftForAlignRight(li) {
+    const menuRect = menu.getBoundingClientRect();
+    const liRect = li.getBoundingClientRect();
 
+    const currentScroll = menu.scrollLeft;
+    const delta = liRect.right - menuRect.right;
 
-  const canScrollX = () => (menu.scrollWidth - menu.clientWidth) > 1;
-
-
-
-  function align(li, side, smooth = true) {
-
-    if (!li || !canScrollX()) return;
-
-    li.scrollIntoView({
-
-      behavior: smooth ? 'smooth' : 'auto',
-
-      block: 'nearest',
-
-      inline: side, // RTL: start=ימין, end=שמאל
-
-    });
-
+    return currentScroll + delta;
   }
 
+  function alignRight(li, smooth = true) {
+    if (!li) return;
 
+    const targetLeft = getScrollLeftForAlignRight(li);
 
-  // טעינה: active מוצמד לימין
+    menu.scrollTo({
+      left: targetLeft,
+      behavior: smooth ? 'smooth' : 'auto',
+    });
+  }
 
   function alignActiveOnLoad() {
-
     const activeLi = menu.querySelector('a.ed-mp__link.is-active')?.closest('li');
-
     if (!activeLi) return;
 
-    requestAnimationFrame(() => requestAnimationFrame(() => align(activeLi, 'start', false)));
-
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        alignRight(activeLi, false);
+      });
+    });
   }
 
-
-
   document.addEventListener('DOMContentLoaded', alignActiveOnLoad);
-
   window.addEventListener('load', alignActiveOnLoad);
 
-
-
   menu.addEventListener('click', (e) => {
-
     const link = e.target.closest('a.ed-mp__link');
-
     if (!link || !menu.contains(link)) return;
 
-
-
     const clickedLi = link.closest('li');
+    if (!clickedLi) return;
 
-    if (!clickedLi || !canScrollX()) return;
-
-
-
-    const activeLi = menu.querySelector('a.ed-mp__link.is-active')?.closest('li');
-
-
-
-    // אם אין active כרגע – נצמיד את הנלחץ לימין
-
-    if (!activeLi) {
-
-      align(clickedLi, 'start', true);
-
-      return;
-
-    }
-
-
-
-    // קליק על active עצמו – לא מזיזים
-
-    if (activeLi === clickedLi) return;
-
-
-
-    // RTL: clicked משמאל ל-active => clicked אחרי active ב-DOM
-
-    const clickedIsLeftOfActive =
-
-      !!(activeLi.compareDocumentPosition(clickedLi) & Node.DOCUMENT_POSITION_FOLLOWING);
-
-
-
-    // משמאל ל-active => להצמיד לימין
-
-    // מימין ל-active => להצמיד לשמאל
-
-    align(clickedLi, clickedIsLeftOfActive ? 'start' : 'end', true);
-
+    requestAnimationFrame(() => {
+      alignRight(clickedLi, true);
+    });
   });
-
 })();
 
 

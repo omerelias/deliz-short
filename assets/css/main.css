@@ -1228,7 +1228,14 @@ body.square_images .woocommerce ul.products li.product a img{
         margin-top: 20px;
         width: 100%;
         box-sizing: border-box;
+        border-bottom: 1px solid #e9ebee;
+        padding-inline-start: 15px;
+        padding-block-end: 10px;
     }  
+
+    .menu-block .ed-mp-sidebar{
+        margin-inline-start: -15px;
+    }
     
     .main-content .menu-block ul.ed-mp__menu li.ed-mp__item{
         margin: 0;
@@ -1277,7 +1284,6 @@ body.square_images .woocommerce ul.products li.product a img{
     .center-column .ed-mp-products-wrap .ed-mp__subcats .ed-mp__subcat-link{
         font-size: 14px;
         margin: 0;
-        border-bottom: none;
         display: inline-block;
         width: auto !important;
         text-align: center;
@@ -1295,6 +1301,7 @@ body.square_images .woocommerce ul.products li.product a img{
         background-color: var(--mobile-menu-bg);
         border-radius: var(--radius);
         padding: 5px 10px;
+        position: relative;
     }
 
     .center-column .ed-mp-products-wrap .ed-mp__products ul.products li .loop-bottom-wrap{
@@ -1304,6 +1311,16 @@ body.square_images .woocommerce ul.products li.product a img{
     .main-content .menu-block ul.ed-mp__menu a.ed-mp__link:hover, .main-content .menu-block ul.ed-mp__menu a.ed-mp__link.is-active{
         color: var(--mobile-menu-text-color-active);
         background-color: var(--mobile-menu-bg-active);
+    }
+
+    .main-content .menu-block ul.ed-mp__menu a.ed-mp__link.is-active:after{
+        content:"";
+        background-color: var(--mobile-menu-bg-active);
+        height: 3px;
+        width: 100%;
+        display: block;
+        position: absolute;
+        bottom: -10px;
     }
 
     body .slick-dotted.slick-slider {
@@ -1322,7 +1339,6 @@ body.square_images .woocommerce ul.products li.product a img{
     body.menu-with-icons .main-content .menu-block ul.ed-mp__menu a.ed-mp__link img,
     body.menu-with-icons .main-content .menu-block ul.ed-mp__menu a.ed-mp__link span{
         position: relative;
-        left: 5px;
     }
 
     body.menu-with-icons .main-content .menu-block ul.ed-mp__menu a.ed-mp__link img{
@@ -1339,29 +1355,30 @@ body.square_images .woocommerce ul.products li.product a img{
 
     .main-content .left-column{
         position: fixed;
-        top: 0;
         left: 0;
+        bottom: 0;
+        top: auto;
         visibility: hidden;
         width: 480px;
         height: 100%;
         max-height: none;
+        max-width: 100%;
         z-index: 2222222;
         background-color: #fff;
         box-shadow: none;
         touch-action: manipulation;
-        /* transition: transform .3s ease, visibility .3s ease; */
-        -moz-transition: transform .6s cubic-bezier(.75,0,.175,1),visibility .6s cubic-bezier(.75,0,.175,1);
+        -moz-transition: transform .6s cubic-bezier(.75,0,.175,1), visibility .6s cubic-bezier(.75,0,.175,1);
         -webkit-transition: transform .6s cubic-bezier(.75, 0, .175, 1), visibility .6s cubic-bezier(.75, 0, .175, 1);
         transition: transform .6s cubic-bezier(.75, 0, .175, 1), visibility .6s cubic-bezier(.75, 0, .175, 1);
-        padding: 20px;
-        max-width: 80%;
-        transform: translate(-140%);
+        transform: translateY(100%);
+        min-width: 100%;
+        padding: 0;
     }
 
     body.basket-open .main-content .left-column{
-        transform: translate(0);
         visibility: visible;
-        min-width: 95%;
+        transform: translateY(0);
+        min-width: 100%;
         padding: 0;
         top: 0;
         margin-top: 0;
@@ -1472,14 +1489,18 @@ button.default-close-btn{
     background-color: transparent;
     border: none;
     padding: 0;
-    width: 15px;
-    height: 15px;
+    width: 34px;
+    height: 34px;
     cursor: pointer;
+        background-size: 11px;
+        border-radius: 50%;
+    background: #E4E4E4 url(../images/pop-close.svg) center no-repeat;
 }
 
 button.default-close-btn svg{
     width: 100%;
     height: 100%;
+    display:none
 }
 
 .ed-basket-bar{
@@ -1865,9 +1886,7 @@ form.wpcf7-form .contact-form input.wpcf7-submit{
     padding-inline: 70px;
     max-width: 100%;
     box-sizing: border-box;
-    padding-block: 50px;
-    padding-block-end: 30px;
-   
+    padding-block: 30px;
 }
 
 form#choose-shipping{
