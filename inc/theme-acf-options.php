@@ -405,3 +405,59 @@ function ed_add_items_images_size_body_class($classes) {
     return $classes;
 
 }
+
+//fonts
+add_action('wp_enqueue_scripts', function () {
+    if (!function_exists('get_field')) return;
+
+    $site_font   = trim((string) get_field('site_font', 'option'));
+    $titles_font = trim((string) get_field('titles_font', 'option'));
+
+    if ($site_font === '') {
+        $site_font = 'Heebo';
+    }
+
+    if ($titles_font === '') {
+        $titles_font = $site_font ?: 'Heebo';
+    }
+
+    $fonts_to_load = array_unique([$site_font, $titles_font]);
+    $families = [];
+
+    foreach ($fonts_to_load as $font) {
+        if ($font === '') continue;
+        $families[] = 'family=' . str_replace(' ', '+', $font) . ':wght@300;400;500;600;700;800';
+    }
+
+    if (empty($families)) return;
+
+    wp_enqueue_style(
+        'theme-google-fonts',
+        'https://fonts.googleapis.com/css2?' . implode('&', $families) . '&display=swap',
+        [],
+        null
+    );
+}, 20);
+
+add_action('wp_head', function () {
+    if (!function_exists('get_field')) return;
+
+    $site_font   = trim((string) get_field('site_font', 'option'));
+    $titles_font = trim((string) get_field('titles_font', 'option'));
+
+    if ($site_font === '') {
+        $site_font = 'Heebo';
+    }
+
+    if ($titles_font === '') {
+        $titles_font = $site_font ?: 'Heebo';
+    }
+    ?>
+    <style>
+        :root {
+            --site-font: "<?php echo esc_attr($site_font); ?>", sans-serif;
+            --titles-font: "<?php echo esc_attr($titles_font); ?>", sans-serif;
+        }
+    </style>
+    <?php
+});

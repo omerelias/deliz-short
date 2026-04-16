@@ -1,14 +1,16 @@
 /* Put your theme CSS here 2 */
 
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
-
 body{
     direction: rtl;
     text-align: right;
     overflow: visible !important;
-    font-family: "Heebo", sans-serif;
+    font-family: var(--site-font), sans-serif;
     font-style: normal;
     color: var(--main-site-text-color, #000);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--titles-font), sans-serif;
 }
 
 *:not(body)::-webkit-scrollbar {
@@ -27,7 +29,7 @@ body{
 }
 
 button,input,textarea{
-    font-family: "Heebo", sans-serif;
+    font-family: var(--site-font), sans-serif;
 }
 
 button{
