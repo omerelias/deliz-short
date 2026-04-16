@@ -936,7 +936,7 @@ class ED_Checkout_Upsells {
 
     wp_localize_script('ed-checkout-upsells', 'ED_CHECKOUT_UPSELLS', [
 
-      'ajaxUrl' => admin_url('admin-ajax.php'), 
+      'ajaxUrl' => admin_url('admin-ajax.php'),
 
       'nonce' => wp_create_nonce('ed-checkout-upsells-nonce'),
 
