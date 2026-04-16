@@ -1407,8 +1407,41 @@ body.square_images .woocommerce ul.products li.product a img{
 }
 
 @media (max-width: 767px) {
+
+    .top-header{
+        display:none
+    }
+
+    body.show-mobile-top-header .top-header{
+        display:block;
+        background-color: var(--mobile-top-header-bg,var(--top-header-bg));
+        color: var(--mobile-top-header-text, var(--top-header-txt_color, var(--main-text-color)));
+    }
+
+    .top-header a{
+        color: var(--mobile-top-header-text, var(--top-header-txt_color, var(--main-text-color)))!important;
+    }
+
+    .top-header .top-header-inner,
+    .top-header .header-top-right{
+        width:100%;
+        max-width: none;
+    }
+
+    .top-header .header-top-right ul{
+        gap: 15px;
+    }
+
+    .top-header .top-header-container{
+            justify-content: space-between;
+    }
+
     .ed-main-slider .ed-slide{
         height: 300px;
+    }
+
+    .top-header .header-top-right{
+        display:none
     }
 
     body.mobile-per-row-2 .center-column .ed-mp-products-wrap .ed-mp__products ul.products li {
