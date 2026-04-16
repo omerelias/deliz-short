@@ -326,7 +326,7 @@ add_shortcode('ed_products_box', function ($atts) {
           );
         }
 
-        if (!empty($items)) {
+        if (!empty($items) && get_field('show_sub_cats', 'option')) {
           $subcats_html = '<div class="ed-mp__subcats" data-ed-products-subcats="1">' . implode('', $items) . '</div>';
         }
       }

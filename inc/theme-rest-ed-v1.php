@@ -44,7 +44,7 @@ function ed_rest_get_subcats_html( $term ) {
 			);
 		}
 
-		if ( ! empty( $items ) ) {
+		if ( ! empty( $items ) && get_field('show_sub_cats', 'option') ) {
 			return '<div class="ed-mp__subcats" data-ed-products-subcats="1">' . implode( '', $items ) . '</div>';
 		}
 
@@ -84,7 +84,7 @@ function ed_rest_get_subcats_html( $term ) {
 					);
 				}
 
-				if ( ! empty( $items ) ) {
+				if ( ! empty( $items ) && get_field('show_sub_cats', 'option') ) {
 					return '<div class="ed-mp__subcats" data-ed-products-subcats="1" data-ed-parent-term="' . esc_attr( $parent->slug ) . '">' . implode( '', $items ) . '</div>';
 				}
 			}
