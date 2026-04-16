@@ -8,6 +8,7 @@ body{
     overflow: visible !important;
     font-family: "Heebo", sans-serif;
     font-style: normal;
+    color: var(--main-site-text-color, #000);
 }
 
 *:not(body)::-webkit-scrollbar {
@@ -153,8 +154,8 @@ body.basket-open .site-overlay,
 }
 
 .top-header{
-    height: 31px;
-    line-height: 30px;
+    height: var(--top-header-height, 31px);
+    line-height: var(--top-header-height, 31px);
     font-size: 12px;
 }
 
