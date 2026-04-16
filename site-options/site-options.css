@@ -1,0 +1,170 @@
+/* עמוד האפשרויות */
+#wpbody-content > .wrap {
+  max-width: none;
+}
+
+/* פריסה כללית */
+.ed-site-options-layout {
+  display: flex;
+  flex-direction: row; /* RTL: הסיידבר מימין */
+  align-items: flex-start;
+  gap: 28px;
+  margin-top: 20px;
+}
+
+/* סיידבר */
+.ed-site-options-sidebar {
+  width: 300px;
+  min-width: 300px;
+  position: sticky;
+  top: 32px;
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid #dcdcde;
+  box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.ed-site-options-sidebar__inner {
+  padding: 0;
+}
+
+/* אזור תוכן */
+.ed-site-options-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ברירת מחדל: כל הקבוצות מוסתרות */
+.ed-site-options-content {
+  position: relative;
+}
+
+.ed-site-options-content .acf-postbox {
+  visibility: hidden;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.ed-site-options-content .acf-postbox.is-visible {
+  visibility: visible;
+  position: relative;
+  inset: auto;
+  pointer-events: auto;
+  opacity: 1;
+}
+
+/* קבוצת ניווט */
+.ed-site-options-nav-group {
+  border-bottom: 1px solid #e7e7e7;
+  background: #fff;
+}
+
+.ed-site-options-nav-group:last-child {
+  border-bottom: 0;
+}
+
+.ed-site-options-nav-group + .ed-site-options-nav-group {
+  margin-top: 0;
+}
+
+/* לינק ראשי */
+.ed-site-options-nav-main {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  color: #1d2327;
+  text-align: right;
+  cursor: pointer;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  transition: background .15s ease, color .15s ease;
+}
+
+.ed-site-options-nav-main:hover {
+  background: #f6f7f7;
+}
+
+.ed-site-options-nav-group.is-active > .ed-site-options-nav-main {
+  background: #f0f6fc;
+  color: #0a4b78;
+  box-shadow: inset -3px 0 0 #2271b1;
+}
+
+/* תתי לינקים */
+.ed-site-options-subnav {
+  display: none;
+  background: #fcfcfc;
+  padding: 6px 0 10px;
+  border-top: 1px solid #eef0f1;
+}
+
+.ed-site-options-nav-group.is-active .ed-site-options-subnav {
+  display: block;
+}
+
+/* תתי לינקים פנימה */
+.ed-site-options-subnav a {
+  display: block;
+  text-decoration: none;
+  color: #50575e;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 8px 16px 8px 34px; /* הזחה פנימית */
+  margin-right: 12px;         /* מרווח מהצד הימני */
+  border-right: 2px solid transparent;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.ed-site-options-subnav a:hover {
+  background: #f6f7f7;
+  color: #1d2327;
+}
+
+.ed-site-options-subnav a.is-active {
+  background: #eef6ff;
+  color: #0a4b78;
+  border-right-color: #2271b1;
+  font-weight: 600;
+}
+
+/* אם אין טאבים */
+.ed-site-options-nav-group.no-tabs .ed-site-options-subnav {
+  display: none !important;
+}
+
+/* כותרות ACF עצמן */
+.ed-site-options-content .acf-postbox > .postbox-header,
+.ed-site-options-content .acf-postbox > h2 {
+  background: #fff;
+}
+
+/* מובייל / מסך קטן */
+@media (max-width: 1200px) {
+  .ed-site-options-layout {
+    display: block;
+  }
+
+  .ed-site-options-sidebar {
+    width: 100%;
+    min-width: 0;
+    position: static;
+    margin-bottom: 20px;
+  }
+}
+
+.acf-fields>.acf-field.acf-field-message .acf-label{
+    margin: 0;
+}
+
+.acf-fields>.acf-field.acf-field-message .acf-label label{
+    font-weight: bold;
+    font-size: 16px;
+    margin: 0;
+}
