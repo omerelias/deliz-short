@@ -130,9 +130,17 @@ function deliz_short_build_theme_options_css(): string {
 
   $mobile_top_header_text    = get_field('mobile_top_header_text', 'option');
 
+  $desktop_logo_size       = get_field('desktop_logo_size', 'option');
+
+  $mobile_logo_size       = get_field('mobile_logo_size', 'option');
+
   $main_header_bg          = get_field('main_header_bg', 'option');
 
   $main_header_txt_color   = get_field('main_header_txt_color', 'option');
+
+  $mobile_main_header_bg          = get_field('mobile_main_header_bg', 'option');
+
+  $mobile_main_header_text   = get_field('mobile_main_header_text', 'option');
 
   $menu_link_color         = get_field('menu_link_color', 'option');
 
@@ -228,9 +236,17 @@ function deliz_short_build_theme_options_css(): string {
 
   if ($mobile_top_header_text)   $css .= "  --mobile-top-header-text: " . $mobile_top_header_text . ";\n";
 
+  if ($desktop_logo_size)   $css .= "  --desktop-logo-size: " . $to_px($desktop_logo_size) . ";\n";
+
+  if ($mobile_logo_size)   $css .= "  --mobile-logo-size: " . $to_px($mobile_logo_size) . ";\n";
+
   if ($main_header_bg)   $css .= "  --main-header-bg: " . $main_header_bg . ";\n";
 
   if ($main_header_txt_color)   $css .= "  --main-header-txt-color: " . $main_header_txt_color . ";\n";
+
+  if ($mobile_main_header_bg)   $css .= "  --mobile-main-header-bg: " . $mobile_main_header_bg . ";\n";
+
+  if ($mobile_main_header_text)   $css .= "  --mobile-main-header-text: " . $mobile_main_header_text . ";\n";
 
   if ($menu_link_color)   $css .= "  --menu-link-color: " . $menu_link_color . ";\n";
 
@@ -263,12 +279,6 @@ function deliz_short_build_theme_options_css(): string {
   $css .= ".top-header{background-color:var(--top-header-bg);color:var(--top-header-txt_color)}\n";
 
   $css .= ".top-header a{color:var(--top-header-txt_color)}\n";
-
-  $css .= ".site-header{background-color:var(--main-header-bg);color:var(--main-header-txt-color)}\n";
-
-  $css .= ".site-header a{color:var(--main-header-txt-color)}\n";
-
-
 
   // Slider per-slide variables
 
