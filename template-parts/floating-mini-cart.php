@@ -578,13 +578,14 @@ if (
 						<?php //endif; ?>
 					</a>
 				</div>
-
+				<?php if(get_field('show_weight_pop', 'option')): ?>					
 				<div class="bottom-cart">
 					<div class="cart-custom-notice">
 						<?php _e('*The final price will be set after weighing.', 'deliz-short'); ?>
 						<a href="javascript:void(0);"><?php _e('More Details', 'deliz-short'); ?></a>
 					</div>
 				</div>
+				<?php endif; ?>
 			<?php else : ?>
 				<div class="ed-float-cart__footer-shipping-chip ed-float-cart__footer-shipping-chip--empty-cart">
 					<?php do_action('deliz_short_float_cart_footer_shipping'); ?>

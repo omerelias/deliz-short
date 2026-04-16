@@ -1,212 +1,463 @@
 <?php
+
 /**
+
  * Auto-split from functions-front.php — do not load directly.
+
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
+
+
+
 	exit;
+
 }
 
-//מספר מוצאים בשורה דסקטופ
-add_filter('body_class', function($classes){
 
-  // ACF Options page field
-  $num = get_field('desktop_prod_num', 'option');
-  $num_m = get_field('mobile_prod_num', 'option');
-  $with_isons = get_field('menu_icons_show', 'option');
 
-  // ניקוי/ולידציה
-  $num = is_numeric($num) ? (int) $num : 0;
-  $num_m = is_numeric($num_m) ? (int) $num_m : 0;
+add_action('acf/init', function () {
 
-  if ($num > 0) {
-    $classes[] = 'desktop-per-row-' . $num;
-  }
+  if ( ! function_exists('acf_add_options_page') ) return;
 
-  if ($num > 0) {
-    $classes[] = 'mobile-per-row-' . $num_m;
-  }
 
-  if ($with_isons > 0) {
-    $classes[] = 'menu-with-icons';
-  }    
 
-  return $classes;
+  acf_add_options_page([
+
+    'page_title'  => __( 'הגדרות אתר', 'deliz-short' ),
+
+    'menu_title'  => __( 'הגדרות אתר', 'deliz-short' ),
+
+    'menu_slug'   => 'site-settings',
+
+    'capability'  => 'manage_options',
+
+    'redirect'    => false,
+
+    'position'    => 59,
+
+    'icon_url'    => 'dashicons-admin-generic',
+
+    'update_button' => __( 'שמור', 'deliz-short' ),
+
+    'updated_message' => __( 'ההגדרות נשמרו', 'deliz-short' ),
+
+  ]);
+
 });
 
-//שורט קוד לסל צף
-add_shortcode('ed_floating_cart', function () {
-  if ( ! function_exists('WC') ) return '';
-  ob_start();
-  get_template_part('template-parts/floating-mini-cart');
-  return ob_get_clean();
-});
 
-add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
-  if ( ! function_exists('WC') ) return $fragments;
 
-  ob_start();
-  get_template_part('template-parts/floating-mini-cart');
-  $full = ob_get_clean();
-  $fragments['#ed-float-cart'] = $full;
+if ( function_exists('acf_add_options_page') ) {
 
-  // Header: title + free-shipping bar (deliz_short_float_cart_header_shipping) — keep in sync after partial cart AJAX.
-  if ( preg_match( '/<header\s+class="ed-float-cart__header"[^>]*>[\s\S]*?<\/header>/u', $full, $m ) ) {
-    $fragments['#ed-float-cart header.ed-float-cart__header'] = $m[0];
-  }
+  acf_add_options_page([
 
-  // Dedicated fragment: nested progress bar HTML breaks naive header regex; ensures bar returns after qty AJAX.
-  ob_start();
-  echo '<div class="ed-float-cart__header-shipping">';
-  if ( function_exists( 'WC' ) && WC()->cart && ! WC()->cart->is_empty() ) {
-    do_action( 'deliz_short_float_cart_header_shipping' );
-  }
-  echo '</div>';
-  $fragments['#ed-float-cart .ed-float-cart__header-shipping'] = ob_get_clean();
+    'page_title' => __( 'סליידר ראשי', 'deliz-short' ),
 
-  // Checkout CTA + ~ running total (non-empty cart only in template).
-  if ( preg_match( '/<div\s+class="ed-float-cart__actions"[^>]*>[\s\S]*?<\/div>/u', $full, $m ) ) {
-    $fragments['#ed-float-cart .ed-float-cart__actions'] = $m[0];
-  }
+    'menu_title' => __( 'סליידר ראשי', 'deliz-short' ),
 
-  // Totals + coupon form + CTA live in the footer; mini-cart JS can update after coupon apply/remove
-  // without relying only on wc_fragment_refresh (cart-fragments script may be absent).
-  if ( preg_match( '/<footer\s+class="ed-float-cart__footer"[^>]*>[\s\S]*?<\/footer>/u', $full, $m ) ) {
-    $fragments['#ed-float-cart footer.ed-float-cart__footer'] = $m[0];
-  }
+    'menu_slug'  => 'main-slider',
 
-  return $fragments;
-});
+    'capability' => 'manage_options',
+
+    'redirect'   => false,
+
+    'position'   => 59,
+
+    'icon_url'   => 'dashicons-images-alt2',
+
+  ]);
+
+}
+
+
 
 /**
- * מחיר משלוח ב־#ocws-delivery-data-chip — רינדור אחרון אחרי עדכון הסל (fragments מ-WC / פופאפ / REST),
- * כדי שהמספר יתאים לכמות ולסה״כ אחרי הוספה לסל ושינויי כמות.
+
+ * Generate theme options CSS file from ACF Options.
+
+ * Outputs: /wp-content/uploads/theme-options.css
+
  */
-add_filter( 'woocommerce_add_to_cart_fragments', 'deliz_short_fragment_ocws_delivery_chip', 50, 1 );
-function deliz_short_fragment_ocws_delivery_chip( $fragments ) {
-	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
-		return $fragments;
-	}
-	if ( ! class_exists( 'Oc_Woo_Shipping_Public', false ) || ! is_callable( array( 'Oc_Woo_Shipping_Public', 'show_chip_in_cart' ) ) ) {
-		return $fragments;
-	}
-	ob_start();
-	Oc_Woo_Shipping_Public::show_chip_in_cart();
-	$html = ob_get_clean();
-	if ( $html !== '' ) {
-		$fragments['div#ocws-delivery-data-chip'] = $html;
-	}
-	return $fragments;
-}
 
-// Shipping popup: do not show on page load — only when user adds to cart or clicks delivery chip
-add_action('wp_footer', function () {
-  if (is_checkout()) return;
-  ?>
-  <script>
-  (function(){
-    function hideShippingPopupOnLoad() {
-      var popup = document.querySelector('.choose-shipping-popup');
-      if (popup && popup.classList.contains('shown')) {
-        popup.classList.remove('shown');
-        document.body.style.overflow = '';
-      }
+function deliz_short_build_theme_options_css(): string {
+
+  if ( ! function_exists( 'get_field' ) ) {
+
+    return '';
+
+  }
+
+
+
+  // Pull values from options
+
+  $main_site_text_color = get_field('main_site_text_color', 'option');
+
+  $primary                 = get_field('main_color', 'option');
+
+  $primary_hover           = get_field('main_color_hover', 'option');
+
+  $main_text_color         = get_field('main_text_color', 'option');
+
+  $main_text_color_hover   = get_field('main_text_color_hover', 'option');
+
+  $secondery_text_color     = get_field('secondery_text_color', 'option');
+
+  $item_title_color        = get_field('item_title_color', 'option');
+
+  $item_price_color        = get_field('item_price_color', 'option');
+
+  $item_sale_price_color   = get_field('item_sale_price_color', 'option');
+
+  $floating_cart_bg        = get_field('floating_cart_bg', 'option');
+
+  $floating_cart_text_color= get_field('floating_cart_text_color', 'option');
+
+  $radius                  = get_field('radius', 'option');
+
+  $menu_img_size           = get_field('menu_img_size', 'option');
+
+  $menu_img_size_mobile    = get_field('menu_img_size_mobile', 'option');
+
+  $top_header_height       = get_field('top_header_height', 'option');
+
+  $top_header_bg           = get_field('top_header_bg', 'option');
+
+  $top_header_txt_color    = get_field('top_header_txt_color', 'option');
+
+  $mobile_top_header_bg           = get_field('mobile_top_header_bg', 'option');
+
+  $mobile_top_header_text    = get_field('mobile_top_header_text', 'option');
+
+  $main_header_bg          = get_field('main_header_bg', 'option');
+
+  $main_header_txt_color   = get_field('main_header_txt_color', 'option');
+
+  $menu_link_color         = get_field('menu_link_color', 'option');
+
+  $menu_link_color_active  = get_field('menu_link_color_active', 'option');
+
+  $mobile_menu_bg          = get_field('mobile_menu_bg', 'option');
+
+  $mobile_menu_text_color  = get_field('mobile_menu_text_color', 'option');
+
+  $mobile_menu_bg__active  = get_field('mobile_menu_bg__active', 'option');
+
+  $mobile_menu_text_color_active = get_field('mobile_menu_text_color_active', 'option');
+
+  $ft_bg_color             = get_field('ft_bg_color', 'option');
+
+  $ft_txt_color            = get_field('ft_txt_color', 'option');
+
+  $fb_bg_color             = get_field('fb_bg_color', 'option');
+
+  $fb_txt_color            = get_field('fb_txt_color', 'option');
+
+  $checkout_background     = get_field('checkout_background', 'option');
+
+  $checkout_blocks_background = get_field('checkout_blocks_background', 'option');
+
+
+
+  // Normalize
+
+  $primary               = is_string($primary) ? trim($primary) : '';
+
+  $secondary             = is_string($secondary) ? trim($secondary) : '';
+
+  $floating_cart_bg      = is_string($floating_cart_bg) ? trim($floating_cart_bg) : $floating_cart_bg;
+
+  $floating_cart_text_color = is_string($floating_cart_text_color) ? trim($floating_cart_text_color) : $floating_cart_text_color;
+
+  $radius                = is_string($radius) ? trim($radius) : $radius;
+
+
+
+  $to_px = function($v){
+
+    if ($v === '' || $v === null) return '';
+
+    if (is_numeric($v)) return $v . 'px';
+
+    return preg_match('/(px|rem|em|%)$/', (string) $v) ? (string) $v : (string) $v;
+
+  };
+
+
+
+  $css  = "/* Auto-generated from ACF Options. */\n";
+
+  $css .= ":root{\n";
+
+  if ($main_site_text_color)   $css .= "  --main-site-text-color: " . $main_site_text_color . ";\n";
+
+  if ($secondery_text_color)   $css .= "  --secondery-text-color: " . $secondery_text_color . ";\n";
+
+  if ($primary)   $css .= "  --color-primary: " . $primary . ";\n";
+
+  if ($primary_hover)   $css .= "  --color-primary-hover: " . $primary_hover . ";\n";
+
+  if ($main_text_color)   $css .= "  --main-text-color: " . $main_text_color . ";\n";
+
+  if ($main_text_color_hover)   $css .= "  --main-text-color-hover: " . $main_text_color_hover . ";\n";
+
+  if ($item_title_color) $css .= "  --item-title-color: " . $item_title_color . ";\n";
+
+  if ($item_price_color) $css .= "  --item-price-color: " . $item_price_color . ";\n";
+
+  if ($item_sale_price_color) $css .= "  --item-sale-price-color: " . $item_sale_price_color . ";\n";
+
+  if ($floating_cart_bg) $css .= "  --floating-cart-bg: " . $floating_cart_bg . ";\n";
+
+  if ($floating_cart_text_color) $css .= "  --floating-cart-text-color: " . $floating_cart_text_color . ";\n";
+
+  if ($radius) $css .= "  --radius: " . $to_px($radius) . ";\n";
+
+  $css .= "  --menu-img-size: " . (!empty($menu_img_size) ? $to_px($menu_img_size) : '50px') . ";\n";
+
+  $css .= "  --menu-img-size-mobile: " . (!empty($menu_img_size_mobile) ? $to_px($menu_img_size_mobile) : '20px') . ";\n";
+
+  if ($top_header_height)   $css .= "  --top-header-height: " . $to_px($top_header_height) . ";\n";
+
+  if ($top_header_bg)   $css .= "  --top-header-bg: " . $top_header_bg . ";\n";
+
+  if ($top_header_txt_color)   $css .= "  --top-header-txt_color: " . $top_header_txt_color . ";\n";
+
+  if ($mobile_top_header_bg)   $css .= "  --mobile-top-header-bg: " . $mobile_top_header_bg . ";\n";
+
+  if ($mobile_top_header_text)   $css .= "  --mobile-top-header-text: " . $mobile_top_header_text . ";\n";
+
+  if ($main_header_bg)   $css .= "  --main-header-bg: " . $main_header_bg . ";\n";
+
+  if ($main_header_txt_color)   $css .= "  --main-header-txt-color: " . $main_header_txt_color . ";\n";
+
+  if ($menu_link_color)   $css .= "  --menu-link-color: " . $menu_link_color . ";\n";
+
+  if ($menu_link_color_active)   $css .= "  --menu-link-color-active: " . $menu_link_color_active . ";\n";
+
+  if ($mobile_menu_bg)   $css .= "  --mobile-menu-bg: " . $mobile_menu_bg . ";\n";
+
+  if ($mobile_menu_text_color)   $css .= "  --mobile-menu-text-color: " . $mobile_menu_text_color . ";\n";
+
+  if ($mobile_menu_bg__active)   $css .= "  --mobile-menu-bg-active: " . $mobile_menu_bg__active . ";\n";
+
+  if ($mobile_menu_text_color_active)   $css .= "  --mobile-menu-text-color-active: " . $mobile_menu_text_color_active . ";\n";
+
+  if ($ft_bg_color)   $css .= "  --ft-bg-color: " . $ft_bg_color . ";\n";
+
+  if ($ft_txt_color)   $css .= "  --ft-txt-color: " . $ft_txt_color . ";\n";
+
+  if ($fb_bg_color)   $css .= "  --fb-bg-color: " . $fb_bg_color . ";\n";
+
+  if ($fb_txt_color)   $css .= "  --fb-txt-color: " . $fb_txt_color . ";\n";
+
+  if ($checkout_background)   $css .= "  --checkout-background: " . $checkout_background . ";\n";
+
+  if ($checkout_blocks_background)   $css .= "  --checkout-block-background: " . $checkout_blocks_background . ";\n";
+
+  $css .= "}\n";
+
+  $css .= "body{font-size:var(--font-size-base,16px)}\n";
+
+  $css .= ".top-header{background-color:var(--top-header-bg);color:var(--top-header-txt_color)}\n";
+
+  $css .= ".top-header a{color:var(--top-header-txt_color)}\n";
+
+  $css .= ".site-header{background-color:var(--main-header-bg);color:var(--main-header-txt-color)}\n";
+
+  $css .= ".site-header a{color:var(--main-header-txt-color)}\n";
+
+
+
+  // Slider per-slide variables
+
+  if ( function_exists('have_rows') && have_rows('slider_settings', 'option') ) {
+
+    $i = 0;
+
+    while ( have_rows('slider_settings', 'option') ) {
+
+      the_row();
+
+      $i++;
+
+      $content_bg = sanitize_hex_color( get_sub_field('content_bg') ) ?: '';
+
+      $txt_color  = sanitize_hex_color( get_sub_field('text_on_image_color') ) ?: '';
+
+      $btn_bg     = sanitize_hex_color( get_sub_field('btn_bg') ) ?: '';
+
+      $btn_txt    = sanitize_hex_color( get_sub_field('btn_txt') ) ?: '';
+
+      $sel = '.ed-main-slider .ed-slide[data-ed-slide="'.$i.'"]';
+
+      $css .= $sel . "{\n";
+
+      if ($content_bg) $css .= "  --ed-content-bg: {$content_bg};\n";
+
+      if ($txt_color)  $css .= "  --ed-text-color: {$txt_color};\n";
+
+      if ($btn_bg)     $css .= "  --ed-btn-bg: {$btn_bg};\n";
+
+      if ($btn_txt)    $css .= "  --ed-btn-txt: {$btn_txt};\n";
+
+      $css .= "}\n";
+
     }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function run() {
-        document.removeEventListener('DOMContentLoaded', run);
-        setTimeout(hideShippingPopupOnLoad, 0);
-      });
-    } else {
-      setTimeout(hideShippingPopupOnLoad, 0);
+
+  }
+
+
+
+  return $css;
+
+}
+
+
+
+add_action('acf/save_post', function ($post_id) {
+
+  if ($post_id !== 'options') return;
+
+  $css = deliz_short_build_theme_options_css();
+
+  update_option('deliz_short_theme_options_css', $css, false);
+
+}, 20);
+
+
+
+add_action('wp_enqueue_scripts', function () {
+
+  if ( is_admin() ) return;
+
+
+
+  // Prevent loading the generated file-based stylesheet (if still present/enqueued elsewhere).
+
+  wp_dequeue_style('theme-options');
+
+  wp_deregister_style('theme-options');
+
+
+
+  $css = get_option('deliz_short_theme_options_css', '');
+
+  if ( ! is_string($css) || $css === '' ) {
+
+    $css = deliz_short_build_theme_options_css();
+
+  }
+
+  if ( ! is_string($css) || trim($css) === '' ) {
+
+    return;
+
+  }
+
+
+
+  // Attach to an existing enqueued handle so it prints in <head>.
+
+  // 'deliz-short-main' is enqueued in inc/theme-enqueue.php.
+
+  wp_add_inline_style('deliz-short-main', $css);
+
+}, 21);
+
+
+
+function ed_add_items_images_size_body_class($classes) { 
+
+    if (!function_exists('get_field')) {
+
+        return $classes;
+
     }
-  })();
-  </script>
-  <?php
-}, 2);
-
-// Product Popup functionality is loaded from includes/product-popup/class-product-popup.php
-
-add_action( 'wp_footer', 'overlay_bg' );
-function overlay_bg(){
-  echo '<div class="site-overlay"></div>';
-}
-
-/**
- * oc-woo-shipping: ממזג billing_floor / billing_apartment / billing_enter_code לקבוצת השדות `ocws`
- * כדי להציגם שוב בתוך #oc-woo-shipping-additional — כפילות מול .woocommerce-billing-fields-part-2 ב-form-shipping.
- * בלי המיזוג השדות נשארים רק בבלוק part-2 (מספיק לצ'קאאוט; הפופאפ משתמש ב-billing ישירות).
- */
-add_filter(
-	'ocws_merge_into_ocws_group_fields',
-	static function () {
-		return array();
-	},
-	999
-);
-
-// Checkout / header SMS popup (guests)
-add_action(
-	'wp_footer',
-	function () {
-		if ( is_user_logged_in() ) {
-			return;
-		}
-		get_template_part( 'template-parts/checkout-sms-popup' );
-	},
-	15
-);
-
-function print_menu_shortcode($atts, $content = null) {
-    extract(shortcode_atts(array( 'name' => null, ), $atts));
-    return wp_nav_menu( array( 'menu' => $name, 'echo' => false ) );
-}
-add_shortcode('oc_menu', 'print_menu_shortcode');
-
-/**
- * AJAX: current ocws_shipping_popup_confirmed for floating-cart checkout gate.
- */
-function deliz_short_ajax_ocws_shipping_status() {
-	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
-		wp_send_json_success( array( 'confirmed' => true ) );
-		return;
-	}
-	if ( ! class_exists( 'OCWS_Popup', false ) ) {
-		wp_send_json_success( array( 'confirmed' => true ) );
-		return;
-	}
-	wp_send_json_success(
-		array(
-			'confirmed' => (bool) WC()->session->get( 'ocws_shipping_popup_confirmed' ),
-		)
-	);
-}
-add_action( 'wp_ajax_deliz_ocws_shipping_status', 'deliz_short_ajax_ocws_shipping_status' );
-add_action( 'wp_ajax_nopriv_deliz_ocws_shipping_status', 'deliz_short_ajax_ocws_shipping_status' );
 
 
-add_action(
-	'woocommerce_before_checkout_form',
-	function () {
-      $custom_logo_id = get_theme_mod('custom_logo');      
-      $site_name = get_bloginfo('name');
-      $logo = '<a href="' . esc_url(home_url('/')) . '"><img src="' . esc_url(wp_get_attachment_image_url($custom_logo_id, 'full')) . '" alt="' . esc_attr($site_name) . '"></a>';
-      if(get_field('checkout_logo', 'option')){
-        $logo = '<a href="' . esc_url(home_url('/')) . '"><img src="' . esc_url(get_field('checkout_logo', 'option')) . '" alt="' . esc_attr($site_name) . '"></a>';
-      }
 
-      echo '<div class="checkout_logo">"'.$logo.'"</div>';
-	},
-	15
-);
+    $items_images_size = get_field('items_images_size', 'option');
 
-add_filter('body_class', function ($classes) {
-    $show_top_header = function_exists('get_field')
-        ? get_field('mobile_show_top_header', 'option')
-        : 0;
 
-    if ((int) $show_top_header == 1) {
-        $classes[] = 'show-mobile-top-header';
+
+    if ($items_images_size === 'square') {
+
+
+
+        $classes[] = 'square_images';
+
+
+
+    } elseif ($items_images_size === 'rectangular') {
+
+
+
+        $classes[] = 'rectangular_images';
+
+
+
     }
+
+
 
     return $classes;
+
+}
+
+//fonts
+add_action('wp_enqueue_scripts', function () {
+    if (!function_exists('get_field')) return;
+
+    $site_font   = trim((string) get_field('site_font', 'option'));
+    $titles_font = trim((string) get_field('titles_font', 'option'));
+
+    if ($site_font === '') {
+        $site_font = 'Heebo';
+    }
+
+    if ($titles_font === '') {
+        $titles_font = $site_font ?: 'Heebo';
+    }
+
+    $fonts_to_load = array_unique([$site_font, $titles_font]);
+    $families = [];
+
+    foreach ($fonts_to_load as $font) {
+        if ($font === '') continue;
+        $families[] = 'family=' . str_replace(' ', '+', $font) . ':wght@300;400;500;600;700;800';
+    }
+
+    if (empty($families)) return;
+
+    wp_enqueue_style(
+        'theme-google-fonts',
+        'https://fonts.googleapis.com/css2?' . implode('&', $families) . '&display=swap',
+        [],
+        null
+    );
+}, 20);
+
+add_action('wp_head', function () {
+    if (!function_exists('get_field')) return;
+
+    $site_font   = trim((string) get_field('site_font', 'option'));
+    $titles_font = trim((string) get_field('titles_font', 'option'));
+
+    if ($site_font === '') {
+        $site_font = 'Heebo';
+    }
+
+    if ($titles_font === '') {
+        $titles_font = $site_font ?: 'Heebo';
+    }
+    ?>
+    <style>
+        :root {
+            --site-font: "<?php echo esc_attr($site_font); ?>", sans-serif;
+            --titles-font: "<?php echo esc_attr($titles_font); ?>", sans-serif;
+        }
+    </style>
+    <?php
 });
