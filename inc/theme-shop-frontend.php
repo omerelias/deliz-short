@@ -16,6 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 
 
+if ( ! function_exists( 'deliz_short_build_theme_options_css' ) ) {
+
 add_action('acf/init', function () {
 
   if ( ! function_exists('acf_add_options_page') ) return;
@@ -373,6 +375,8 @@ add_action('wp_enqueue_scripts', function () {
   wp_add_inline_style('deliz-short-main', $css);
 
 }, 21);
+
+}
 
 
 
