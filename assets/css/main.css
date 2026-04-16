@@ -1159,7 +1159,23 @@ body.square_images .woocommerce ul.products li.product a img{
     }
 }
 
+.site-logo__img--mobile {
+  display: none;
+}
+
 @media (max-width: 991px) {
+
+    .site-logo__img--desktop {
+        display: none;
+    }
+
+    .site-logo__img--mobile {
+        display: block;
+    }
+
+    .site-logo__fallback.has-mobile-logo {
+        display: none;
+    }
 
     .site-header{
         background-color: var(--mobile-main-header-bg, var(--main-header-bg, #fff));
