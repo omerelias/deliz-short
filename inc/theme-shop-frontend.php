@@ -198,3 +198,15 @@ add_action(
 	},
 	15
 );
+
+add_filter('body_class', function ($classes) {
+    $show_top_header = function_exists('get_field')
+        ? get_field('mobile_show_top_header', 'option')
+        : 0;
+
+    if ((int) $show_top_header == 1) {
+        $classes[] = 'show-mobile-top-header';
+    }
+
+    return $classes;
+});
