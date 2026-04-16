@@ -730,7 +730,13 @@ class ED_Checkout_Upsells {
 
     check_ajax_referer('ed-checkout-upsells-nonce', 'nonce');
 
+    if ( ! self::is_enabled() ) {
 
+      wp_send_json_success( array( 'html' => '<p>' . esc_html__( 'לא נמצאו מוצרים להצגה', 'deliz-short' ) . '</p>', 'count' => 0 ) );
+
+      return;
+
+    }
 
     $product_ids = self::get_upsell_products();
 
@@ -848,14 +854,6 @@ class ED_Checkout_Upsells {
 
   public static function enqueue_assets() {
 
-    if (!self::is_enabled()) {
-
-      return;
-
-    }
-
-
-
     // Only enqueue if WooCommerce is active
 
     if (!function_exists('WC') || !WC()->cart) {
@@ -864,23 +862,27 @@ class ED_Checkout_Upsells {
 
     }
 
+    $upsells_enabled = self::is_enabled();
 
+    // CSS + popup markup only when upsells feature is enabled (field checkout_upsells_enabled).
 
-    // CSS
+    if ($upsells_enabled) {
 
-    wp_enqueue_style(
+      wp_enqueue_style(
 
-      'ed-checkout-upsells',
+        'ed-checkout-upsells',
 
-      get_template_directory_uri() . '/includes/lib/checkout-upsells/assets/css/checkout-upsells.css',
+        get_template_directory_uri() . '/includes/lib/checkout-upsells/assets/css/checkout-upsells.css',
 
-      [],
+        [],
 
-      defined('DELIZ_SHORT_VERSION') ? DELIZ_SHORT_VERSION : '1.0.0'
+        defined('DELIZ_SHORT_VERSION') ? DELIZ_SHORT_VERSION : '1.0.0'
 
-    );
+      );
 
+    }
 
+    // JS is always loaded: float-cart checkout → SMS / OCWS gate does not depend on upsells being enabled.
 
     // JS (checkout-sms-flow: guests need CheckoutSMSFlow before proceedToCheckoutOrSms)
 
@@ -934,9 +936,11 @@ class ED_Checkout_Upsells {
 
     wp_localize_script('ed-checkout-upsells', 'ED_CHECKOUT_UPSELLS', [
 
-      'ajaxUrl' => admin_url('admin-ajax.php'),
+      'ajaxUrl' => admin_url('admin-ajax.php'), 
 
       'nonce' => wp_create_nonce('ed-checkout-upsells-nonce'),
+
+      'upsellsEnabled' => $upsells_enabled,
 
       'title' => $title,
 

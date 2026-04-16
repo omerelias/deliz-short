@@ -203,9 +203,15 @@
     e.stopImmediatePropagation();
 
     console.log('🔵 Checkout form submit - intercepting...');
-
+ 
     // Store form reference
     checkoutForm = $(this);
+
+    if (config.upsellsEnabled === false) {
+      checkoutForm.off('submit', interceptSubmit);
+      checkoutForm.submit();
+      return false;
+    }
 
     // Check if upsells exist
     $.ajax({
@@ -469,6 +475,10 @@
       console.log('🔵 Config:', config);
 
       function continueUpsellFlow() {
+        if (config.upsellsEnabled === false) {
+          proceedToCheckoutOrSms(checkoutUrl);
+          return;
+        }
         // Upsells first; SMS / OCWS gate only after upsell step or when there are no upsells (see proceedToCheckoutOrSms)
         $.ajax({
           url: config.ajaxUrl,
