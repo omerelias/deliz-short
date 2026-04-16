@@ -203,9 +203,9 @@ body.basket-open .site-overlay,
 
 .site-header .header-logo{
     text-align: right;
-    flex: 0 0 150px;
-    width: 150px;
-    min-width: 150px;
+    flex: 0 0 var(--desktop-logo-size,150px);
+    width: var(--desktop-logo-size,150px);
+    min-width: var(--desktop-logo-size,150px);
 }
 
 .site-header .header-logo a{
@@ -1202,10 +1202,12 @@ body.square_images .woocommerce ul.products li.product a img{
         left: 45px;
         top: 9px;
     }
-
-    .site-header .custom-logo-link img {
-        max-width: 90px;
-    }    
+    
+    .site-header .header-logo{
+        flex: 0 0 var(--mobile-logo-size, var(--desktop-logo-size, 90px));
+        width: var(--mobile-logo-size, var(--desktop-logo-size, 90px));
+        min-width: var(--mobile-logo-size, var(--desktop-logo-size, 90px));
+    }
 
     .main-content .menu-block ul.ed-mp__menu {
         padding: 0;

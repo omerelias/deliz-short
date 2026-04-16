@@ -130,6 +130,10 @@ function deliz_short_build_theme_options_css(): string {
 
   $mobile_top_header_text    = get_field('mobile_top_header_text', 'option');
 
+  $desktop_logo_size       = get_field('desktop_logo_size', 'option');
+
+  $mobile_logo_size       = get_field('mobile_logo_size', 'option');
+
   $main_header_bg          = get_field('main_header_bg', 'option');
 
   $main_header_txt_color   = get_field('main_header_txt_color', 'option');
@@ -227,6 +231,10 @@ function deliz_short_build_theme_options_css(): string {
   if ($mobile_top_header_bg)   $css .= "  --mobile-top-header-bg: " . $mobile_top_header_bg . ";\n";
 
   if ($mobile_top_header_text)   $css .= "  --mobile-top-header-text: " . $mobile_top_header_text . ";\n";
+
+  if ($desktop_logo_size)   $css .= "  --desktop-logo-size: " . $to_px($desktop_logo_size) . ";\n";
+
+  if ($mobile_logo_size)   $css .= "  --mobile-logo-size: " . $to_px($mobile_logo_size) . ";\n";
 
   if ($main_header_bg)   $css .= "  --main-header-bg: " . $main_header_bg . ";\n";
 

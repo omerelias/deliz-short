@@ -1595,8 +1595,11 @@ body.popup-open {
 .ed-product-popup__container button.default-close-btn {
 
   border-radius: 100%;
-
-  background-color: #fff;
+background: #E4E4E4 url(../images/pop-close.svg) center no-repeat;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-size: 11px;
 
   transition: background-color .12s ease-out;
 
